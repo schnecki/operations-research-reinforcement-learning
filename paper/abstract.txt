@@ -1,0 +1,88 @@
+An important goal in Manufacturing Planning and Control systems is to achieve short and predictable
+flow times, especially where high flexibility in meeting customer demand is required. Besides
+achieving short flow times, one should also maintain high output and due-date performance while
+keeping the work-in-process level low. One approach to address this problem is to collect all
+incoming orders in an order-pool and periodically decide which orders to release to the shop floor.
+Once orders are released, costs start to accumulate as the orders materialise as actual jobs in the
+production system. The main challenge is to find a good compromise of balancing the shop floor and
+timely completion of jobs. Although the performance of such systems can be measured manifold the
+most overarching objective is to maximise profits by adequately assigning holding and lateness
+costs.
+
+Most state-of-the-art order release mechanisms use static or fixed lead times to address the order
+release problem, and thus neglect the nonlinear relationship between resource utilisation and flow
+times which is well known from practice and queuing theory, where lead time is a planning parameter
+and flow time is the actual time an order needs to traverse through the system. One way to address
+this nonlinear interaction effects is to set lead times dynamically. Thus, intuitively the order
+release problem is solved by perfectly matching the lead times to the flow times, but one faces
+'sampling issues' meaning that the flow times depend on the lead times. An extreme scenario of this
+problem is the so called 'lead time syndrome' which describes a vicious cycle where increasing flow
+times perpetually inflate the lead times which leads to worse performance (see e.g., Mather and
+Plossl 1978; Knollmann and Windt 2013; Selcuk, Fransoo, and De Kok 2006). Therefore,
+Schneckenreither and Haeussler (2018) propose to use reinforcement learning as approach to
+incorporate these effects in this optimisation problem.
+
+Reinforcement learning is a optimisation technique that stems from dynamic programming. The goal in
+reinforcement learning is to find the best stationary policy for a given problem. This policy is
+usually provided by assessing the states (or state-action pairs) of an underlying Markov Decision
+Process (MDP). The advantage of reinforcement learning over dynamic programming is that (i) the
+problem space is explored by an agent and thus only expectantly interesting parts of the problem
+space need to be assessed and (ii) the knowledge (acquisition) of transition probabilities becomes
+unnecessary as the states are evaluated by consecutively observed states solely.
+
+As opposed to the commonly applied discounted reinforcement learning algorithm we use an average
+reward reinforcement learning algorithm to adaptively release orders based on the assessed state
+values of the production system. Like discounted reinforcement learning also average reward
+reinforcement learning is based on an oracle function, in our case the accumulated profit of a
+period, to assess the decisions taken by the agent. By repeatedly choosing different actions the
+agent examines the problem space and rates possible actions for any observed state.
+
+The advantage of average reward reinforcement learning in comparison to the widely applied
+discounted reinforcement learning framework is that the underlying optimisation technique is able to
+find better policies. This yields from the fact that in the latter method the states are assessed by
+a single value, while in the former the values are split up by the average reward accumulated over
+time and a bias value which optimises the number of steps to reach the best possible states of the
+examined process. Thus, while in average reward reinforcement learning these terms are learned
+separately in the discounted framework one value consisting of the addition of these values plus an
+additional error term is estimated. This incautious combining of different kinds of state values as
+done in discounted reinforcement learning leads to the problems that (i) the average reward, which
+is equal for all states of usually investigated unichain MDPs, is dominating and thus diluting the
+bias values, and (ii) the state values are deteriorated by the error term that is only imposed due
+to the discounting technique.
+
+Therefore, we propose a novel average reward reinforcement learning algorithm, which is the first
+that solves the occurring cyclic constraint problem in the setting of average reward reinforcement
+learning, to assess orders for their release to the shop floor. These cyclic constraint problem
+emerges as the underlying constraint structure is based on the Laurent series expansion of the state
+values as shown by Miller and Veinott (1969), and thus easily imposes an infinite number of
+interconnected constraints when handled unwisely. The agent assesses the expected profit upon
+release of an order for the current and future periods and, based on its estimates, decides whether
+to release the order or not. We provide ample evidence of the viability of the approach and compare
+it to well-known established order release mechanisms. Furthermore, we show the advantage of average
+reward reinforcement learning for the problem structures encountered in the context of production
+and logistics by comparing the results to the discounted reinforcement learning framework. The
+preliminary results show that our approach performs better than the other methods. With regard to
+practical implications we are confident that decision support tools based on average reward
+reinforcement learning increase the decision quality of human planners.
+
+
+References:
+-----------
+
+Knollmann, M., and K. Windt. 2013. “Control-theoretic analysis of the Lead Time Syndrome
+  and its impact on the logistic target achievement.” Procedia CIRP 7: 97–102.
+
+Mather, H., and G. W. Plossl. 1978. “Priority fixation versus throughput planning.” Production
+  and Inventory Management 19: 27–51.
+
+Miller, B. L. & Veinott, A. F. Discrete dynamic programming with a small interest rate. The
+  Annals of Mathematical Statistics 40, 366–370 (1969).
+
+Schneckenreither, M., and S. Haeussler. "Reinforcement Learning Methods for Operations Research
+  Applications: The Order Release Problem." International Conference on Machine Learning,
+  Optimization, and Data Science. Springer, Cham, 2018.
+
+Selcuk, B., J. C. Fransoo, and A. G. De Kok. 2006. “The effect of updating lead times on the
+  performance of hierarchical planning systems.” International Journal of Production Economics 104
+  (2): 427–440.
+

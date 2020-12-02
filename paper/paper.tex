@@ -1,0 +1,1723 @@
+\documentclass[envcountsame]{llncs}
+
+
+\usepackage[table]{xcolor}
+\usepackage[utf8x]{inputenc}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{amsmath}
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage[noend]{algpseudocode}
+\usepackage{stmaryrd}
+\usepackage{listings}
+\usepackage{algorithm}
+\usepackage{array}
+\usepackage[colon,round,sort]{natbib}
+\usepackage{textcomp}
+\usepackage{pifont}
+% \usepackage{bbding}
+\usepackage{comment}
+\usepackage{graphicx}
+\usepackage[svgpath=figures/]{svg}
+\usepackage[labelfont=bf]{caption}
+\captionsetup[table]{skip=5pt}
+\usepackage{tikz}
+\usetikzlibrary{patterns}
+\usetikzlibrary{calc}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{shapes,arrows}
+\usetikzlibrary{shapes.geometric}
+% \usepackage{tikz}
+% \usetikzlibrary{patterns}
+% \usetikzlibrary{calc}
+% \usetikzlibrary{decorations.pathreplacing}
+% \usetikzlibrary{shapes,arrows}
+% \usetikzlibrary{shapes.geometric}
+% \usetikzlibrary{arrows}
+
+
+\usepackage{ntheorem}
+\newtheorem*{definition*}{Definition}
+
+
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{relsize}
+\tikzset{fontscale/.style = {font=\relsize{#1}}}
+\usepackage{marvosym}
+\usepackage{paper}
+
+
+% \usepackage{academicons}
+% \usepackage{cite}
+\usepackage[hidelinks,
+plainpages=false,
+pdftitle={Reinforcement Learning Methods for Operations Research Applications -- Reloaded},
+pdfauthor={Manuel Schneckenreither and Stefan Haeussler},
+pdfsubject={Reinforcement Learning Methods for Operations Research Applications -- Reloaded},
+pdfkeywords={production planning, order release, machine learning, reinforcement learning,
+  operations research},
+]{hyperref}
+\usepackage{url}
+\pagestyle{plain}
+
+
+\newcommand{\SH}[1]{\begin{center} \textcolor{green!50!black}{#1} \end{center}}
+\newcommand\MS[2][r]{\ifx t#1 \textcolor{blue}{[\textbf{MS:} #2]}
+  \else \begin{center}\textcolor{blue}{\textbf{MS:} #2} \end{center} \fi}
+
+% \newcolumntype{x}[1]{>{\centering\arraybackslash\hspace{0pt}}p{#1}}
+\title{
+  Reinforcement Learning Methods for Operations Research Applications -- Reloaded
+}
+\author{Manuel Schneckenreither% \inst{1}
+  % \orcidID{0000-0002-4812-4665}
+  \and Stefan Haeussler% \inst{2}
+  % \orcidID{0000-0003-2589-1367}
+}
+
+% \authorrunning{Schneckenreither and Haeussler}
+\institute{
+  Department of Information Systems,
+  Production and Logistics Management,
+  University of Innsbruck, Austria\\
+  email: \email{manuel.schneckenreither@uibk.ac.at,stefan.haeussler@uibk.ac.at}
+}
+
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+  % teilw. von IJPR paper uebernommen
+  An essential task in manufacturing planning and control is to determine when to release orders to
+  the shop floor. One key parameter is the lead time which is the planned time that elapses between
+  the release of an order and its completion. Lead times are normally determined based on the actual
+  duration orders previously took to traverse through the production system (flow times).
+  Traditional order release models assume static lead times, although it has been shown that they
+  should be set dynamically to react the dynamic operational characteristics of the system.
+  Therefore, we present an order release model which sets lead times dynamically by using an
+  reinforcement learning approach. Therefore, we provide an in-depth analysis of reinforcement
+  learning to show that average reward reinforcement learning is a better approach for operations
+  research applications as discounted reinforcement learning. Additionally we present an average
+  reward reinforcement learning algorithm which infers
+  (Blackwell-)optimal\footnote{Blackwell-optimality is not yet fully proven! A first version of such
+    a proof is attached in the Appendix.} policies.
+  % \SH{Add RL stuff}
+  % Therefore, we present a flow time estimation procedure to set lead times dynamically
+  % by using an artificial neural network. Additionally, we implement a safety lead time
+  % to incorporate the underlying cost ratio in the order release model. We test our
+  % proposed approach using a simulation model of a three-stage make-to-order flow-
+  % shop and compare the forecast accuracy and the accumulated costs to other forecast-
+  % based order release models from literature. We show that our proposed model using
+  We use a simulation model of a two-stage flow-shop to compare the algorithm
+  to % and show that our approach outperforms
+  well-known order release mechanisms. We show that in the current version our proposed model using
+  reinforcement learning outperforms some, but not all other tested approaches.
+  % EVTL: especially for scenarios with...
+  \keywords{operations research, production planning, order release, machine learning, reinforcement
+    learning}
+\end{abstract}
+
+
+\section{Introduction}
+\label{sec:introduction} An important goal in Manufacturing Planning and Control (MPC) systems is to
+achieve short and predictable flow times, especially where high flexibility in meeting customer
+demand is required. Besides achieving short flow times, one should also maintain high output and
+due-date performance while keeping the work-in-process level low. One approach to address this
+problem is to collect all incoming orders in an order-pool and periodically decide which orders to
+release to the shop floor. Once orders are released, costs start to accumulate as planned orders
+materialise as actual jobs in the production system. The main challenge is to find a good compromise
+of balancing the shop floor and timely completion of jobs. Although the performance of such systems
+can be measured manifold the most overarching objective is to maximise profits by adequately
+assigning holding and lateness costs.
+
+One of the key modeling parameters for order release mechanisms is the \textit{lead time} which
+refers to the planned time that elapses between the release of an order and its arrival in the
+finished goods inventory. This planning parameter is often based on the observable time an order
+needs to traverse through the production system, which we denote as \textit{flow time}. Flow times
+consist of processing, setup, control, transport, and waiting times, whereas the latter is the
+governing factor. Waiting times are a result from queuing (e.g. jobs queue before and after
+processing) which depend heavily on the amount of jobs in the system (WIP) and thus, waiting times
+are relatively difficult to estimate which makes the setting of favorable lead times so difficult
+(e.g., \citealt{Tatsiopoulos1983, Wiendahl1995}). Most state-of-the-art order release mechanisms use
+static or fixed lead times to address the order release problem, and thus neglect the nonlinear
+relationship between resource utilisation and flow times which is well known from practice and
+queuing theory (\citealt{Pahl2007}).
+
+One way to address this nonlinear interaction effects is to set lead times dynamically. Thus,
+intuitively the order release problem is solved by perfectly matching the lead times to the flow
+times, but one faces ``sampling issues'' meaning that the flow times depend on the lead times. An
+extreme scenario of this problem is the so called ``lead time syndrome'' which describes a vicious
+cycle where increasing flow times perpetually inflate the lead times which leads to worse
+performance (see e.g., \citealt{Mather1978, knollmann2013control, Selcuk2006}. Therefore,
+\cite{SchneckenreitherHaeussler2019} propose to use reinforcement learning as approach to
+incorporate these effects in this optimisation problem. Reinforcement learning is an optimisation
+technique that stems from dynamic programming. The goal in reinforcement learning is to find the
+best stationary policy for a given problem. This policy is usually provided by assessing the states
+(or state-action pairs) of an underlying Markov Decision Process (MDP). The advantage of
+reinforcement learning over dynamic programming is that (i) the problem space is explored by an
+agent and thus only expectantly interesting parts of the problem space need to be assessed and (ii)
+the knowledge (acquisition) of transition probabilities becomes unnecessary as the states are
+evaluated by consecutively observed states solely.
+
+Over the past decades reinforcement learning has been applied to various problems, for which
+astonishing results have been reported. E.g. only recently \cite{mnih2015human} have presented a novel
+value-iteration reinforcement learning agent which exceeds human-level abilities in playing many
+classic Atari 2600 games~\citep{bellemare2012investigating}. \cite{mnih2016asynchronous} presents
+improved results with asynchronous actor-critic reinforcement learning. Also games like
+Go~\citep{silver2016mastering} and Chess~\citep{silver2017mastering} have been mastered with
+superhuman performance by \textit{tabula rasa} reinforcement learning agents. Furthermore, the
+method has also been applied in the setting of manufacturing system, e.g. to improve the ramp-up
+process~\citep{doltsinis2012reinforcement}, in locally selecting appropriate dispatching rules
+\citep{zhang1995reinforcement,wang2005application} or scheduling
+\citep{zhang1995reinforcement, waschneck2018optimization}.
+%
+However, all these applications use discounted reinforcement learning and are either designed to
+investigate a rather simple MDP, e.g. by selecting heuristics instead of optimising the underlying
+problem itself, or by mapping the actual objective in a reward function that is approximately \(0\)
+on average over time.
+%
+This is due to the fact that state value is largely composed of a term defined by the policy's
+average reward value \citep{MillerVeinott1969,Blackwell62} which would otherwise dilute the state
+values and thus decrease the solution quality, as for instance in
+\cite{SchneckenreitherHaeussler2019} and \cite{gijsbrechts2018can}.
+%
+
+
+Therefore, most applications that incorporate and directly reflect costs or profit in the reward
+function use average reward reinforcement learning. For instance \cite{aydin2000dynamic} use it in
+the setting of scheduling, while in a series of papers Mahadevan et al. investigated several problem
+domains starting with simple MDPs
+\citep{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults,Mahadevan96_OptimalityCriteriaInReinforcementLearning}.
+After these foundational works for average reward reinforcement learning they introduced a
+continuous time average reward reinforcement learning algorithm named SMART
+\citep{Mahadevan97_SelfimprovingFactorySimulationUsingContinuoustimeAveragerewardReinforcementLearning}.
+Applications of SMART reach from the optimisation of queuing systems
+\citep{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies,Mahadevan96_SensitiveDiscountOptimalityUnifyingDiscountedAndAverageRewardReinforcementLearning},
+maintenance of an inventory system
+\citep{Das99_SolvingSemiMarkovDecisionProblemsUsingAverageRewardReinforcementLearning} to optimising
+transfer line in terms of maximizing demand, while keeping inventory levels of unfinished product as
+low as possible \citep{Mahadevan98_OptimizingProductionManufacturingUsingReinforcementLearning}.
+
+
+Like discounted reinforcement learning also average reward reinforcement learning is based on an
+oracle function, in our case the accumulated profit of a period, to assess the decisions taken by
+the agent. By repeatedly choosing different actions the agent examines the problem space and rates
+possible actions for any observed state. The advantage of average reward reinforcement learning over
+the widely applied discounted reinforcement learning framework is that the underlying optimisation
+technique is able to find better policies. This yields from the fact that in the latter method the
+states are assessed by a single value, while in the former the values are split up by the average
+reward accumulated over time and a bias value which optimises the number of steps to reach the best
+possible states of the examined process
+\citep{Howard64,Puterman94,Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults}.
+Thus, while in average reward reinforcement learning these terms are learned separately in the
+discounted framework one value consisting of the addition of these values plus an additional error
+term is estimated. This incautious combining of different kinds of state values as done in
+discounted reinforcement learning leads to the problems that (i) the average reward, which is equal
+for all states of usually investigated unichain MDPs, is dominating and thus diluting the bias
+values, and (ii) the state values are deteriorated by the error term that is only imposed due to the
+discounting technique.
+
+Thus, as opposed to the commonly applied discounted reinforcement learning algorithm and as proposed
+as future work by \cite{SchneckenreitherHaeussler2019} we use an average reward reinforcement
+learning algorithm to adaptively release orders based on the assessed state values of the production
+system. In contrast to the aforementioned works on average reward reinforcement learning our
+algorithm incorporates the optimisation of not only the average reward over time, but also the bias
+values. Only the work by
+\cite{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}
+integrates this second-level refinement optimisation. However, their algorithm requires the
+selection of a reference state to prevent an infinite increase of state values. This results from
+the lack of feedback in the iterative process of optimising the different refinement optimisation
+levels.
+
+Therefore, we propose a novel average reward reinforcement learning algorithm, which is the first
+that solves the occurring cyclic constraint problem in the setting of average reward reinforcement
+learning, to assess orders for their release to the shop floor. These cyclic constraint problem
+emerges as the underlying constraint structure is based on the Laurent series expansion of the state
+values as shown by \cite{MillerVeinott1969}, and thus easily imposes an infinite number of
+interconnected constraints when handled unwisely.
+%
+The agent assesses the expected costs for the possible releases imposed by adapting the lead time.
+According to the agent's estimates it sets a planned lead time and with that releases orders into
+the production system.
+% upon releasing an order for the current and future periods
+% and, based on its estimates decides whether to release the order or not.
+%
+% \MS[t]{TODO} We provide ample evidence of the viability of the approach and compare it to well-known
+% order release mechanisms. Furthermore, we show that the advantage of average reward reinforcement
+% learning for the problem structures encountered in the context of production and logistics by
+% comparing the results to the discounted reinforcement learning framework. The preliminary results
+% show that our approach performs better than the other methods. With regard to practical implications
+% we are confident that decision support tools based on average reward reinforcement learning increase
+% the decision quality of human planners.
+
+\paragraph{Structure.} The rest of the paper is structured as follows. The next section introduced
+average reward reinforcement learning and presents the used algorithm (see also
+\citealt{Schneckenreither2019}) including a proof-of-concept.
+Section~\ref{sec:Experimental_Evaluation} describes the simulation model we use to evaluate the
+approach. Then~\ref{sec:Preliminary} provides preliminary result data, wheras
+Section~\ref{sec:conclusion} concludes this working paper.
+
+
+\section{Average Reward Reinforcement Learning}
+\label{sec:Average_Reward_Reinforcement_Learning}
+
+This section introduces average reward reinforcement learning in comparison to the discounted
+framework, elaborates on optimiality criteria and provides insights of the underlying algorithm.
+
+Like \cite{MillerVeinott1969} we are considering problems that are observed in a sequence of points
+in time labeled \(1,2,\ldots\) and can be modelled using a finite set of states \(\States\),
+labelled \(1,2,\ldots,\size{\States}\), where the size \(\size{\States}\) is the number of elements
+in \(\States\). At each point $t$ in time the system is in a state \(s_{t} \in \States\). Further,
+by choosing an action $a_{t}$ of a finite set of possible actions \(A_{s}\) the system returns a
+reward $r_{t} = r(s_{t}, a_{t})$ and transitions to another state \(s_{t+1} \in \States\) at time
+\(t+1\) with conditional probability \(p(s_{t+1}, r_{t} \mid s_{t}, a_{t})\). That is we assume that
+reaching state \(s_{t+1}\) from state \(s_{t}\) with reward \(r_{t}\) depends solely on the previous
+state \(s_{t}\) and chosen action \(a_{t}\). In other words, we expect the system to possess the
+Markov property \citep[p.63]{sutton1998introduction}. Reinforcement learning processes that possess
+the Markov property are referred to as Markov decision processes (MDPs)
+\citep[p.66]{sutton1998introduction}.
+% \MS{does our system possesses the Markov property at all? :-o }
+
+Thus, the action space is defined as \(F = \times_{s=1}^{\size{\States}} A_{s}\), where \(A_{s}\) is a
+finite set of possible actions. A \emph{policy} is a sequence \(\pol = (f_{1},f_{2},\ldots)\) of
+elements \(f_{t} \in F\). Using the policy \(\pol\) means that if the system is in state \(s\) at
+time \(t\) the action \(f_{t}(s)\), i.e.% that is
+the \(s\)-th component of \(f_{t}\), is chosen. A stationary policy \(\pol = (f,f,\ldots)\) does not
+depend on time. In the sequel we are concerned with stationary policies only. Thus the goal in
+reinforcement learning (RL) is to find the best stationary policy \(\pol\) for a given problem,
+where the phrase ``best'' will be elaborated in detail below.
+
+
+\subsection{Discounted Reinforcement Learning}
+\label{subsec:Discounted_Reinforcement_Learning}
+
+
+In the discounted framework the value of a state \(V_{\gamma}^{\pol}(s)\) is defined as the expected
+discounted sum of rewards under the stationary policy \(\pol\) when starting in state \(s\). That is
+\begin{align*}
+  V_{\gamma}^{\pol}(s)=\lim_{N \to \infty} E[\sum_{t=0}^{N-1} \gamma^{t} R_{t}^{\pol}(s)]\tcom
+\end{align*}
+
+where \(0 \leqslant \gamma < 1\) is the discount factor and
+\(R_{t}^{\pol}(s) = E_{\pol}[ r(s_{t},a_{t}) \mid s_{t} = s, a_{t} = a]\) % \MS[t]{check if correct!}
+the reward received at time \(t\) upon starting in state \(s\) by following policy \(\pol\)
+\citep{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults}.
+
+The aim in the discounted framework is to find an optimal policy \(\polopt\), which when followed,
+maximises the state value for all states \(s\) as compared to any other policy \(\pol\):
+\(V_{\gamma}^{\polopt} - V_{\gamma}^{\pol} \geqslant 0\). This criteria is usually referred to as
+\(\gamma\)-optimality as the discount factor \(\gamma\) is fixed. However, this also means that the
+actual value set for \(\gamma\) defines the policy that is optimised for. For instance, as can be
+seen in Figure~\ref{fig:printer} setting \(\gamma\) value to \(<0.8027\) the printer-loop is
+preferred over the mail-loop by the agent, although the mail-loop accumulates more reward over time,
+i.e. selecting the mail-loop is a sub-optimal choice.
+
+
+\begin{figure}[t!]
+  \centering
+  \begin{tikzpicture}[thin, scale=0.75]
+    % Nodes
+    \foreach \x in {1,...,5}{
+      \draw ({cos(\x*72-72)*2.5},{sin(\x*72-72)*2.5}) node(\x) [circle,draw,minimum size=25] {\footnotesize \(\x\)};
+    };
+    \foreach[evaluate={
+      \y=int(\x+5);
+    }]  \x in {2,...,3}{
+      \draw ({-cos(\x*72-72)*2.5+5},{sin(\x*72-72)*2.5}) node(\y) [circle,draw,minimum size=25]
+      {\footnotesize \(\x'\)};
+    };
+    \foreach [evaluate={
+      \y=int(\x+5);
+      \z=int(\x+5);
+    }] \x in {4,...,5}{
+      \draw ({-cos(\x*72-72)*2.5+5},{sin(\x*72-72)*2.5}) node(\z) [circle,draw,minimum size=25]
+      {\footnotesize \(\y'\)};
+    };
+
+
+    % Edges
+    \path[thin, ->, bend right, >=stealth] (1) edge[below left] node {\footnotesize\(\)} (2);
+    \path[thin, ->, bend right, >=stealth] (2) edge[above]      node {\footnotesize\(\)} (3);
+    \path[thin, ->, bend right, >=stealth] (3) edge[left ]      node {\footnotesize\(\)} (4);
+    \path[thin, ->, bend right, >=stealth] (4) edge[above]      node {\footnotesize\(\)} (5);
+    \path[thin, ->, bend right, >=stealth] (5) edge[above left] node {\footnotesize\(5\)} (1);
+
+    \path[thin, ->, bend left, >=stealth]         (1)  edge[below right] node {\footnotesize\(\)} (7);
+    \path[thin, ->, bend left, >=stealth]         (7)  edge[above right] node {\footnotesize\(\)} (8);
+    \path[thin, ->, dashed, bend left, >=stealth] (8)  edge[right]       node {\(\ldots\)} (9) ;
+    \path[thin, ->, bend left, >=stealth]         (9)  edge[above]       node {\footnotesize\(\)} (10);
+    \path[thin, ->, bend left, >=stealth]         (10) edge[above right] node {\footnotesize\(20\)} (1);
+
+    \draw (0,0) node[] { Printer };
+    \draw (5,0) node[] { Mail };
+
+  \end{tikzpicture}
+  \caption{\label{fig:printer} A MDP with two different determinstic policies. The only action choice is in
+    state \(1\), in which the agent can choose between doing the printer-loop or the mail-loop.
+    Observe that the average reward received per step equals \(1\) for the printer-loop and \(2\)
+    for the mail-loop. Thus, the (Blackwell-)optimal policy is to choose the mail-loop. However,
+    if \(\gamma < 3^{-\frac{1}{5}} \approx 0.8027\) an agent using discounted reinforcement
+    learning chooses the printer loop.
+    %
+    Adapted from \cite{Mahadevan96_OptimalityCriteriaInReinforcementLearning}.}
+\end{figure}
+
+The main idea behind the \(\gamma\)-parameter of the discounted framework is to be able to balance
+short-term rewards (low \(\gamma\)-values) and long-term rewards (high \(\gamma\)-values). However,
+what seems to be an advantage rather becomes a disadvantage for most applications. The issue is that
+the average reward value is non-linearly increased when \(\gamma\) approaches one. However, in
+almost all cases the aim is to perform well over time which in terms of reward means to first
+maximise for a the policy with highest average reward before more selectively choosing actions. That
+is, if several processes exist, we are searching for the ones with highest average reward before
+considering other criteria.
+%
+Therefore, in almost all RL studies the discount factor is set to a value very close to \(1\), for
+instance to \(0.99\)~\cite[e.g.]{mnih2015human,mnih2016asynchronous,Lillicrap15}.
+%
+By doing so the above mentioned non-linear relationship leads to the fact that the state value
+consists almost solely of the up-scaled average reward term, whereas the bias values can be
+neglected. This leads to diluted state values and thus difficulties in distinguishing actions which
+impose policies that possess the same average reward.
+%
+In contrast to that, average reward RL separately assesses these values and according to these
+selectively chooses the best action, comparing one after the other.
+%
+To illustrate the idea reconsider Figure~\ref{fig:printer}. First the agent picks the policy
+according to the highest average reward. Thus, all actions are assessed by an average reward of
+\(2\) which is inferred from the Mail-loop. This however, makes choosing the Printer-loop
+unattractive; i.e. the policy converges to the optimal policy of choosing the Mail loop.
+
+
+\subsection{Average Reward Reinforcement Learning}
+\label{subsec:Average_Reward_Reinforcement_Learning}
+
+Due to \cite{Howard64} the average reward \(\avgrew^{\pol}(s)\) of a policy \(\pol\) and a starting
+state \(s\) is defined as
+\begin{align*}
+  \avgrew^{\pol}(s) = \lim_{N \to \infty} \frac{\E [\sum_{t=0}^{N-1}R_{t}^{\pol}(s)]}{N}\tpkt
+\end{align*}
+
+
+In the common case of unichain MDPs, in which only a single set of recurrent states exists, the
+average reward \(\avgrew^{\pol}(s)\) is equal for all states \(s\)
+\citep{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults,Puterman94}.
+For simplicity we concentrate on unichain MDPs in this work and thus may simply refer to it as
+\(\avgrew^{\pol}\). A policy that maximises the average reward in every state is called
+gain-optimal. Gain optimality is the least selective criteria an average reward reinforcement
+learning aims for.
+
+Further, for an unichain aperiodic\footnote{In the periodic case the Cesaro limit of degree \(1\)
+  is required to ensure stationary state transition probabilities and thus stationary bias
+  values \citep{Puterman94}. Therefore to ease readability we concentrate on unichain
+  and aperiodic MDPs.} MDP problem, such as ergodic MDPs are, the average adjusted sum of rewards or
+bias value is defined as
+\begin{align*}
+  V^{\pol}(s) = \lim_{N \to \infty}{ \E [ \sum_{t=0}^{N-1}(R_{t}^{\pol}(s) - \avgrew^{\pol} )]}\tcom
+\end{align*}
+
+
+where again \(R_{t}^{\pol}(s)\) is the reward received at time \(t\), starting in state \(s\) and
+following policy \(\pol\). Note that the bias values are bounded due to the subtraction of the
+average reward. Thus the bias value can be seen as the rewards that additionally sum up in case the
+process starts in state \(s\). A policy that is gain-optimal is also bias-optimal if it maximises
+the bias values in every state and compared to every other policy.
+
+
+Especially for highly probabilistic systems bias-optimality is important. To clarify this consider
+Figure~\ref{fig:three-states} which again consists of two possible deterministic policies with the
+only choice in state \(1\). Both policies have the same average reward of \(1\). However, only
+selecting the A-loop is bias-optimal, as the actions with non-zero rewards are selected earlier.
+E.g.~consider starting in state 1. Under the policy \(\pol_{A}\) which takes the A-loop the reward
+sequence is \((2,0,2,0,\ldots)\), while for the other policy \(\pol_{B}\) it is
+\((0,2,0,2,\ldots)\).
+
+
+\begin{figure}[t!]
+  \centering
+  \begin{tikzpicture}[thin, scale=0.75]
+    % Nodes
+    \draw (-3,0) node(0) [circle,draw,minimum size=25] {\footnotesize \(0\)};
+    \draw (0,0)  node(1) [circle,draw,minimum size=25] {\footnotesize \(1\)};
+    \draw (3,0)  node(2) [circle,draw,minimum size=25] {\footnotesize \(2\)};
+
+    % Edges
+    \path[thin, ->, bend right, >=stealth] (1) edge[above] node {\footnotesize\(2\)} (0);
+    \path[thin, ->, bend right, >=stealth] (2) edge[above] node {\footnotesize\(2\)} (1);
+    \path[thin, ->, bend right, >=stealth] (0) edge[below] node {\footnotesize\(0\)} (1);
+    \path[thin, ->, bend right, >=stealth] (1) edge[below] node {\footnotesize\(0\)} (2);
+
+    \draw (-1.5,0) node[] { A };
+    \draw (1.5,0) node[] { B };
+
+
+  \end{tikzpicture}
+  \caption{\label{fig:three-states} A task with two different MDPs, A (going left in 1) and B
+    (going right). As in the previous example the only action choice is in state \(1\). Observe
+    that the average reward received per step equals \(1\) for both policies. However, only taking
+    the A loop is bias-optimal, as its policy \(\pol_{A}\) leads to bias values
+    \(V^{\pol_{A}}(1)=0.5\), \(V^{\pol_{A}}(0)=-0.5\) and \(V^{\pol_{A}}(2)=1.5\), while policy
+    \(\pol_{B}\) which selects the B loop generates bias values \(V^{\pol_{B}}(1)=-0.5\),
+    \(V^{\pol_{B}}(0)=-1.5\) and \(V^{\pol_{B}}(2)=0.5\). Adapted from
+    \cite{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults}.}
+\end{figure}
+
+
+\subsection{More Refined Optimality Criteria}
+\label{subsec:More_Refined_Optimality_Criteria}
+
+The aforementioned and informally introduced notions of gain-optimality and bias-optimality can be
+generalised to \(n\)-discount-optimality and will now be defined formally.
+
+\begin{definition}
+  Due to \cite{Veinott69} for MDPs a policy \(\polopt\) is \emph{\(n\)-discount-optimal} for
+  \(n=-1,0,1,\ldots\) for all states \(s \in \States\) with discount factor
+  \(\gamma\) % and \(V_{\gamma}^{\pol}(s)\) being the value function as defined above
+  %
+  if and only if
+  \begin{align*}
+    \lim_{\gamma \to 1}(1-\gamma)^{-n}\ (V_{\gamma}^{\polopt}(s) - V_{\gamma}^{\pol}(s)) \geqslant 0 \tpkt
+  \end{align*}
+\end{definition}
+
+
+For the case of \(n=-1\) this lead to gain-optimality
+\(\avgrew^{\polopt}(s) - \avgrew^{\pol}(s) \geqslant 0\) for all policies \(\pol\) and states \(s\)
+\citep{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}. In
+the case of \(n=0\) it describes bias-optimality with \(V^{\polopt}(s) - V^{\pol}(s) \geqslant 0\)
+forall policies \(\pol\) and states \(s\)
+\citep{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}.
+%
+Only if a policy is \(n\)-discount-optimal for all \(n < m\) it can be \(m\)-discount
+optimal \citep{Puterman94,Veinott69}.
+%
+If a policy is \(\infty\)-discount-optimal then it is said to be
+Blackwell-optimal \citep{Blackwell62}.
+% weakening the argument!!!
+I.e.~for Blackwell-optimal policies \(\polopt\) there exists a discount factor \(\gammaopt < 1\)
+such that \(V_{\gamma}^{\polopt}(s) \geqslant V_{\gamma}^{\pol}(s)\) for all
+\(\gamma \geqslant \gammaopt\) and under all policies \(\pol\)
+\citep{Mahadevan96_SensitiveDiscountOptimalityUnifyingDiscountedAndAverageRewardReinforcementLearning,Blackwell62}.
+Informally that means there exists a discount factor \(<1\) which finds Blackwell-optimal policies.
+However, (i) in more complex, i.e. real world, MDPs this value can be arbitrary close to \(1\) and
+(ii) the difference in state values may be very small, which (iii) due to the need of state value
+function approximation likely causes errors when choosing among different actions in the discounted
+framework.
+% Real world applications underlie much more complex MDPs as the ones of Figures~\ref{fig:printer}
+% and~\ref{fig:three-states}. Thus \(\gamma\)-values even very close to \(1\) can lead to sub-optimal
+% policies. To investigate these differences we will now present a more elective optimality criteria.
+%
+%
+
+
+In the sequel we present the Laurent series expansion which not only links discounted reinforcement
+learning with average reward reinforcement learning, but also connects to \(n\)-discount-optimality.
+
+% Furthermore, for the rest of the paper we occasionally write drop the \(V(s)\) and $V_{\gamma}$ instead of
+% \(V^{\pol}(s)\) and \(V^{\pol}_{\gamma}\) when the policy is clear from the context.
+
+
+\subsection{The Laurent Series Expansion of Discounted State Values}
+\label{subsec:The_Laurent_Series_Expansion_of_Discounted_State_Values}
+
+
+\cite{MillerVeinott1969} established the link between discounted RL state values
+\(V_{\gamma}^{\pol}(s)\) and average reward RL values \(\avgrew^{\pol}(s)\) and \(V^{\pol}(s)\)
+using the Laurent series expansion as
+\begin{align*}
+  V_{\gamma}^{\pol}(s) = \frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol}(s) + e_{\gamma}^{\pol}(s) \tcom
+\end{align*}
+
+
+where \cite{Puterman94} shows that \(\lim_{\gamma \to 1} e_{\gamma}^{\pol}(s) = 0\). Note how the
+first term depending on the average reward \(\avgrew^{\pol}(s)\) converges to infinity as \(\gamma\)
+increases.
+
+
+However, an important insight is the connection between \(n\)-discount-optimality and the Laurent
+series expansion of \(V_{\gamma}^{\pol}(s)\). Each addend corresponds to one step in
+\(n\)-discount-optimality. That is for \((-1)\)-discount-optimality the average reward must be
+maximised.
+%
+Then for \(0\)-discount-optimality the agent has to choose the highest bias values.
+%
+Finally \(n\)-discount-optimality for \(n \geqslant 1\) requires to maximise the term
+\(e_{\gamma}^{\pol}(s)\) which only exists as \(\gamma\) is strictly less than \(1\). Thus this term
+incorporates the number of steps its expected rewards on the path which are required for reaching
+the highest rewards. That is, it optimises the expected reward according to the occurrence on the
+paths, where shorter paths and those which collect the rewards sooner are preferred.
+
+Note how the Laurent series expansion dissipates these values in single terms and therefore defines
+a divide and conquer methodological approach to reinforcement learning. Thus in average reward
+reinforcement learning these terms are learned separately, while in the discounted framework the
+combined value for a fixed \(\gamma\)-value is learned.
+
+The addends, where \(n=-1,0,\ldots\) denote the coefficients of the Laurent series expansion,
+can be reformulated to following constraint problem with expected reward
+\(R^{\pol}(s) = E_{\pol}[ r(s, a) ] = \sum_{a \in \mathcal{A}(s)}p(a | s) r(s, a)\) as shown by
+\cite{MillerVeingsott1969} and \citet[p.346]{Puterman94}:
+
+\begin{align}
+  \label{eq:constr1}\avgrew^{\pol}(s) - E[\avgrew^{\pol}(s)] & = 0 &  & \text{for } n = -1 \\
+  \label{eq:constr2}\avgrew^{\pol}(s) + V^{\pol}(s) - E[V^{\pol}(s)] & = R^{\pol}(s) && \text{for } n = 0 \\
+  \label{eq:constr3}W^{\pol}_{n-1}(s) + W^{\pol}_{n}(s) - E[W^{\pol}_{n}(s)] & = 0 && \text{for } n \geqslant 1, \text{where } W_{0}^{\pol}(s) = V^{\pol}(s)
+\end{align}
+
+\citet[p.343ff]{Puterman94} shows that due to the given degree of freedom if \(n=-1,0,\ldots,M\)
+constraints are satisfying the above conditions for all states \(s\), then only
+\(\avgrew^{\pol}(s), V^{\pol}(s), W^{\pol}_{1}, \ldots, W^{\pol}_{M-1}\) are unique, whereas
+\(W^{\pol}_{M}\) is offset by the vector \(u\) where for the transition probability matrix \(P\) the
+vector \(u\) is characterised by \((I-P)u = 0\). Note that \(u\) is determined by the number of
+closed irreducible classes of \(P\), that is for ergodic MDPs \(u\) is determined by a single
+constant. Our algorithm is based on the above formulation.
+
+\subsection{Algorithm}
+\label{subsec:Algorithm}
+
+
+\begin{algorithm}[t!]
+  \begin{algorithmic}[1]
+    \State{}Initialize values to \(0\) \While{the stopping criterion is not fulfilled}
+    \State{}\begin{minipage}[t]{0.9\textwidth} With probability \(p_{exp}\) choose a random action
+      and probability \(1-p_{exp}\) one that maximizes \MS[t]{max V$_{\gamma_{1}}(s,a)$ if more than
+      one e?}
+      \(\lex(\avgrew^{\pol}(s,a),\V^{\pol}(s,a),\Delta e^\pol_{\gamma_{1},\gamma_{0}}(s,a))\) at the
+      current state \(s\) where
+      \(\Delta e_{\gamma_{1},\gamma_{0}}^{\pol}(s,a) = V_{\gamma_{1}}^{\pol}(s,a) -
+      V_{\gamma_{0}}^{\pol}(s,a) - \avgrew^{\pol}(s,a) (\frac{1}{1-\gamma_{1}} -
+      \frac{1}{1-\gamma_{0}})\)
+      % \(\Delta e^\pol_\gamma_{1},\gamma_{0}(s,a) = V^\pol_{\gamma_0}(s,a) - V^\pol_{\gamma_1}(s,a)\)
+      for all actions for which
+      % \(\frac{\avgrew^{\pol}(s,a)}{1-\gamma_{0}} + \V^{\pol}(s,a) < V^\pol_{\gamma_0}(s,a)\)
+      \(\Delta e_{\gamma_{1},\gamma_{0}}^{\pol}(s,a) < 0\) holds or if no such actions exists, from
+      all actions. Set \(a^{\pol} = 0\) if a random action was chosen,
+      \(a^{\pol}=1\) otherwise.
+    \end{minipage}
+    \State{}Carry out action \(a\), observe reward \(r\) and resulting state \(s'\)
+    \State{}Update values using exponential smoothing
+      \MS[t]{why only random/non-random for rho and enforcing? very inconsistent!!!}
+    \begin{align*}
+      \qquad a) & & \avgrew^{\pol}(s,a)  & \gets (1- a^{\pol} \alpha) \avgrew^{\pol}(s,a) + a^{\pol} \alpha [r + \max_{a}\V^{\pol}(s',a) - \V^{\pol}(s,a)]     \\
+      b) & & \V^{\pol}(s,a)        & \gets (1-\beta) \V^{\pol}(s,a) + \beta  \cdot \\
+         &        &                      & [r - \avgrew^{\pol}(s,a) + \max_{a} \V^{\pol}(s',a) +
+                                           a^{\pol} (\Psi_{V}^{\pol}(s,a) + \zeta \Psi_{W}^{\pol}(s,a))] \\
+      c) & & W^{\pol}(s,a)        & \gets (1-\delta) W^{\pol}(s,a) + \delta [-\V^{\pol}(s,a) +
+                                    \max_{a} W^{\pol}(s',a)]              \\
+      d) & & \Psi_{V}^{\pol}(s,a) & \gets (1-\xi \beta) \Psi_{V}^{\pol}(s,a) + \xi \beta [r - \avgrew^{\pol}(s,a) - V(s,a) + \max_{a}V^{\pol}(s',a)]\\
+      e) & & \Psi_{W}^{\pol}(s,a) & \gets (1-\xi \delta) \Psi_{W}^{\pol}(s,a) + \xi \delta [- V^{\pol}(s,a) - W^{\pol}(s,a) + \max_{a} W^{\pol}(s',a)]
+    \end{align*}
+    \State{Update discounted state-values}
+    \begin{align*}
+      V^\pol_{\gamma_0}(s,a)    & \gets (1-\gamma) V^\pol_{\gamma_0}(s,a) + \gamma (r + \gamma_{0} \max_{a} V^\pol_{\gamma_0}(s',a)) \\
+      V^\pol_{\gamma_1}(s,a)    & \gets (1-\gamma) V^\pol_{\gamma_1}(s,a) + \gamma (r + \gamma_{1} \max_{a} V^\pol_{\gamma_1}(s',a))
+    \end{align*}
+    \State{}Set \(s \gets s'\), \(t \gets t+1\) and decay parameters accordingly
+    \EndWhile{}
+  \end{algorithmic}
+  \caption{\label{alg}Model-free tabular version of the Blackwell-optimal RL algorithm.}
+\end{algorithm}
+
+% \MS{
+%   Optimisations:
+%   \begin{enumerate}
+%   \item Use Lemma 3 of Miller \& Veinott to get rid of W2
+%   \item Use Reference state as in Mahadevan to get rid of W
+%   \item Average reward freed reinforcement learning
+%   \end{enumerate}
+% }
+
+
+The reinforcement learning algorithm is depicted in Algorithm~\ref{alg}. After initialising all
+values the agent enters the loop in which the first task is to choose an action (step 3). In this
+action selection process we utilise an \(\epsilon\)-sensitive lexicographic order
+\(a=(a_{1},\ldots,a_{n}) \lex (b_{1},\ldots,b_{n})=b\) defined as \(a \lex b\) if and only if
+\(| a_{j} - b_{j} | \leqslant \epsilon\) for all \(j < i\) and \(|a_{i} - b_{i}| > \epsilon\). Note
+that the resulting sets of actions may not be disjoint. Although this is an unusual order in
+programming, taking the maximum as in our algorithm is straight-forward and thus cheap to compute.
+%
+The first action selection criteria maximises the average reward. In case of unichain and thus
+ergodic MDPs only one scalar average reward value over all states is learned and thus the problem
+simplified by abolishing the comparison in the first component. Then the set of actions which
+maximise the bias values are selected. Finally, \(\Delta V^\pol_\gamma(s,a)\) is used to estimate
+the slope of the error term \(e_{\gamma}^{\pol}(s,a)\), which can be either positive or negative.
+Therefore, there is the need of a distinction of which actions to maximise according to the
+discounted state value difference
+\(\Delta V^{\pol}_{\gamma}(s,a) = V^\pol_{\gamma_1}(s,a) - V^\pol_{\gamma_0}(s,a)\). As the aim is
+to collect rewards as soon as possible, a Blackwell-optimal reinforcement learning agents maximises
+the error term, thus any actions converging to
+\(\frac{\avgrew^{\pol}(s,a)}{1-\gamma_{0}} + \V^{\pol}(s,a)\) from above are preferred over those
+that converge from below. Within these sets the action which maximises
+\(\Delta V^{\pol}_{\gamma}(s,a)\) is selected. If multiple such actions the agent can choose
+randomly among these.
+
+As usual in reinforcement learning the equations are integrated by exponentially smoothing the
+values utilising parameters \(\alpha, \beta, \gamma, \delta\).
+% Further, as in this paper we concentrate on unichain MDPs the average reward
+% \(\avgrew^{\pol}(s,a)\) can be learned as a scalar value \(\avgrew^{\pol}\), whereas the algorithm
+% is supports multichain MDPs, cf. step \(5a\).
+Step \(5a\) uses the Bellman equation for average reward reinforcement learning
+(cf.~\citealt{Howard64, tadepalli1998model}) to find the average reward. Then step \(5b\), \(5c\)
+and \(5d\) depict Equations (\ref{eq:constr2}) and (\ref{eq:constr3}) for \(n=0\), \(n=1\) and
+\(n=2\). The need of learning values for \(n=2\) stems from the fact that the actual values
+corresponding to the highest \(n\) are offset by vector \(u\).
+
+% For \(n=0\) (step \(5b\)) the bias values are learned and further to ensure a unique solution of
+% \(V^{\pol}\) step \(5c\) solves the constraints for \(n=1\). Thus, the first three assignments of
+% step \(5\) correspond to the above constraint system for \(n=-1,0,1\). The last line of step \(5\)
+% evaluates the deviation of \(W^{\pol}(s,a)\), which ought to be \(0\) once the system is correctly
+% solved and if an action of the optimal policy \(\polopt\) was taken.
+Step \(6\) infers the discounted state values using learning rate \(\gamma\) and two discount rates
+\(0.5 \leqslant \gamma_{0} < \gamma_{1} < 1\) to estimate the state value difference
+\(\Delta V^{\pol}_{\gamma}(s,a)\).
+
+Steps \(7\) and \(8\) are crucial, but were not considered in average reward reinforcement learning
+before. They feed back the deviations \(\Psi_{\cdot}(s,a)\) into the constraint problem creating a
+recursive system of equations. Depending on the underlying MDP when this constraint is omitted one
+likely observes steadily increasing deviations and therefore a wrong solution. This feedback loop
+however is only activated in case a non-random action was chosen, as otherwise the deviations
+\(\Psi_{\cdot}(s,a) > 0\) \citep{MillerVeinott1969}.
+
+%
+%
+% Steps \(5d\) and \(5e\) calculate the deviations of actual values and expected values. In case the
+% agent performs a non-random action
+%
+Recall that the algorithm evaluates the slope of \(e_{\gamma}^{\pol}(s)\) by learning the state
+values using two different \(\gamma\) settings and discounted reinforcement learning. The slope of
+\(e_{\gamma}^{\pol}(s)\) combined with the observation that for Blackwell-optimal policies
+\(\polopt\) there exists a discount factor \(\gammaopt < 1\) such that
+\(V_{\gamma}^{\polopt}(s) \geqslant V_{\gamma}^{\pol}(s)\) for all \(\gamma \geqslant \gammaopt\)
+and under all policies \(\pol\)
+\citep{Mahadevan96_SensitiveDiscountOptimalityUnifyingDiscountedAndAverageRewardReinforcementLearning,Blackwell62}
+provides the most selective criteria for our algorithm, which theoretically can find
+Blackwell-optimal policies\footnote{This claim is only not fully proven yet. See the appendix for a
+  first version of the proof. } (see Section~\ref{sec:methods} in Appendix).
+
+
+\subsection{Proof-of-Concept}
+\label{subsec:Proof-of-Concept}
+
+Reconsider the task depicted in Figure~\ref{fig:three-states}. The Blackwell-optimal MDP
+\(\pol_{A}\), that is the one that chooses the A-loop, is shown on the left side of
+Figure~\ref{fig:three-states2}. Recall that the bias values for \(\pol_{A}\) are
+\(V^{\pol_{A}}(0)=-0.5\), \(V^{\pol_{A}}(1)=0.5\) and \(V^{\pol_{A}}(2)=1.5\). Our model-based
+implementation infers the values \(\avgrew^{\pol_{A}} = 1\), \(V^{\pol_{A}}(0)=-0.5\), \(V^{\pol_{A}}(1)=0.5\)
+and \(V^{\pol_{A}}(2)=1.4391\) fully automatically in \(200k\) steps. Furthermore, the addition of
+\(V^{\pol_{A}}(2) + \Psi^{\pol_{A}}_{V}(2) = 1.4998\), where \(\Psi^{\pol_{A}}_{V}(2)\) is the exponentially
+smoothed deviation for state \(2\). Thus the model-based algorithm is able to correctly approximate
+the mathematical solution.
+
+The right side of Figure~\ref{fig:three-states2} shows the same MDP for the model-free version. In
+model-free reinforcement learning state-action pairs as opposed to state values are estimated. Thus
+each state is replicated as often, as actions are available in that state. Therefore, state \(1\) is
+replaced by states-action pairs \((1,l)\) and \((1,r)\) for moving to the left (taking the A-loop)
+and to the right respectively. The dashed line indicates that these states are connected and thus
+the agent has to choose among them when reaching either. In this case the inferred bias values are
+\(V^{\pol_{A}}(0,r) = -0.5\), \(V^{\pol_{A}}(1,l)=V^{\pol_{A}}(1,r)=0.5\), and \(V^{\pol_{A}}(2,l)=1.5\). The above given tabular model-free
+average reward reinforcement learning algorithm is able to exactly infer these values in less than
+100k steps. This provides evidence that the algorithm in general infers correct solutions in regard to
+the underlying constraints.
+
+% \MS{Occasionally we write \(V^{\pol_{A}}(s)\) and $V_{\gamma}$ instead of \(V^{\pol}(s)\) and
+% \(V^{\pol}_{\gamma}\) when the policy is clear from the context.}
+
+Furthermore, in the later case \(V^{\pol_{A}}(1,l)=V^{\pol_{A}}(1,r)=0.5\), that is if the agent
+resides in state \(1\) it has to choose among the both available actions. This cannot be done on
+basis of the average reward, nor on the bias values. Therefore, it infers the slopes of the error
+terms using the difference of the discounted state values \(V^{\pol_{A}}_{\gamma_{1}}(1,l) = 5.56\)
+and \(V^{\pol_{A}}_{\gamma_{0}}(1,l) = 2.67\) for state-action pair \((1,l)\) and
+\(V^{\pol_{A}}_{\gamma_{1}}(1,r) = 5.16\) and \(V^{\pol_{A}}_{\gamma_{0}}(1,r) = 1.67\) for
+\((1,r)\), yielding \(\Delta V^{\pol_{A}}_\gamma(1,l) = -2.89\) and
+\(\Delta V^{\pol_{A}}_\gamma(1,r) = -3.49\), where \(\gamma_{0} = 0.5\) and \(\gamma_{1}=0.8\).
+
+The idea is that rewards are collected as soon as possible, thus the error term has to be maximised
+when \(\gamma \to 1\). As we have
+\(2.5 = \frac{\avgrew^{\pol_{A}}}{1-\gamma_{0}} + V^{\pol_{A}}(1,a) < V^{\pol_{A}}_{\gamma_{0}}(1,l)
+= 2.67\), while \(2.5 \geqslant 1.67\), we choose action \(l\) as it is the only action with
+positive error term.
+
+
+% Current state:                               A
+% Period:                                      5000
+% Alpha:                                       0.0050
+% Beta:                                        0.0700
+% Delta:                                       0.0700
+% Gamma:                                       0.0700
+% Epsilon:                                     1.2913
+% Exploration:                                 0.8609
+% Algorithm:                                   BORL with gammas  (0.5,0.8); state values for rho; Deciding on V
+% Zeta (for forcing V instead of W):           1.0000
+% Xi (ratio of W error forcing to V):          0.2000
+% Scaling (V,W,R0,R1) by V Config:             Tabular representation (no scaling needed)
+% Psi Rho/Psi V/Psi W:                         (0.0000,0.0000,0.0000)
+% Rho:                                         1.0000
+% V                                       W
+% [+0.0000]right: -0.5000                 [+0.0000]right: 0.2061
+% [+1.0000]left : 0.5000                  [+1.0000]left : -0.2939
+% [+1.0000]right: 0.5000                  [+1.0000]right: -2.2939
+% [+2.0000]left : 1.5000                  [+2.0000]left : -1.7939
+% R0                                      R1
+% [+0.0000]right: 1.3333                  [+0.0000]right: 4.4444
+% [+1.0000]left : 2.6667                  [+1.0000]left : 5.5556
+% [+1.0000]right: 1.6667                  [+1.0000]right: 5.1556
+% [+2.0000]left : 3.3333                  [+2.0000]left : 6.4444
+% PsiV
+% [+0.0000]right: -0.0000
+% [+1.0000]left : -0.0000
+% [+1.0000]right: -0.0000
+% [+2.0000]left : -0.0000
+
+
+\begin{figure}[t!]
+  \centering
+  \begin{tikzpicture}[thin, scale=0.75]
+    % Nodes
+    \draw (-3,0) node(0) [circle,draw,minimum size=25] {\footnotesize \(0\)};
+    \draw (0,0)  node(1) [circle,draw,minimum size=25] {\footnotesize \(1\)};
+    \draw (3,0)  node(2) [circle,draw,minimum size=25] {\footnotesize \(2\)};
+
+    % Edges
+    \path[thin, ->, bend right, >=stealth] (1) edge[above] node {\footnotesize\(2\)} (0);
+    \path[thin, ->, bend right, >=stealth] (2) edge[above] node {\footnotesize\(2\)} (1);
+    \path[thin, ->, bend right, >=stealth] (0) edge[below] node {\footnotesize\(0\)} (1);
+    % \path[thin, ->, bend right, >=stealth] (1) edge[below] node {\footnotesize\(0\)} (2);
+
+    \draw (-1.5,0) node[] { A };
+    \draw (1.5,0) node[] { B };
+
+    \draw (6,0) node(B0) [circle,draw,minimum size=25] {\footnotesize \((0,r)\)};
+    \draw (9,1.0)  node(B1l) [circle,draw,minimum size=25] {\footnotesize \((1,l)\)};
+    \draw (9,-1.0)  node(B1r) [circle,draw,minimum size=25] {\footnotesize \((1,r)\)};
+    \draw (12,0)  node(B2) [circle,draw,minimum size=25] {\footnotesize \((2,l)\)};
+
+    \path[thin, ->, bend right, >=stealth] (B1l) edge[above] node {\footnotesize\(2\)} (B0);
+    \path[thin, ->, bend right, >=stealth] (B2) edge[above] node {\footnotesize\(2\)} (B1l);
+    \path[thin, ->, bend right, >=stealth] (B0) edge[below] node {\footnotesize\(0\)} (B1l);
+    \path[thin, ->, bend right, >=stealth] (B1r) edge[below] node {\footnotesize\(0\)} (B2);
+
+    \path[thin, dashed] (B1r.west) edge[below] node {} (B1l.west);
+    \path[thin, dashed] (B1r.east) edge[below] node {} (B1l.east);
+
+
+  \end{tikzpicture}
+  \caption{\label{fig:three-states2} The left side depicts the Blackwell-optimal MDP of
+    Figure~\ref{fig:three-states}, that is the MDP that takes the A loop. On the right side is the
+    model-free version of the same MDP with policy \(\pol_{A}\). As in the model-free scenario
+    state-action pairs are evaluated state \(1\) is split into a state that takes the left loop
+    and one that traverses to the right. They are linked with dashed lines to indicate that these
+    states are connected and the agent has to decide for one among them. The bias values for the
+    model-free version are \(V^{\pol_{A}}(0,r) = -0.5\),
+    \(V^{\pol_{A}}(1,l)=V^{\pol_{A}}(1,r)=0.5\), and \(V^{\pol_{A}}(2,l)=1.5\).}
+\end{figure}
+
+
+\section{Experimental Evaluation}
+\label{sec:Experimental_Evaluation}
+
+This section introduces the simulation model and the parameterisation of the algorithm. To be able
+to compare the performance of the algorithm we chose to implement the same setup as has been used by
+\cite{SchneckenreitherHaeussler2019}.
+
+\subsection{Simulation Model}
+\label{subsec:Simulation_Model}
+
+\begin{figure*}[t!]
+  \centering
+  \input{productionsystem}                      % Figure production system
+  \caption{Production system of the simulation model with routing, processing time distributions and
+    demand.} \label{fig:ps}
+\end{figure*}
+
+Therefore, we use the hypothetical flow shop make-to-order manufacturing system similar to the
+system analyzed by \cite{Lee1997} and later by \cite{Schneckenreither2019}. The simulation model
+consists of three work centres; each consists of a single machine and can process only one order at
+a time. Figure~\ref{fig:ps} depicts the make-to-order production system setup.
+%
+The number of orders arriving is uniformly distributed between 3 and 15 order per period and
+thus with a mean of 9 order per period.
+%
+% Orders arrive
+% uniformly between 3 and 15 orders per period and thus a mean of 9 orders per period, or
+In other words, on average every $0.11$ periods one order arrives in the order pool.
+%
+Incoming orders are queued at the order pool until released. The due date slack ($\DDS$), that is
+the periods until incoming orders are due, is set to 7 periods.
+%
+Once orders are released they are queued at each work center and wait until being processed by the
+machine. The queuing priority is first-come-first-serve. No preemptions are allowed. Order
+routings are deterministic and embrace two production stages with diverging shape and no return
+visits. This results in 2 different products. The operation times of the work centres are
+uniformly distributed, cf. Table~\ref{tbl:costs}. These characteristics lead to a utilization rate
+of 90\% for the bottleneck work center (WC3) in steady state. % Planning periods were set to 960
+% minutes (16 hours).
+
+% \begin{figure}[b!]
+%   \centering
+%   \def\arraystretch{1.2}          %  1 is the default, change whatever you need
+%   \begin{table}[t!]
+%     \centering
+%     \begin{tabular}{|l||c|c|c|}
+        %         \hline
+        %     %         BEGIN RECEIVE ORGTBL optime
+        %         Work Center & WC1 & WC2 & WC3\\
+        %         \hline
+        %         Operation time & \(\mathcal{U}(70,130)\) & \(\mathcal{U}(130,170)\) & \(\mathcal{U}(180,200)\)\\
+        %     %         END RECEIVE ORGTBL optime
+        %         \hline
+        %       \end{tabular}
+        %   %       \egroup
+
+        %         \caption{\label{tab:OTs}Operation times.}
+        %   %       \end{figure}
+        %         \end{table}
+\begin{table}[t]
+  \centering
+  \begin{tabular}{|l||c|c|c|}
+    % BEGIN RECEIVE ORGTBL values
+    \hline
+    Work Center & WC1 & WC2 & WC3\\
+    \hline
+    Operation time & \(\mathcal{U}(70,130)\) & \(\mathcal{U}(130,170)\) & \(\mathcal{U}(180,200)\)\\
+    % END RECEIVE ORGTBL optime
+    \hline
+    \multicolumn{4}{c}{}\\
+    \hline
+    Cost & Wc p. Order/Period & Fc p. Order/Period & Bc p. Order/Period \\
+    \hline
+    Value & 3 & 10 & 20 \\
+    \hline
+    % END RECEIVE ORGTBL values
+  \end{tabular}
+
+  \caption{\label{tbl:costs}Operation times (upper half) and costs setup (in monetary unit).}
+\end{table}
+
+
+        %         \begin{figure}[b!]
+        %         \centering
+        %         \def\arraystretch{1.2}          %  1 is the default, change whatever you need
+        %         \setlength\tabcolsep{1.7pt}
+        %         \begin{tabular}{|l||c|c|c|c|c|c|}
+
+        %       \end{tabular}
+        %         \egroup
+        %         \caption{Operation times.}
+        %         \label{tab:OTs}
+        %         \end{figure}
+
+
+To evaluate the performance of the different order release models we define
+following performance measures similar to literature
+(e.g.,~\citealt{Baykasoglu2011,Thuerer2012}):
+\begin{itemize}
+\item \textbf{Cost related measures:} average total holding costs for  WIP and finished goods inventory,
+  costs for backorders. There are no earnings,
+  thus the algorithms minimizes the costs. The setup for the actual values of the costs is given in
+  Table~\ref{tbl:costs} and shows that late deliveries are especially expensive. All costs are per
+  order and period, and are measured and reported at the end of each period.
+
+  % \begin{table}[t]
+  %   \centering
+  %   \begin{tabular}{|l||c|c|c|}
+  %     %     BEGIN RECEIVE ORGTBL values
+        %         \hline
+        %         Work Center & WC1 & WC2 & WC3\\
+        %         \hline
+        %         Operation time & \(\mathcal{U}(70,130)\) & \(\mathcal{U}(130,170)\) & \(\mathcal{U}(180,200)\)\\
+        %     %         END RECEIVE ORGTBL optime
+        %         \hline
+        %         \multicolumn{4}{c}{}\\
+        %         \hline
+        %         Cost & Wc p. Order/Period & Fc p. Order/Period & Bc p. Order/Period \\
+        %         \hline
+        %         Value & 3 & 10 & 20 \\
+        %         \hline
+        %     %         END RECEIVE ORGTBL values
+        %       \end{tabular}
+
+        %         \caption{\label{tbl:costs}Operation times and costs setup (in monetary unit).}
+        %         \end{table}
+
+        %         \SH{The costs were set as follows: $Wc:Fc:Bc = 1:1.5:2.5$?}
+\item \textbf{Delivery related measures:} % mean service level -- percentage of
+        %         orders on time (\%SL),
+  mean tardiness of late orders (TA), standard deviation of
+  lateness ($\sigma$TA).
+\item \textbf{Flow time related measures:} mean shop floor throughput time (time
+  duration from release until entry of finished goods inventory; SFTT).
+\end{itemize}
+
+The length of each simulation run to evaluate the performance was 6000 periods including a warm-up
+period of 1000 periods. Welch’s procedure was applied to approximate the length of the warm-up
+period (see~\citealt{law:simulationc}).
+
+        %         Each order release method was evaluated on 25 predefined demand
+        %         streams.
+
+
+        %         \MS{TODO}
+\subsection{Conventional Order Release Rules}
+
+As external benchmark for comparison we use
+        %         use two different order release rules. First, we use immediate release which releases orders as
+        %         soon as they arrive at the order pool. And second, we
+different parameterized backward infinite loading (\BIL{}) techniques:
+
+\begin{equation*}
+  RD_{j} = DD_{j} - LT_{j} \tcom
+  \label{eq:BIL}
+\end{equation*}
+
+where the release date \(RD_{j}\) of product type \(j\) is calculated by the difference of the due
+date \(DD_{j}\) and the lead time \(LT_{j}\). Note that we set lead times for each product type and
+not for every order as done by \cite{Ackerman1963}.
+
+        %         The
+        %         variants are named according to the used lead time $LT$. For example in case of $\BILOne$ we have
+        %         $LT=1$. \MS{@Equation 1: Use LT$_{j}$ or LT?}
+
+        %         \MS[t]{do we?}
+
+
+\subsection{Algorithm Setup}
+\label{subsec:Algorithm_Setup}
+
+\paragraph{Markov Decision Process.} The underlying MDP is unichain and looks as follows.
+Both, state space $\mathcal{S}$ and action space $\mathcal{A}$ are discrete. Any state
+$s \in \mathcal{S}$ of the \textit{state space} is composed of the following information for each
+product $p$:
+        %         The following information is presented to the algorithm for both Product 1 and Product 2 as follows.
+\begin{itemize}
+
+\item The currently set lead time $LT_{p} \in \{1,2,\ldots,\DDS\}$ (Recall:
+  $\text{Due Date Period} - \text{Lead Time} = \text{Release Period}$). Note that we bound the
+  maximum lead time with due date slack $\DDS$, which is $7$ in our setup.
+
+\item Counters $OP_{p,d}\in \N$ for the number of orders in the order pool divided in time buckets
+  with $d \in \{1,2,\ldots,\DDS \}$, which stands for the number of periods until the due date.
+
+  % \item Flag for each machine whether it is idle or not.
+
+\item Counters $Q_{i}\in \N$ standing for the number of orders for each queue $i$.
+
+\item Counters $FGI_{p,d} \in \N$ of orders in the finished goods inventory divided in time
+  buckets with $d \in \{-5,-4,-3,\ldots, \DDS \}$, which stands for the number of periods until the
+  due date. Orders with a due date with more than 5 periods ago are listed in the counter
+  $FGI_{-5}$.
+
+\item Counters $S_{p,d} \in \N$ of shipped orders from the last period divided in time buckets
+  with $d \in\{-5,-4,-3,\ldots, \DDS \}$, which stands for the number of periods until the due date.
+  Orders with a due date with more than 5 periods ago are listed in the counter $S_{-5}$.
+
+\end{itemize}
+
+\noindent The algorithm implicitly learns a function which maps the current state of the
+production system to a release decision. In an optimal situation it does so by multiply exploring
+every action for each state and assessing its economic viability.
+
+Orders are released once the due date is within the interval $[t,t+\text{lead time}]$, whereas $t$
+is the current period. Clearly, this yields bulk releases (either all or no orders with the same
+due date and product type are released). % Note that we do not present past state
+        %         information to the neural network.
+
+The \textit{actions space} is composed of two independent decisions. These are the relative changes
+of the lead times to the currently set lead times $LT_{p} \in \{1,2,\ldots,\DDS\}$ for each product
+$p$. Recall that $p=2$.
+        %
+Furthermore, we restrict the action space for each state $s_{t+1}$ according to the last set lead
+time $LT_{p}$ from state $s_{t}$ by restricting the change of the lead time for consecutive
+periods to a maximum of 1. Thus, if $LT_{p}$ is the current lead time for product $p$ the action
+space for this product is given by $\{1,2,\ldots,\DDS\} \cap \{LT_{p}-1,LT_{p},LT_{p}+1\}$. Put
+differently the algorithm can increase or decrease the lead time by 1 or leave it as it is, as
+long as it acts within the discrete action space given by the set $\{1,2,\ldots,\DDS\}$ for each
+type of product. Thus the action space over all products is given by the full enumeration of
+available actions of the individual products.
+
+        %         We allow the agent a higher increase
+        %         of the lead time, compared to the decrease, to give it the chance to react quickly to high
+        %         number of
+        %         incoming demand.
+
+
+\paragraph*{Reward.}
+In each period the agent chooses an action which generates a reward while traversing to the next
+period by simulating the production system. The rewards are the accumulated costs at the end of the
+period. These costs are consist of the number of backorders, the current WIP level and the number of
+orders in the inventory.
+        %
+        %         The costs are divided by the normalizing parameter $\eta$ (see Table~\ref{tbl:variants}) and then
+        %         clipped (cut off) to the interval $[-0.5,0.5]$.
+
+\paragraph*{Adapted Algorithm.}
+The algorithm depicted above is designed as a tabular version. We have adapted it to use neural
+networks for the approximation of the different kind of state-action pair value functions. This is
+required due to the exponential growth of the state space. The implementation collects the observed
+information for each state-action function in a replay memory and randomly selects \(128\) data
+points out of a collection of \(30k\) memories in each period and trains these on the neural
+network. This technique is called experience replay memory
+\citep{lin1993reinforcement,mnih2015human} and ought to overcome we instabilities. Nonetheless, this
+approximation results in the fact that the algorithm can be unstable or may even diverge
+\citep{tsitsiklis1997analysis}. Additionally we use a target and a worker network, whereas the
+target network is overwritten every \(10k\) steps by the worker network. This has been proposed by
+\cite{mnih2015human} and should further stabilize the algorithm.
+
+\paragraph*{Neural Network Setup.}
+        %
+We use the same setup for the neural network as done by \cite{Schneckenreither2019}. However as they
+use a actor-critic agent, whereas we approximate state-action-values the output of the network is a
+one dimensional vector as opposed to a matrix. Therefore we use a single three layer fully-connected
+network where the number of nodes and activation functions are 41-ReLU\footnote{ReLU stands for
+  rectified linear unit.}-89-ReLU-20-ReLU-9, with the output activations being Tanh (hyperbolic
+tangent function).
+        %
+The output for both networks consist of $3^{2}=9$ nodes. This is due to the fact that all
+combinations of increase, decrease and no change of the lead time for each product type have to be
+represented.
+        %
+For back-propagation we use the Adam optimiser with learning rate \(0.001\), and beta-values
+\(\beta_{1}=0.9\), and \(\beta_{2}=0.999\).
+
+
+\section{Preliminary Results}
+\label{sec:Preliminary}
+
+This section provides preliminary results for the described setup and gives an overview of the
+current performance of the algorithm compared to the conventional static lead time setting
+algorithms.
+
+Currently we evaluate two different kinds of reward reporting as they have been proposed by
+\cite{Schneckenreither2019}. They find that it is beneficial to overcome the time offset imposed by
+the production system. That is, although orders are immediately released to the production system
+and thus generate a response in terms of a reward to the agent, the full impact of the chosen action
+takes several periods to materialise. For instance, by deciding not to release an order, which later
+becomes a backorder, it is beneficial to reward the actions actually responsible for the backorder
+instead of the last action (only). Thus they propose to keep track of the orders currently in the
+order pool until all fully traversed through the production system and reward the actions according
+to all orders in the order pool.
+
+The parameter setup is given in Table~\ref{tbl:params}. The parameters are exponentially decayed
+with rate \(0.05\) and \(350k\) steps\footnote{The decay is defined as \(0.05 ^{(t/350k)}\), where
+  \(t\) is the current period}. We implemented the deep Q-network algorithm proposed by
+\cite{mnih2015human}, which is parameterised by learning rate \(\delta\) and a discount factor of
+\(0.99\).
+
+
+\begin{table}[t]
+  \centering
+        %         \def\arraystretch{1.2}          %  1 is the default, change whatever you need
+
+  \begin{tabular}{|l||c|c|c|c|c|c|c|c|c|c|}
+    \hline
+    Parameter & $\alpha$ & $\beta$ & $\delta$ & $\gamma$ & $\epsilon$ & $p_{exp}$ & $\xi$ \\
+    \hline
+    Value & 0.5 & 0.15 & 0.15 & 0.15 & 0.5 & 1.0 & 0.15 \\
+    \hline
+  \end{tabular}
+
+        %         \egroup
+
+  \caption{\label{tbl:params}Parameter Setup.}
+        %         \end{figure}
+\end{table}
+
+
+Table~\ref{tbl:res} shows the results, where we evaluate the average reward and discounted
+reinforcement learning algorithm by providing either direct reward feedback, that is the reward
+accumulated in the next period, without keeping track of any orders, as \(\ActShipped\) and
+\(\ActShippedDQN\) respectively. Further both algorithms are evaluated with keeping track of the
+order pool orders, such that each action is responsible for all orders in the order pool. These are
+labelled \(\ActOrdPool\) and \(\ActOrdPoolDQN\). For comparisons reasons we provide
+\(\BILOne-\BILSix\) and immediate release (interval release).
+
+The results show that at the current time we are facing issues with scaling the algorithm to the
+order release problem. Likely this is due to parameterisation issues, which we are investigating
+currently. However, it can be seen that i) the technique of keeping track of the order pool orders
+leads to better policies and ii) that despite the parameterisation issues average reward
+reinforcement learning finds better solutions than its discounted counterpart. However, the least
+costs are generated by \(\BILThree\), which shows that there is room for improvement for the
+reinforcement learning policies.
+
+Interesting is also to see, that all reinforcement learning variants are releasing rather late,
+leading to low finished goods inventory costs (FGIC), but high backorder costs (BOC). Furthermore,
+the agents based on the order-pool orders, namely \(\ActOrdPool\) and \(\ActOrdPoolDQN\), are able
+achieve lower work-in-process costs (WIPC) and also lower tardiness, than the other the agents
+rewarded directly on the shipped orders.
+
+
+\begin{table}[t!]
+  \centering
+  \def\arraystretch{1.2}          %  1 is the default, change whatever you need
+  \setlength\tabcolsep{4pt}
+  \begin{tabular}{|l||c|c|c|c|c|c|c|c|c|}
+    % BEGIN RECEIVE ORGTBL res2
+    \hline
+    Algorithm/KPI & SUM & BOC & FGIC & WIPC & % \%SL &
+                                                       TARD & \(\sigma\)TARD & SFTT\\
+    \hline
+    % Evaluation 1 & \multicolumn{11}{c|}{} \\
+    \ActShipped    & 1777.74 & 1322.04 & 94.49 & 361.20       & 2.24 & 1.52 & 3.44\\
+    \ActOrdPool    & 1593.03 & 1318.65 &14.01 &260.36         & 2.11 & 1.42 & 2.68\\
+    \ActShippedDQN & 1940.62 & 1570.40 &6.30 &363.92          & 2.35 & 1.59 & 3.95 \\
+    \ActOrdPoolDQN & 1618.88 & 1306.20 & 40.68& 272.00        & 2.08 & 1.38 & 2.58\\
+    \BILOne        & 1736.98 & 1510.42  &  0.00  & 226.56     & 2.04 & 1.26 & 2.16 \\
+    \BILTwo        & 1081.79 & 769.86 & 86.89   & 225.03      & 1.87 & 1.18 & 2.15\\
+    \BILThree      &  \textbf{922.36} & 362.59 &  334.47  & 225.30     & 1.74 & 1.07 & 2.15\\
+    \BILFour       & 1062.68 & 155.72  & 681.03   & 225.93    & 1.63 & 0.99 & 2.15\\
+    \BILFive       & 1380.04 & 65.45  & 1088.94    & 225.64   & 1.67 & 1.02 & 2.15\\
+    \BILSix        & 1777.77 & 25.04 &  1529.77  & 222.96     & 1.61 & 0.85 & 2.13\\
+    \imre          & 2209.97 & 12.08 &1974.72 & 223.16        & 1.58 & 0.63 & 2.14 \\
+    \hline
+    % END RECEIVE ORGTBL res2
+  \end{tabular}
+        %         \egroup
+
+  \caption{\label{tbl:res}Evaluation results where the monetary units are in \(k\)-values.}
+
+        %         \end{figure}
+\end{table}
+
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper introduces deep theoretical insights in reinfocement learning and provides first evidence
+that average reward reinfocement learning is better applicable to operations research problems than
+the discounted framework.
+        %         adds to the growing body of evidence that machine learning algorithms can contribute
+        %         positively to a company's performance.
+The paper describes an % successful
+application of an order release model based on reinforcement learning. The performance is tested on
+a multi-product, two-stage hypothetical flow shop and is measured by cost, delivery and lead time
+related measures. We show that in the current version the machine learning approach is not able to
+outperform all other tested order release
+approaches. % By yielding lower \textit{UPDATE: total costs,
+        %         less mean and standard deviation of tardiness and a shorter shop floor throughput time (SFTT)}.
+        %         Despite the good performance of our proposed adaptive order release model based on \textit{UPDATE:
+        %         reinforcement learning} we are aware of its limitations. Firstly, the results are limited to the
+        %         simulated case and the validity of the results for other production systems must be assessed in
+        %         future studies. Secondly, adding further experimental factors would be beneficial like including
+        %         scenarios with machine failures and different scheduling rules. In conclusion we found that our
+        %         proposed adaptive order release approach harbours enormous potential.
+In the future we expect to be able to yield better results by investigating the parameterisation and
+resolving current issues when scaling average reinforcement learning to complex scenarios.
+
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\vfill
+\pagebreak
+\appendix
+
+
+\section{N-Discount-Optimality}
+\label{sec:methods}
+
+This part proves (or rather ought to prove, as this is only the first version of such a proof)
+Blackwell-optimality of the average reward reinforcement learning algorithm shown in
+Algorithm~\ref{alg}. The idea is to prove \(n\)-discount optimality for \(n=-1\), \(n=0\), and
+finally for \(n \geqslant 1\). But first recall the definition of \(n\)-discount-optimality.
+
+
+\begin{definition*}
+  Due to \cite{Veinott69} for MDPs a policy \(\polopt\) is \emph{\(n\)-discount-optimal} for
+  \(n=-1,0,1,\ldots\) for all states \(s \in \States\) with discount factor
+  \(\gamma\) % and \(V_{\gamma}^{\pol}(s)\) being the value function as defined above
+        %
+  if and only if
+  \begin{align*}
+    \lim_{\gamma \to 1}(1-\gamma)^{-n}\ (V_{\gamma}^{\polopt}(s) - V_{\gamma}^{\pol}(s)) \geqslant 0 \tpkt
+  \end{align*}
+\end{definition*}
+
+
+\subsection{\(\mathbf{(-1)}\)-Discount-Optimality\cite{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}.}
+
+Here we provide insights in the algorithm and
+\(n\)-discount-optimality, where we concentrate on \(n=-1\). Recall that the discounted state value
+can be expanded by the Laurent series expansion:
+\(V_{\gamma}^{\pol} = \frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol} + e_{\gamma}^{\pol}(s)\), where
+\(\lim_{\gamma \to 1} e_{\gamma}^{\pol}(s) = 0\)
+
+
+\begin{align*}
+  \lim_{\gamma \to 1} (1-\gamma)^{1} \cdot (V_{\gamma}^{\polopt}(s) - V_{\gamma}^{\pol}(s)) \geqslant 0\\
+  \lim_{\gamma \to 1} (1-\gamma) \cdot (\frac{\avgrew^{\polopt}(s) - \avgrew^{\pol}(s)}{1-\gamma} + V^{\polopt}(s) - V^{\pol}(s) + e_{\gamma}^{\polopt}(s) - e_{\gamma}^{\pol}(s)) \geqslant 0\\
+  \lim_{\gamma \to 1} (\avgrew^{\polopt}(s) - \avgrew^{\pol}(s) + (1-\gamma) \cdot (V^{\polopt}(s) - V^{\pol}(s) + e_{\gamma}^{\polopt}(s) - e_{\gamma}^{\pol}(s)) \geqslant 0\\
+  \avgrew^{\polopt}(s) - \avgrew^{\pol}(s) \geqslant 0\\
+\end{align*}
+
+That is a policy \(\pol\) which ought to be (\(-1\))-discount-optimal has to maximise the average reward
+\(\rho^{\pol}(s)\) over all states \(s\).
+
+\subsection{\(\mathbf{0}\)-Discount-Optimality\cite{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}.}
+
+Note that a policy can only be \(0\)-discount-optimal if it is \(-1\)-discount-optimal, thus
+\(\avgrew^{\polopt}(s)=\avgrew^{\pol}(s)\). Furthermore, recall that
+\(\lim_{\gamma \to 1} e_{\gamma}^{\pol}(s) = 0\).
+
+
+\begin{align*}
+  \lim_{\gamma \to 1} (1-\gamma)^{0} \cdot (V_{\gamma}^{\polopt}(s) - V_{\gamma}^{\pol}(s)) \geqslant 0\\
+  \lim_{\gamma \to 1} (\frac{\avgrew^{\polopt}(s) - \avgrew^{\pol}(s)}{1-\gamma} + V^{\polopt}(s) - V^{\pol}(s) + e_{\gamma}^{\polopt}(s) - e_{\gamma}^{\pol}(s)) \geqslant 0\\
+  \lim_{\gamma \to 1} (\frac{0}{1-\gamma} + V^{\polopt}(s) - V^{\pol}(s)) \geqslant 0\\
+  V^{\polopt}(s) - V^{\pol}(s) \geqslant 0\\
+\end{align*}
+
+Therefore a \(0\)-discount-optimal policy \(\pol\) has to maximise the bias values
+\(V^{\pol}(s)\) for all states \(s\).
+
+\vfill
+\pagebreak
+
+\subsection{\(\mathbf{n}\)-Discount-Optimality for \(\mathbf{n \geqslant 1}\).}
+
+The following derivation provides an important insight to the analysis. Recall that for unichain
+MDPs the average reward \(\avgrew^{\pol}(s)\) for all states \(s\) is equal and stated as
+\(\avgrew^{\pol}\). Furthermore, as the policy is \(0\)-discount-optimal
+\(V^{\polopt}(s) = V^{\pol}(s)\).
+
+
+\begin{align*}
+  \lim_{\gamma \to 1} (1-\gamma)^{-n} \cdot (V_{\gamma}^{\polopt}(s) - V_{\gamma}^{\pol}(s)) & \geqslant 0\\
+  \lim_{\gamma \to 1} (1-\gamma)^{-n} \cdot ( \frac{\avgrew^{\polopt}(s)}{1-\gamma} + V^{\polopt}(s) + e_{\gamma}^{\polopt}(s)  %& \\
+  - \frac{\avgrew^{\pol}(s)}{1-\gamma} - V^{\pol}(s) - e_{\gamma}^{\pol}(s) ) & \geqslant 0\\
+  \lim_{\gamma \to 1} (1-\gamma)^{-n} \cdot ( e_{\gamma}^{\polopt}(s) - e_{\gamma}^{\pol}(s) ) & \geqslant 0\\
+\end{align*}
+
+As stated before \(e_{\gamma}^{\polopt}(s)\) approaches 0 as \(\gamma \to 1\). Therefore, it is
+important to note that for \(n>0\) we analyse the case when \(\gamma\) is strictly less than \(1\). This
+means that the number of actions to reach a desired goal is taken into account.
+        %         The ratio of long-term to short-term is provided by the discount factor \(\gamma\).
+Therefore, a \(\infty\)-discount-optimal policy \(\pol\) has to maximise the error term
+$e_{\gamma}^{\pol}(s)$ for all states \(s\). That is, an \(\infty\)-discount-optimal algorithm has to
+choose the action with the largest error term \(e_{\gamma}^{\pol}(s)\) once \(\gamma \to 1\).
+However, as the error term depends on infinitely many sub-terms simply estimating these and summing
+up does not work.
+
+
+\begin{figure*}[t]
+  \centering
+  \begin{tikzpicture}[scale=8]
+    \draw[->] (0,0) -- (1.0,0) node[right] {$\gamma$};
+    \draw[->] (0,0) -- (0,0.8) node[above] {$\mathbb{R}$};
+    \draw[scale=1,domain=0.001:0.85,smooth,variable=\x,blue] plot ({\x},{0.1/(1-\x)+0.2});
+    \draw[scale=1,domain=0.001:0.865,smooth,variable=\x,red] plot ({\x},{0.1/(1-\x)+0.2-0.2*(1-\x)^0.5});
+
+        %         Labels
+    \draw[blue] (0.6,0.64) node () {$\frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol}(s)$};
+    \draw[red] (0.875,0.58) node () {$V_{\gamma}^{\pol}(s)$};
+    \draw (-0.015,0.3) -- (0.015,0.3);
+    \draw (-0.2, 0.3) node[align=left] () {$\avgrew^{\pol}(s) + V^{\pol}(s)$};
+
+    \draw (-0.015,0.1) -- (0.015,0.1);
+    \draw (-0.111, 0.1) node[] () {$R^{\pol}(s)$};
+
+    \draw (0.9,-0.015) -- (0.9,0.015) node[below, yshift=-0.2cm] () {$1$};
+    \draw (0.75,-0.015) -- (0.75,0.015) node[below, yshift=-0.2cm] () {$\gamma_{1}$};
+    \draw (0.20,-0.015) -- (0.20,0.015) node[below, yshift=-0.2cm] () {$\gamma_{0}$};
+
+    \draw (0.5,0.4) -- (0.5,0.258578644) node[midway,left, yshift=-0.2cm] () {$e_{\gamma}^{\pol}(s)$};
+
+    \draw (0.2,0.146114562) -- (0.75,0.146114562) node[midway, below] () {$\gamma_{1}-\gamma_{0}$};
+    \draw (0.75,0.146114562) -- (0.75,0.5) node[midway,right] () {$V_{\gamma_{1}}^{\pol}(s)-V_{\gamma_{0}}^{\pol}(s)$};
+
+
+  \end{tikzpicture}
+  \caption{Visualisation of the monotonically increasing state values for a state $s$ and the
+    corresponding decreasing error term $e_{\gamma}^{\pol}(s)$ as $\gamma$ approaches 1. }
+  \label{fig:e}
+\end{figure*}
+
+Therefore, the idea is to use two discounted state-values with different $\gamma$'s to infer the
+slope of the error term. Figure~\ref{fig:e} illustrates the idea. Here $\gamma_{1}$ and $\gamma_{0}$
+are used to estimate the difference of \(V_{\gamma_{1}}^{\pol}(s)\) and
+\(V_{\gamma_{0}}^{\pol}(s)\). As the average reward and the bias values are equal (recall
+\(0\)-discount-optimality) the difference is a direct estimate of the slope of the error term. Thus
+the larger the increase of the difference of the discounted state values when comparing
+\(0\)-discount-optimal actions the better the action. However, for this to hold true we have to
+prove strict monotonicity of
+\(V_{\gamma}^{\pol}(s) = \frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol}(s) + e_{\gamma}^{\pol}(s)\)
+under increasing $\gamma$. In the sequel we assume \(\avgrew^{\pol}(s) \geqslant 0\). Note that this
+assumption is easily met by adding a constant reward for any action in cases where
+\(\avgrew^{\pol}(s) < 0\). This assumption eases the following analysis and makes sense as usually
+we are interested in problems which accumulate positive average reward, e.g. profit or points, over
+time.
+
+
+\begin{remark}
+  Nonetheless, it is an important insight that if \(\avgrew^{\pol}(s) < 0\) then
+  \(\frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol}(s)\) approaches negative infinity (as opposed to
+  positive infinity, cf. Figure~\ref{fig:e}). Therefore, in such cases the following optimisation
+  objectives would need to be inverted.
+\end{remark}
+
+
+\begin{lemma}
+  \label{lem:err}
+  The error term
+  \(e_{\gamma}^{\pol}(s) = \sum_{m=1}^{\infty}(\frac{1-\gamma}{\gamma})^{m} \cdot y_{m}\) strictly
+  monotonically decreases as $\gamma$ increases.
+\end{lemma}
+
+\begin{proof}
+        %         S[t]{Is the following formula (indices) correct?}
+  Note that \(e_{\gamma}^{\pol}(s) = \sum_{m=1}^{\infty}(\frac{1-\gamma}{\gamma})^{m} \cdot y_{m}\),
+  where the sign of \(y_{m}\) alternates in each step. This is due to the fact that
+  \(y_{m} = \E_{\pol} [ y_{m} ] - y_{m-1}\) for all \(m \geqslant 1\)~\cite[p.346]{Puterman94}, that
+  is \(y_{m}\) only depends on \(y_{m-1}\) and the underlying (stationary) policy. Further \(y_{0}\)
+  is the bias value \(V^{\pol}(s)\).
+        %
+  We consider three cases:
+  \begin{enumerate}
+  \item[1)]
+    \begin{minipage}[t]{0.17\textwidth}
+      \(\gamma = 0.5\):
+    \end{minipage}
+    The factor \((\frac{1-\gamma}{\gamma})^{m}\) is $1$.
+  \item[2)]
+    \begin{minipage}[t]{0.17\textwidth}
+      \(0.5 < \gamma < 1\):
+    \end{minipage}
+    The factor \((\frac{1-\gamma}{\gamma})^{m}\) is $<1$ and strictly monotonically converging towards $0$.
+  \item[3)]
+    \begin{minipage}[t]{0.17\textwidth}
+      \(0 < \gamma < 0.5\):
+    \end{minipage}
+    The factor \((\frac{1-\gamma}{\gamma})^{m}\) is $>1$ and strictly monotonically converging towards $\infty$.
+  \end{enumerate}
+
+  \paragraph{Case 1)}
+  { As \(\frac{1-\gamma}{\gamma} = 1 \) the term reduces to
+    \(e_{\gamma}^{\pol}(s) = \sum_{m=1}^{\infty} y_{m}^{\pol}\). We use the definition
+        %
+    \begin{align*}
+      y_{m}^{\pol}=(-1)^{m} H_{\pol}^{m+1} h_{\pol} \tcom
+    \end{align*}
+    %
+    where \(H_{\pol}\) is the deviation matrix defined as
+    %
+    \begin{align*}
+      H_{\pol} = \clim_{N \to \infty} \sum_{t=0}^{N-1}{P^{t}-P^{\star}} \tcom
+    \end{align*}
+    \(\clim\) the Cesaro limit\footnote{Recall that the Cesaro limit (with degree \(1\)) is only
+      required in periodic MDPs to ensure stationary matrices. For aperiodic MDPs they can be read
+      as normal limits.~\cite[p.592ff]{Puterman94}}, \(P^{\star}\) the stationary matrix defined as
+    \(P^{\star} = \clim_{N \to \infty}P^{N}\) and \(h_{\pol}\) a column vector holding the bias values
+    of the states \cite[]{Puterman94,MillerVeinott1969}. Thus, we get
+        %
+    \begin{align*}
+      e_{\gamma}^{\pol}(s) & = \sum_{m=1}^{\infty}y_{m}^{\pol}(s) = \sum_{m=1}^{\infty}{y_{2m}^{\pol}(s) + y_{2m+1}^{\pol}(s)}
+                             = \sum_{m=1}^{\infty} H^{2m+2} h - H^{2m+1} h \\
+                           & = \sum_{m=1}^{\infty} (H^{2m+2} - H^{2m+1}) h \tpkt
+    \end{align*}
+
+    % Wlog. assume all entries in \(H\) are positive. Therefore,
+    It suffices\footnote{This claim has not been proven yet!} to show that $H^{2m+2} - H^{2m+1} < 0$
+    for all $m \geqslant 1$ to prove strict monotonicity of $e_{\gamma}^{\pi}(s)$.
+    % \MS[t]{why should that prove monotonicity? Rethink!!!}
+    However, this directly follows as for MDPs with at least two states \(H-1 < 0\) in
+    %
+    \begin{align*}
+      e_{\gamma}^{\pol}(s) = \sum_{m=1}^{\infty} (H^{2m+2} - H^{2m+1}) h = \sum_{m=1}^{\infty} H^{2m+1} (H - 1) h \tpkt
+    \end{align*}
+    %
+  }
+
+
+  \paragraph{Case 2)}{ As the factor \((\frac{1-\gamma}{\gamma})^{m}\) is $<1$ and strictly
+    monotonically decreasing for an increasing $m \geqslant 1$, we use the same argument as in the
+    previous case (Case 1) with which the claim follows. }
+
+  \paragraph{Case 3)}{ This part of the proof is open!
+
+    % Recall the Laurent Series expansion only holds when \(0 <
+    % \frac{1-\gamma}{\gamma} < \norm{H_{\pi}}^{-1}\),
+    % where for a finite matrix \(C = (c_{ij})\) the norm \(\norm{C}\) is defined as
+    % \(\norm{C} \coloneqq \max_{i} \sum_{j} |c_{ij}|\).
+
+    % \begin{align*}
+    %   e_{\gamma}^{\pol}(s) & = \sum_{m=1}^{\infty}y_{m}^{\pol}(s) = \sum_{m=1}^{\infty}{y_{2m}^{\pol}(s) + y_{2m+1}^{\pol}(s)}\\
+    %   & = \sum_{m=1}^{\infty} (\frac{1-\gamma}{\gamma})^{2m+1} H^{2m+2} h -
+    %   (\frac{1-\gamma}{\gamma})^{2m}H^{2m+1} h \\
+    %   & = \sum_{m=1}^{\infty} (\frac{1-\gamma}{\gamma})^{2m} H^{2m+1}((\frac{1-\gamma}{\gamma}) H - 1) h \tpkt
+    % \end{align*}
+
+
+          %           \MS{No! This does not prove that under two different gammas $e_{\gamma_{1}}^{\pol}(s) -
+          %           e_{\gamma_{0}}^{\pol}(s)$ is decreasing}
+
+  }
+
+
+          %           We now investigate \(e^{\pol}(s) = \sum_{m=1}^{\infty}y_{m}^{\pol}(s)\) to infer properties of
+          %           \(e_{\gamma}^{\pol}(s)\). Observe that we removed the factor $(\frac{1-\gamma}{\gamma})^{m}$
+          %           depending on a concrete \(\gamma\). There are three cases to distinguish for this factor under
+          %           increasing $m$:
+
+          %           In all three cases the factor does neither change the monotonicity properties nor the sign of
+          %           $y_{m}$ in the term
+          %           \(e_{\gamma}^{\pol}(s) = \sum_{m=1}^{\infty}(\frac{1-\gamma}{\gamma})^{m} \cdot y_{m}\).
+          %           Therefore, wlog. suppose $\gamma = 0.5$ and thus \(e^{\pol}(s) = e_{\gamma}^{\pol}(s)\).
+
+          %           This factor is positive and strictly and monotonically
+          %           converging towards $0$ (resp. $\infty$) as $m$ increases and as long as \(0.5 < \gamma < 1\)
+          %           (resp. $0 < \gamma < 0.5)$. Note that we are usually interested in $\gamma$ values close to $1$,
+          %           as $\gamma \to 1$. \MS[t]{what happens when $\gamma < 0.5$?}
+          %
+\end{proof}
+
+\begin{corollary}
+  \label{cor:diff}
+  For any two \(0\)-discount-optimal stationary policies $\pol_{1}, \pol_{2}$ with stationary
+  transition matrices \(P_{1}\) and \(P_{2}\) respectively, the differences of the slopes of the
+  error terms \(e_{\gamma}^{\pol_{1}}(s)\) and \(e_{\gamma}^{\pol_{2}}(s)\) for any \(\gamma\) is
+  dependent on \(H_{\pol_{1}}\) and \(H_{\pol_{2}}\) and thus \(P_{1}\) and \(P_{2}\) solely.
+\end{corollary}
+
+\begin{proof}
+  Note that due to \(0\)-discount-optimality the bias values \(h_{1} = h_{2}\) are equal for both
+  policies. Therefore as for any given \(H\) the error term is determined by
+  \(e_{\gamma}^{\pol}(s) = \sum_{m=1}^{\infty} ((\frac{1-\gamma}{\gamma})^{2m + 1} H^{2m+2} -
+  (\frac{1-\gamma}{\gamma})^{2m} H^{2m+1}) h = \sum_{m=1}^{\infty} (\frac{1-\gamma}{\gamma})^{2m}
+  H^{2m+1}( \frac{1-\gamma}{\gamma} H - 1) h \) the claim follows directly.
+\end{proof}
+
+\begin{corollary}
+  \label{cor:cont}
+  The error term function \(e_{\gamma}^{\pol}(s)\) for \(\gamma \to 1\) and for any given policy
+  \(\pol\) is continuous.
+\end{corollary}
+
+\begin{proof}
+  The claim follows directly from Corollary~\ref{cor:diff} and due to the shape of the term
+  \(e_{\gamma}^{\pol}(s) = \sum_{m=1}^{\infty} (\frac{1-\gamma}{\gamma})^{m} H^{m+1} h\).
+\end{proof}
+
+
+\begin{theorem}
+  If \(\avgrew^{\pol}(s) > 0\) then
+  \(V_{\gamma}^{\pol}(s) = \frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol}(s) + e_{\gamma}^{\pol}(s)\) is
+  strictly monotonically increasing as $\gamma$ approaches \(1\).
+\end{theorem}
+
+\begin{proof}
+  Due to \(\avgrew^{\pol}(s) > 0\) and \(0 < \gamma < 1\) the term
+  \(\frac{\avgrew^{\pol}(s)}{1-\gamma}\) strictly monotonically approaches infinity as
+  $\gamma \to 1$. Furthermore, by Lemma~\ref{lem:err} and as
+  \(\lim_{\gamma \to 1} e_{\gamma}^{\pol}(s) = 0\) the theorem follows immediately.
+\end{proof}
+
+\begin{theorem}
+  \label{thm:minmax}
+  If \(\avgrew^{\pol}(s) \geqslant 0\) and for \(\gamma\)-values \(\gamma_{0}, \gamma_{1}\) with
+  \(0.5 \leqslant \gamma_{0} < \gamma_{1} < 1\) a Blackwell-optimal agent chooses the action \(a\)
+  with expected future state \(s'\) that maximises the expected\footnote{To ease readability and as
+    we aim for model-free RL we have dropped the expectations in the formulas. } discounted state
+  value difference
+  \(\Delta V_{\gamma}^{\pol}(s') = V_{\gamma_{0}}^{\pol}(s') - V_{\gamma_{1}}^{\pol}(s')\) of the
+  set of \(0\)-discount-optimal actions available and for which
+  \begin{itemize}
+  \item[a)] \(\frac{\avgrew}{1-\gamma_{0}} + V^{\pol}(s') < V_{\gamma_{0}}^{\pol}(s')\) holds, or if
+    no such actions exists, then for which
+  \item[b)]
+    \(\frac{\avgrew}{1-\gamma_{0}} + V^{\pol}(s') \geqslant V_{\gamma_{0}}^{\pol}(s')\) hold.
+  \end{itemize}
+
+  % the discounted state value difference \(V_{\gamma_{1}}^{\pol}(s') - V_{\gamma_{0}}^{\pol}(s')\),
+  % where the decision to maximise or minimise the difference is based on the value that minimises
+  % \(V_{\gamma_{1}}^{\pol}(s') - V_{\gamma_{0}}^{\pol}(s')\).
+  %         %
+\end{theorem}
+
+\begin{remark}
+  In Theorem~\ref{thm:minmax} we have chosen to base the decision on the values generated with
+  \(\gamma_{0}\) as the error term is greater with smaller \(\gamma\)-values.
+\end{remark}
+
+
+\begin{proof}
+  First observe that due to strict monotonicity of \(\frac{\avgrew^{\pol}(s')}{1-\gamma}\) and
+  \(e_{\gamma}^{\pol}(s')\) and as \(\lim_{\gamma \to 1} e_{\gamma}^{\pol}(s') = 0\) the discounted
+  state values \(V_{\gamma}^{\pol}(s')\) and the sum of average reward values
+  \(\frac{\avgrew^{\pol}(s')}{1-\gamma} + V^{\pol}(s')\) converge with increasing \(\gamma\).
+          %
+  Thus for any state \(s'\) either \(e_{\gamma}^{\pol}(s') > 0\) or \(e_{\gamma}^{\pol}(s') < 0\)
+  for all \(\gamma\)-values. That is \(V_{\gamma}^{\pol}(s')\) converges to
+  \(\frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol}(s')\) for \(\gamma \to 1\) from above or below.
+  Clearly just considering the slope of the error term is insufficient as for any states
+  \(s_{1}, s_{2}\) it may happen to be that \(e_{\gamma}^{\pol}(s_{1}) > 0\) while
+  \(e_{\gamma}^{\pol}(s_{2}) < 0\). Thus we split the decision in cases, where in case \(a)\) we
+  consider all states \(s_{1}\) with \(e_{\gamma}^{\pol}(s_{1}) > 0\) and in case \(b)\) we states
+  \(s_{2}\) with \(e_{\gamma}^{\pol}(s_{2}) < 0\). Note that
+  \(e_{\gamma}^{\pol}(s_{1}) > e_{\gamma}^{\pol}(s_{2})\) which explains the prioritisation of case
+  \(a)\) over case \(b)\).
+
+  Within these two sets of states we investigate the slopes of the error term.
+
+  \MS[t]{Todo: Show that two points are sufficient for a proxy of the slope.}
+  Thus the slope can be approximated by
+  \begin{align*}
+    \frac{\Delta V_{\gamma}^{\pol}(s)}{\Delta \gamma} = \frac{e_{\gamma_{1}}(s) - e_{\gamma_0}(s)}{\gamma_{1} - \gamma_{0}} \tpkt
+  \end{align*}
+
+  As \(\gamma_{1}(s)-\gamma_{0}(s)\) is constant the difference of the error terms
+  \(e_{\gamma_{1}}(s) - e_{\gamma_0}(s)\) is sufficient to compare the slopes of the error term and
+  can be computed by
+  \begin{align}
+    \label{eq:errorAvgRew}
+    e_{\gamma_{1}}(s) - e_{\gamma_0}(s) = \frac{\avgrew^{\pol}(s)}{1-\gamma_{1}} -
+    \frac{\avgrew^{\pol}(s)}{1-\gamma_{0}} - V_{\gamma_{1}}^{\pol}(s) + V_{\gamma_{0}}^{\pol}(s)\tpkt
+  \end{align}
+
+  However, as all possible future states are gain-optimal \(\avgrew^{\pol}(s)\) is equal for all
+  states \(s\) under consideration. Therefore, the difference \(V_{\gamma_{0}}^{\pol}(s) -
+  V_{\gamma_{1}}^{\pol}(s)\) suffices for comparison purposes between any two states \(s_{1}, s_{2}\):
+  \begin{align*}
+  e_{\gamma_{1}}(s_{1}) - e_{\gamma_0}(s_{1}) - e_{\gamma_{1}}(s_{2}) + e_{\gamma_0}(s_{2}) =
+    V_{\gamma_{0}}^{\pol}(s_1) - V_{\gamma_{1}}^{\pol}(s_1) - V_{\gamma_{0}}^{\pol}(s_2) + V_{\gamma_{1}}^{\pol}(s_2)\tpkt\\
+  \end{align*}
+
+
+  Then due to Corollaries~\ref{cor:diff}~and~\ref{cor:cont} we conclude that
+  \(\lim_{\gamma \to 1}(1-\gamma)^{-n}\ (V_{\gamma}^{\polopt}(s) - V_{\gamma}^{\pol}(s)) \geqslant
+  0\), where \(\gamma\) is the discount factor and \(V_{\gamma}^{\pol}(s)\) the value function.
+
+\end{proof}
+
+\begin{remark}
+  Note that this means a Blackwell-optimal agent collects the rewards as soon as possible, as it
+  maximises the error term \(e_{\gamma}^{\pol}(s)\).
+
+  % In the case of model-free reinforcement learning, in which rather state-action pairs as opposed to
+  % states are assessed, Theorem~\ref{thm:minmax} does not hold. Observe that in the model-free case
+  % the agent has to choose between MDP states, for instance \((1,l)\) or \((1,r)\) in
+  % Figure~\ref{fig:three-states2}.
+  % Thus, although the gain and
+  % bias values are equal,
+  % Thus the error terms of different actions \(a, a'\) may cause
+  % \(e_{\gamma}^{\pol}(s,a) > 0\) and \(e_{\gamma}^{\pol}(s,a') < 0\).
+
+  % This is due to the fact that by observing one state for each action multiple the error
+
+
+  % states defined
+
+  % chooses the among different states, cf. Figure~\ref{fig:three-states2}.
+
+  % chooses action based on
+  % a state \(s\) state-action pairs are assessed. Thus, multiple values could be available to decide
+  % on whether to maximise or minimise the discounted state value difference. The correct approach is
+  % to decide on behalf of the action \(a\) which minimises
+  % \(\mid V^{\pol}_{\gamma_{0}}(s,a) - \frac{\avgrew^{\pol}}{1-\gamma_{0}} - V^{\pol}(s,a) \mid\) as
+  % for all actions the error term \(e_{\gamma}^{\pol}(s)\) is converging towards \(0\) with the same
+  % rate (due to the same discount factor \(\gamma_{0}\)).
+\end{remark}
+
+Thus under the assumption of correct approximations and by strict monotonicity of $e_{\gamma}^{\pi}$
+we conclude Blackwell optimality of the algorithm. Figure~\ref{fig:e} visualises the discounted
+state values and the idea of estimating the slope of $e_{\gamma}^{\pi}(s)$ in comparison to
+$\frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol}(s)$.
+
+
+\subsection{Refinements}
+\label{subsec:Refinements}
+
+The main limitation of the straightforward approach of Theorem~\ref{thm:minmax} is that it requires
+accurate estimations of the bias values when splitting the actions into the two sets with increasing
+and deceasing error term value. However, to be able to estimate \(V^{\pol}(s)\) accurately enough
+one usually has to go through a tedious process of investigating many different parameterisations,
+which is a cumbersome task, especially if the correct values are not known. Furthermore, the process
+of finding the correct values is computationally very expensive in comparison to finding the
+deviations between any two values.
+
+Therefore, we have developed another approach of selecting the best possible action which does not
+depend on correct bias values. In this approach we utilise Equation~\ref{eq:errorAvgRew} which
+allows a determination of the slope simply by rectifying the additional slope imposed due to the
+term \(\frac{\avgrew^{\pol}(s)}{1-\gamma}\). As \(V_{\gamma}^{\pol}(s)\) and \(\avgrew^{\pol}(s)\)
+are computationally cheap they can be usually accurately computed.
+
+Therefore in the implementation we propose to replace Theorem~\ref{thm:minmax} by following the
+following one.
+
+\begin{theorem}\label{thm:err}
+  If \(\avgrew^{\pol}(s) \geqslant 0\) and for \(\gamma\)-values \(\gamma_{0}, \gamma_{1}\) with
+  \(0.5 \leqslant \gamma_{0} < \gamma_{1} < 1\) a Blackwell-optimal agent chooses the action \(a\)
+  with expected future state \(s'\) that maximises the expected error term difference
+  \(\Delta e_{\gamma_{1},\gamma_{0}}^{\pol}(s') = V_{\gamma_{1}}^{\pol}(s') -
+  V_{\gamma_{0}}^{\pol}(s') - \avgrew^{\pol}(s') (\frac{1}{1-\gamma_{1}} - \frac{1}{1-\gamma_{0}})\)
+  of the set of \(0\)-discount-optimal actions available and for which
+  \begin{itemize}
+  \item[a)] \(\Delta e_{\gamma_{1},\gamma_{0}}^{\pol}(s') < 0\) holds, or if
+    no such actions exists, then for which
+  \item[b)]
+    \(\Delta e_{\gamma_{1},\gamma_{0}}^{\pol}(s') \geqslant 0\) hold.
+  \end{itemize}
+\end{theorem}
+
+\begin{proof}
+  We have for any state \(s'\) either \(e_{\gamma}^{\pol}(s') > 0\) or \(e_{\gamma}^{\pol}(s') < 0\)
+  for all \(\gamma\)-values (see proof of Theorem~\ref{thm:minmax}). Therefore, by definition states
+  \(s'\) with \(e_{\gamma_{1},\gamma_{0}}^{\pol}(s') < 0\) have a decreasing error term value. As
+  \(e_{\gamma_{1},\gamma_{0}}^{\pol}(s')\) is a direct measure for the slope of the error term, and
+  by the characteristics on the term specified in Corollaries~\ref{cor:diff} and~\ref{cor:cont}, we
+  can conclude that the maximum expected error term difference for negative values of
+  \(e_{\gamma_{1},\gamma_{0}}^{\pol}(s')\) impose the greatest \(V_{\gamma}^{\pol}(s')\) when
+  \(\gamma \to 1\). The proof for \(e_{\gamma_{1},\gamma_{0}}^{\pol}(s') \geqslant 0\) follows the
+  same argument. Therefore, the Theorem provides a way to find the policy \(\polopt\) with
+  \(\lim_{\gamma \to 1} (1-\gamma)^{-n} \cdot ( e_{\gamma}^{\polopt}(s') - e_{\gamma}^{\pol}(s')) >
+  0\) for any other policy \(\pol\).\qed
+\end{proof}
+
+
+\section{Bellman Optimality Formulas and Derivations (Incomplete)}
+\label{sec:bellman_optimality}
+
+\paragraph{Bellman optimality equations for the average reward.}
+
+\begin{align*}
+  V^{\star}(s) & = \max_{a \in A(s)} R^{\polopt}(s,a) \\
+               & = \max_{a \in A(s)} \E_{\polopt} [ \sum_{t=0}^{\infty}(R_{t}(s) - \avgrew^{\polopt}(s)) \mid s=s_{t}, a_{t} = a] \\
+               & = \max_{a \in A(s)} \E_{\polopt} [ R_{0}(s) - \avgrew^{\polopt}(s) + \sum_{t=0}^{\infty}(R_{t}(s_{t+1}) - \avgrew^{\polopt}(s_{t+1}))  \mid s=s_{t}, a_{t} = a] \\
+               & = \max_{a \in A(s)} \E [ R_{0}(s) - \avgrew^{\polopt}(s) + V^{\star}(s_{t+1})  \mid s=s_{t}, a_{t} = a ] \\
+               & = \max_{a \in A(s)} (r(s,a) - \avgrew^{\polopt}(s) + \sum_{s_{t+1}} p(s_{t+1}|s,a) \cdot V^{\star}(s_{t+1}))
+\end{align*}
+
+The value of an action in a given state must equal the expected return for following an optimal
+policy from that state:
+
+\begin{align*}
+  R^{\star}(s,a) & = \E [ r(s,a) - \avgrew^{\polopt}(s) + V^{\star}(s_{t+1})  \mid s=s_{t},a=a_{t} ]\\
+                 & = r(s,a) - \avgrew^{\polopt}(s) + \E [ \max_{a_{t+1} \in A(s_{t+1})}R^{\star}(s_{t+1},a_{t+1}) \mid s=s_{t},a=a_{t}]\\
+                 & = r(s,a) - \avgrew^{\polopt}(s) + \sum_{s_{t+1}} p(s_{t+1} | s, a) (\max_{a_{t+1} \in A(s_{t+1})} R^{\star}(s_{t+1},a_{t+1}))
+\end{align*}
+
+\paragraph*{Bellman optimal equations for the bias value.}
+
+
+\begin{align*}
+  W^{\star}(s) & = \E [ R_{t}(s) + V^{\star}(s_{t+1}) | s = s_{t}, a=a_{t} ]\\
+               & = \E [ R_{t}(s) + \max_{a_{t+1} \in A(s_{t+1})} R^{\star}(s_{t+1},a_{t+1}) | s = s_{t} , a=a_{t}]\\
+\end{align*}
+
+
+\begin{align*}
+  W^{\star}(s,a) & = \E [ r(s,a) + V^{\star}(s_{t+1}) \mid s=s_{t}, a=a_{t} ] \\
+                 & = r(s,a) + \E [  \max_{a_{t+1} \in A(s_{t+1})} R^{\star}(s_{t+1},a_{t+1}) \mid s=s_{t}, a=a_{t} ]\\
+                 & = r(s,a) + \sum_{s_{t+1}} p(s_{t+1} | s, a) (\max_{a_{t+1} \in A(s_{t+1})} R^{\star}(s_{t+1},a_{t+1}))
+\end{align*}
+
+
+Difference \(R_{n+1}\) to \(W_{n+1}\)?
+
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
