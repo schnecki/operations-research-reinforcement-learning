@@ -103,17 +103,8 @@ pdfkeywords={production planning, order release, machine learning, reinforcement
   reinforcement learning approach. Therefore, we provide an in-depth analysis of reinforcement
   learning to show that average reward reinforcement learning is a better approach for operations
   research applications as discounted reinforcement learning. Additionally we present an average
-  reward reinforcement learning algorithm which infers
-  (Blackwell-)optimal\footnote{Blackwell-optimality is not yet fully proven! A first version of such
-    a proof is attached in the Appendix.} policies.
-  % \SH{Add RL stuff}
-  % Therefore, we present a flow time estimation procedure to set lead times dynamically
-  % by using an artificial neural network. Additionally, we implement a safety lead time
-  % to incorporate the underlying cost ratio in the order release model. We test our
-  % proposed approach using a simulation model of a three-stage make-to-order flow-
-  % shop and compare the forecast accuracy and the accumulated costs to other forecast-
-  % based order release models from literature. We show that our proposed model using
-  We use a simulation model of a two-stage flow-shop to compare the algorithm
+  reward reinforcement learning algorithm which infers near-Blackwell-optimal policies. We use a
+  simulation model of a \MS[t]{todo}two-stage flow-shop to compare the algorithm
   to % and show that our approach outperforms
   well-known order release mechanisms. We show that in the current version our proposed model using
   reinforcement learning outperforms some, but not all other tested approaches.
@@ -123,75 +114,75 @@ pdfkeywords={production planning, order release, machine learning, reinforcement
 \end{abstract}
 
 
-\section{Introduction}
-\label{sec:introduction} An important goal in Manufacturing Planning and Control (MPC) systems is to
-achieve short and predictable flow times, especially where high flexibility in meeting customer
-demand is required. Besides achieving short flow times, one should also maintain high output and
-due-date performance while keeping the work-in-process level low. One approach to address this
-problem is to collect all incoming orders in an order-pool and periodically decide which orders to
-release to the shop floor. Once orders are released, costs start to accumulate as planned orders
-materialise as actual jobs in the production system. The main challenge is to find a good compromise
-of balancing the shop floor and timely completion of jobs. Although the performance of such systems
-can be measured manifold the most overarching objective is to maximise profits by adequately
-assigning holding and lateness costs.
+\section{Introduction}\label{sec:introduction}
+An important goal in Manufacturing Planning and Control (MPC) systems is to achieve short and
+predictable flow times, especially where high flexibility in meeting customer demand is required.
+Besides achieving short flow times, one should also maintain high output and due-date performance
+while keeping the work-in-process level low. One approach to address this problem is to collect all
+incoming orders in an order-pool and periodically decide which orders to release to the shop floor.
+Once orders are released, costs start to accumulate as planned orders materialise as actual jobs in
+the production system. The main challenge is to find a good compromise of balancing the shop floor
+and timely completion of jobs. Although the performance of such systems can be measured manifold the
+most overarching objective is to maximise profits by adequately assigning holding and lateness
+costs.
 
-One of the key modeling parameters for order release mechanisms is the \textit{lead time} which
+One of the key modeling parameters for order release mechanisms is the \textit{lead time}, which
 refers to the planned time that elapses between the release of an order and its arrival in the
 finished goods inventory. This planning parameter is often based on the observable time an order
-needs to traverse through the production system, which we denote as \textit{flow time}. Flow times
-consist of processing, setup, control, transport, and waiting times, whereas the latter is the
-governing factor. Waiting times are a result from queuing (e.g. jobs queue before and after
-processing) which depend heavily on the amount of jobs in the system (WIP) and thus, waiting times
-are relatively difficult to estimate which makes the setting of favorable lead times so difficult
-(e.g., \citealt{Tatsiopoulos1983, Wiendahl1995}). Most state-of-the-art order release mechanisms use
-static or fixed lead times to address the order release problem, and thus neglect the nonlinear
-relationship between resource utilisation and flow times which is well known from practice and
-queuing theory (\citealt{Pahl2007}).
+needs to traverse the production system, which in contrast is denoted as the \textit{flow time}.
+Flow times consist of processing, setup, control, transport, and waiting times, whereas the latter
+is the governing factor \citep[][p.223]{zapfel1982produktionswirtschaft}. Waiting times are a result
+from queuing (e.g.\@ jobs queue before and after processing), depend heavily on the amount of jobs in
+the system (WIP) and thus are relatively difficult to estimate, which makes the
+setting of favorable lead times so difficult (e.g., \citealt{Tatsiopoulos1983, Wiendahl1995}). Most
+state-of-the-art order release mechanisms use static or fixed lead times to address the order
+release problem, and thus neglect the nonlinear relationship between resource utilisation and flow
+times, which is well known from practice and queuing theory (\citealt{Pahl2007}).
 
-One way to address this nonlinear interaction effects is to set lead times dynamically. Thus,
-intuitively the order release problem is solved by perfectly matching the lead times to the flow
-times, but one faces ``sampling issues'' meaning that the flow times depend on the lead times. An
-extreme scenario of this problem is the so called ``lead time syndrome'' which describes a vicious
-cycle where increasing flow times perpetually inflate the lead times which leads to worse
-performance (see e.g., \citealt{Mather1978, knollmann2013control, Selcuk2006}. Therefore,
-\cite{SchneckenreitherHaeussler2019} propose to use reinforcement learning as approach to
+One way to address this nonlinear interaction effects is to set lead times dynamically. Intuitively
+the order release problem is solved by perfectly matching the lead times to the flow times, but the
+corresponding optimisation problem faces ``sampling issues'' meaning that the flow times depend on
+the lead times. An extreme scenario of this problem is the so called ``lead time syndrome'', which
+describes a vicious cycle where increasing flow times perpetually inflate the lead times which leads
+to worse performance (see e.g., \citealt{Mather1978, knollmann2013control, Selcuk2006}. Therefore,
+\citet{SchneckenreitherHaeussler2019} propose to use reinforcement learning as approach to
 incorporate these effects in this optimisation problem. Reinforcement learning is an optimisation
-technique that stems from dynamic programming. The goal in reinforcement learning is to find the
-best stationary policy for a given problem. This policy is usually provided by assessing the states
-(or state-action pairs) of an underlying Markov Decision Process (MDP). The advantage of
-reinforcement learning over dynamic programming is that (i) the problem space is explored by an
-agent and thus only expectantly interesting parts of the problem space need to be assessed and (ii)
-the knowledge (acquisition) of transition probabilities becomes unnecessary as the states are
-evaluated by consecutively observed states solely.
+technique that stems from dynamic programming and its goal is to find the best stationary policy for
+a given problem. This policy is usually provided by assessing the states (or state-action pairs) of
+an underlying Markov Decision Process (MDP). The advantage of reinforcement learning over dynamic
+programming is that (i) the problem space is explored by an agent and thus only expectantly
+interesting parts of the problem space need to be assessed and (ii) the knowledge (acquisition) of
+transition probabilities becomes unnecessary as the states are evaluated by consecutively observed
+states solely.
 
 Over the past decades reinforcement learning has been applied to various problems, for which
-astonishing results have been reported. E.g. only recently \cite{mnih2015human} have presented a novel
-value-iteration reinforcement learning agent which exceeds human-level abilities in playing many
-classic Atari 2600 games~\citep{bellemare2012investigating}. \cite{mnih2016asynchronous} presents
-improved results with asynchronous actor-critic reinforcement learning. Also games like
-Go~\citep{silver2016mastering} and Chess~\citep{silver2017mastering} have been mastered with
-superhuman performance by \textit{tabula rasa} reinforcement learning agents. Furthermore, the
-method has also been applied in the setting of manufacturing system, e.g. to improve the ramp-up
-process~\citep{doltsinis2012reinforcement}, in locally selecting appropriate dispatching rules
-\citep{zhang1995reinforcement,wang2005application} or scheduling
+astonishing results have been reported. E.g.\@ only recently \citet{mnih2015human} have presented a
+novel value-iteration reinforcement learning agent which exceeds human-level abilities in playing
+many classic Atari 2600 games~\citep{bellemare2012investigating}. Further,
+\citet{mnih2016asynchronous} present improved results with asynchronous actor-critic reinforcement
+learning. Also games like Go~\citep{silver2016mastering} and Chess~\citep{silver2017mastering} have
+been mastered with superhuman performance by \textit{tabula rasa} reinforcement learning agents.
+Furthermore, the method has also been applied in the setting of manufacturing system, e.g.\@ to
+improve the ramp-up process~\citep{doltsinis2012reinforcement}, in locally selecting appropriate
+dispatching rules \citep{zhang1995reinforcement,wang2005application} or scheduling
 \citep{zhang1995reinforcement, waschneck2018optimization}.
 %
 However, all these applications use discounted reinforcement learning and are either designed to
-investigate a rather simple MDP, e.g. by selecting heuristics instead of optimising the underlying
+investigate a rather simple MDP, e.g.\@ by selecting heuristics instead of optimising the underlying
 problem itself, or by mapping the actual objective in a reward function that is approximately \(0\)
 on average over time.
 %
-This is due to the fact that state value is largely composed of a term defined by the policy's
+This is due to the fact that state value is largely composed of a term defined by the policys'
 average reward value \citep{MillerVeinott1969,Blackwell62} which would otherwise dilute the state
-values and thus decrease the solution quality, as for instance in
-\cite{SchneckenreitherHaeussler2019} and \cite{gijsbrechts2018can}.
+values and thus decrease the solution quality, as can for instance be observed in
+\citet{SchneckenreitherHaeussler2019} and \citet{gijsbrechts2018can}.
 %
 
 
 Therefore, most applications that incorporate and directly reflect costs or profit in the reward
-function use average reward reinforcement learning. For instance \cite{aydin2000dynamic} use it in
-the setting of scheduling, while in a series of papers Mahadevan et al. investigated several problem
-domains starting with simple MDPs
+function use average reward reinforcement learning. \citet{aydin2000dynamic} use it in the setting
+of scheduling, while in a series of papers Mahadevan et al. investigated several problem domains
+starting with simple MDPs
 \citep{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults,Mahadevan96_OptimalityCriteriaInReinforcementLearning}.
 After these foundational works for average reward reinforcement learning they introduced a
 continuous time average reward reinforcement learning algorithm named SMART
@@ -202,37 +193,51 @@ maintenance of an inventory system
 \citep{Das99_SolvingSemiMarkovDecisionProblemsUsingAverageRewardReinforcementLearning} to optimising
 transfer line in terms of maximizing demand, while keeping inventory levels of unfinished product as
 low as possible \citep{Mahadevan98_OptimizingProductionManufacturingUsingReinforcementLearning}.
+However, in practise usually decision have to be made on a daily basis \citep{enns2004work}.
+Therefore, we refrain from this adaption and concentrate on standard MDPs only. Furthermore, often
+continuous-time semi-MDP problems can be converted through uniformisation into equivalent discrete
+time instances \citep[see][]{Puterman94,bertsekas1995dynamic}.
 
 
 Like discounted reinforcement learning also average reward reinforcement learning is based on an
-oracle function, in our case the accumulated profit of a period, to assess the decisions taken by
-the agent. By repeatedly choosing different actions the agent examines the problem space and rates
+oracle function, in our case the accumulated costs of a period, to assess the decisions taken by the
+agent. By repeatedly choosing different actions the agent examines the problem space and rates
 possible actions for any observed state. The advantage of average reward reinforcement learning over
 the widely applied discounted reinforcement learning framework is that the underlying optimisation
-technique is able to find better policies. This yields from the fact that in the latter method the
-states are assessed by a single value, while in the former the values are split up by the average
-reward accumulated over time and a bias value which optimises the number of steps to reach the best
-possible states of the examined process
+technique is able to find better policies. This yields from the fact that in standard discounted
+reinforcement learning method the states are assessed independently and by a single value. In
+contrast to that average reward reinforcement learning splits up the evaluation of the average
+reward per step, a bias value that specifies the amount of collected rewards to reach the optimal
+path when starting in a suboptimal state and an error term which defines the number of steps to
+reach the optimal path
 \citep{Howard64,Puterman94,Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults}.
 Thus, while in average reward reinforcement learning these terms are learned separately in the
-discounted framework one value consisting of the addition of these values plus an additional error
-term is estimated. This incautious combining of different kinds of state values as done in
-discounted reinforcement learning leads to the problems that (i) the average reward, which is equal
-for all states of usually investigated unichain MDPs, is dominating and thus diluting the bias
-values, and (ii) the state values are deteriorated by the error term that is only imposed due to the
-discounting technique.
+discounted framework one value consisting of the addition of these values is estimated, where
+however the average reward is scaled by \(1/(1-\gamma)\) with the discount factor \(\gamma\) usually
+being set very close to \(1\), e.g. \(0.99\). In commonly applied unichain MDPs the average reward
+per step is equal for all states. Thus, independently assessing it is computationally unwisely.
+Therefore, we adapt an algorithm that uses a scalar value for the estimation of the average reward.
+Furthermore, as the average reward is scaled in the discounted state values it dominates the other
+two terms. This, combined with the iterative evaluation and the independently assessing of the
+average reward for each state lets standard discounted reinforcement learning struggle to find good
+policies.
+% Thus, this incautious combining of different kinds of state values as done in discounted
+% reinforcement learning leads to the problems that (i) the average reward, which is equal for all
+% states of usually investigated unichain MDPs, is dominating and thus diluting the bias values, and
+% (ii) the state values are deteriorated by the error term that is only imposed due to the
+% discounting technique.
 
-Thus, as opposed to the commonly applied discounted reinforcement learning algorithm and as proposed
-as future work by \cite{SchneckenreitherHaeussler2019} we use an average reward reinforcement
-learning algorithm to adaptively release orders based on the assessed state values of the production
-system. In contrast to the aforementioned works on average reward reinforcement learning our
-algorithm incorporates the optimisation of not only the average reward over time, but also the bias
-values. Only the work by
+Thus, as opposed to the commonly applied discounted reinforcement learning algorithm we use an
+average reward adjusted reinforcement learning algorithm to adaptively release orders based on the
+assessed state values of the production system. In contrast to the aforementioned works on average
+reward reinforcement learning our algorithm incorporates the optimisation of not only the average
+reward over time, but also the bias values, which is an important adaption in highly stochastic
+systems. Only the work by
 \cite{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}
 integrates this second-level refinement optimisation. However, their algorithm requires the
 selection of a reference state to prevent an infinite increase of state values. This results from
 the lack of feedback in the iterative process of optimising the different refinement optimisation
-levels.
+levels. Furthermore, they asses the average reward independently.
 
 Therefore, we propose a novel average reward reinforcement learning algorithm, which is the first
 that solves the occurring cyclic constraint problem in the setting of average reward reinforcement
@@ -257,16 +262,15 @@ the production system.
 
 \paragraph{Structure.} The rest of the paper is structured as follows. The next section introduced
 average reward reinforcement learning and presents the used algorithm (see also
-\citealt{Schneckenreither2019}) including a proof-of-concept.
-Section~\ref{sec:Experimental_Evaluation} describes the simulation model we use to evaluate the
-approach. Then~\ref{sec:Preliminary} provides preliminary result data, wheras
-Section~\ref{sec:conclusion} concludes this working paper.
+\citealt{schneckenreither2020average}). Section~\ref{sec:Experimental_Evaluation} describes the
+simulation model we use to evaluate the approach. \MS[t]{todo}
+% Then~\ref{sec:Preliminary} presents preliminary
+% result data, whereas Section~\ref{sec:conclusion} concludes this working paper.
 
 
-\section{Average Reward Reinforcement Learning}
-\label{sec:Average_Reward_Reinforcement_Learning}
+\section{Average Reward Adjusted Reinforcement Learning}
 
-This section introduces average reward reinforcement learning in comparison to the discounted
+This section introduces average reward adjusted reinforcement learning in comparison to the discounted
 framework, elaborates on optimiality criteria and provides insights of the underlying algorithm.
 
 Like \cite{MillerVeinott1969} we are considering problems that are observed in a sequence of points
@@ -297,25 +301,28 @@ where the phrase ``best'' will be elaborated in detail below.
 \label{subsec:Discounted_Reinforcement_Learning}
 
 
-In the discounted framework the value of a state \(V_{\gamma}^{\pol}(s)\) is defined as the expected
-discounted sum of rewards under the stationary policy \(\pol\) when starting in state \(s\). That is
+In the widely applied discounted framework the value of a state \(V_{\gamma}^{\pol_{\gamma}}(s)\) is
+defined as the expected discounted sum of rewards under the stationary policy \(\pol_{\gamma}\) when
+starting in state \(s\). Note that the policy \(\pol_{\gamma}\) depends on the selected discount
+factor. That is
 \begin{align*}
-  V_{\gamma}^{\pol}(s)=\lim_{N \to \infty} E[\sum_{t=0}^{N-1} \gamma^{t} R_{t}^{\pol}(s)]\tcom
+  V_{\gamma}^{\pol_{\gamma}}(s)=\lim_{N \to \infty} E[\sum_{t=0}^{N-1} \gamma^{t} R_{t}^{\pol_{\gamma}}(s)]\tcom
 \end{align*}
 
 where \(0 \leqslant \gamma < 1\) is the discount factor and
-\(R_{t}^{\pol}(s) = E_{\pol}[ r(s_{t},a_{t}) \mid s_{t} = s, a_{t} = a]\) % \MS[t]{check if correct!}
+\(R_{t}^{\pol}(s) = E_{\pol}[ r(s_{t},a_{t}) \mid s_{t} = s, a_{t} =
+a]\) % \MS[t]{check if correct!}
 the reward received at time \(t\) upon starting in state \(s\) by following policy \(\pol\)
 \citep{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults}.
 
-The aim in the discounted framework is to find an optimal policy \(\polopt\), which when followed,
-maximises the state value for all states \(s\) as compared to any other policy \(\pol\):
-\(V_{\gamma}^{\polopt} - V_{\gamma}^{\pol} \geqslant 0\). This criteria is usually referred to as
-\(\gamma\)-optimality as the discount factor \(\gamma\) is fixed. However, this also means that the
-actual value set for \(\gamma\) defines the policy that is optimised for. For instance, as can be
-seen in Figure~\ref{fig:printer} setting \(\gamma\) value to \(<0.8027\) the printer-loop is
-preferred over the mail-loop by the agent, although the mail-loop accumulates more reward over time,
-i.e. selecting the mail-loop is a sub-optimal choice.
+The aim in the discounted framework is to find an optimal policy \(\polopt_{\gamma}\), which when
+followed, maximises the state value for all states \(s\) as compared to any other policy
+\(\pol_{\gamma}\): \(V_{\gamma}^{\polopt_{\gamma}} - V_{\gamma}^{\pol_{\gamma}} \geqslant 0\). This
+criteria is usually referred to as \(\gamma\)-optimality as the discount factor \(\gamma\) is fixed.
+However, this also means that the actual value set for \(\gamma\) defines the policy that is
+optimised for. For instance, as can be seen in Figure~\ref{fig:printer} setting \(\gamma\) value to
+\(<0.8027\) the printer-loop is preferred over the mail-loop by the agent, although the mail-loop
+accumulates more reward over time, i.e. selecting the mail-loop is a sub-optimal choice.
 
 
 \begin{figure}[t!]
@@ -357,7 +364,7 @@ i.e. selecting the mail-loop is a sub-optimal choice.
     \draw (5,0) node[] { Mail };
 
   \end{tikzpicture}
-  \caption{\label{fig:printer} A MDP with two different determinstic policies. The only action choice is in
+  \caption{\label{fig:printer} A MDP with two different deterministic policies. The only action choice is in
     state \(1\), in which the agent can choose between doing the printer-loop or the mail-loop.
     Observe that the average reward received per step equals \(1\) for the printer-loop and \(2\)
     for the mail-loop. Thus, the (Blackwell-)optimal policy is to choose the mail-loop. However,
@@ -367,7 +374,7 @@ i.e. selecting the mail-loop is a sub-optimal choice.
     Adapted from \cite{Mahadevan96_OptimalityCriteriaInReinforcementLearning}.}
 \end{figure}
 
-The main idea behind the \(\gamma\)-parameter of the discounted framework is to be able to balance
+One idea behind the \(\gamma\)-parameter of the discounted framework is to be able to balance
 short-term rewards (low \(\gamma\)-values) and long-term rewards (high \(\gamma\)-values). However,
 what seems to be an advantage rather becomes a disadvantage for most applications. The issue is that
 the average reward value is non-linearly increased when \(\gamma\) approaches one. However, in
@@ -394,7 +401,6 @@ unattractive; i.e. the policy converges to the optimal policy of choosing the Ma
 
 
 \subsection{Average Reward Reinforcement Learning}
-\label{subsec:Average_Reward_Reinforcement_Learning}
 
 Due to \cite{Howard64} the average reward \(\avgrew^{\pol}(s)\) of a policy \(\pol\) and a starting
 state \(s\) is defined as
@@ -559,7 +565,7 @@ combined value for a fixed \(\gamma\)-value is learned.
 The addends, where \(n=-1,0,\ldots\) denote the coefficients of the Laurent series expansion,
 can be reformulated to following constraint problem with expected reward
 \(R^{\pol}(s) = E_{\pol}[ r(s, a) ] = \sum_{a \in \mathcal{A}(s)}p(a | s) r(s, a)\) as shown by
-\cite{MillerVeingsott1969} and \citet[p.346]{Puterman94}:
+\cite{MillerVeinott1969} and \citet[p.346]{Puterman94}:
 
 \begin{align}
   \label{eq:constr1}\avgrew^{\pol}(s) - E[\avgrew^{\pol}(s)] & = 0 &  & \text{for } n = -1 \\
@@ -573,7 +579,31 @@ constraints are satisfying the above conditions for all states \(s\), then only
 \(W^{\pol}_{M}\) is offset by the vector \(u\) where for the transition probability matrix \(P\) the
 vector \(u\) is characterised by \((I-P)u = 0\). Note that \(u\) is determined by the number of
 closed irreducible classes of \(P\), that is for ergodic MDPs \(u\) is determined by a single
-constant. Our algorithm is based on the above formulation.
+constant. Average reward learning is based on the above formulation.
+
+
+A major problem occurring at average reward RL is that the bias values are not uniquely defined
+without solving the first set of constraints defined by the error term addends
+\citep[see][p.346]{Puterman94,Mahadevan96_SensitiveDiscountOptimalityUnifyingDiscountedAndAverageRewardReinforcementLearning}.
+% We could overcome this issue by simply requiring \(\gamma\) to be strictly less than \(1\).
+%
+Our algorithm, based on the tabular version of \citet{schneckenreither2020average}, does not require
+the exact solution for \(V^{\pol}(s)\), but a solution which is offset suffices. Clearly this
+observation reduces the required iteration steps tremendously as finding the exact solution,
+especially for large discount factors, is tedious. Therefore, we allow to set \(\gamma = 1\), which
+induces \(\X_{\gamma}^{\pol}(s) = V^{\pol}(s) + u\), where \(u\) is for unichain MDPs a scalar value
+independent of \(s\), i.e.\@ equivalent for all states of the MDP~\cite[p.346]{Puterman94}.
+%
+%% Nonetheless, we require \(\gamma < 1\) to stabilise the process.
+%
+If we are interested in correct bias values, i.e. \(\gamma\) is sufficiently close but strictly less
+than \(1\), our approach is a tremendous advantage over average reward RL as it reduces the number
+of iterative learning steps by requiring only a single constraint per state plus one for the scalar
+average reward value. That is, for an MDP with \(N\) states only one more constraint (\(N+1)\) has
+to be solved in \ARA{} as compared to (at least) \(2N+1\) nested constraints for average reward RL.
+Therefore, it is cheap to compute \(\X_{\gamma}^{\pol}(s)\), while it is rather expensive to find
+the correct values of \(V^{\pol}(s)\) directly, especially in an iterative manner as RL is.
+
 
 \subsection{Algorithm}
 \label{subsec:Algorithm}
@@ -581,60 +611,68 @@ constant. Our algorithm is based on the above formulation.
 
 \begin{algorithm}[t!]
   \begin{algorithmic}[1]
-    \State{}Initialize values to \(0\) \While{the stopping criterion is not fulfilled}
-    \State{}\begin{minipage}[t]{0.9\textwidth} With probability \(p_{exp}\) choose a random action
-      and probability \(1-p_{exp}\) one that maximizes \MS[t]{max V$_{\gamma_{1}}(s,a)$ if more than
-      one e?}
-      \(\lex(\avgrew^{\pol}(s,a),\V^{\pol}(s,a),\Delta e^\pol_{\gamma_{1},\gamma_{0}}(s,a))\) at the
-      current state \(s\) where
-      \(\Delta e_{\gamma_{1},\gamma_{0}}^{\pol}(s,a) = V_{\gamma_{1}}^{\pol}(s,a) -
-      V_{\gamma_{0}}^{\pol}(s,a) - \avgrew^{\pol}(s,a) (\frac{1}{1-\gamma_{1}} -
-      \frac{1}{1-\gamma_{0}})\)
-      % \(\Delta e^\pol_\gamma_{1},\gamma_{0}(s,a) = V^\pol_{\gamma_0}(s,a) - V^\pol_{\gamma_1}(s,a)\)
-      for all actions for which
-      % \(\frac{\avgrew^{\pol}(s,a)}{1-\gamma_{0}} + \V^{\pol}(s,a) < V^\pol_{\gamma_0}(s,a)\)
-      \(\Delta e_{\gamma_{1},\gamma_{0}}^{\pol}(s,a) < 0\) holds or if no such actions exists, from
-      all actions. Set \(a^{\pol} = 0\) if a random action was chosen,
-      \(a^{\pol}=1\) otherwise.
+    \State{}Initialise state \(s_{0}\) and network parameters \(\netTarget, \netWorker\) randomly, set
+    an exploration rate \(0 \leqslant \plearn \leqslant \pexp \leqslant 1\), exponential smoothing learning rates
+    \(0 < \alpha, \gamma < 1\), and discount factors
+    \(0 < \gamma_{0} < \gamma_{1} \leqslant 1\).
+    \While{the stopping criterion is not fulfilled}
+    \State{}\begin{minipage}[t]{0.9\textwidth} With probability \(\pexp\) choose a random action and
+      probability \(1-\pexp\) one that fulfills
+      \(\max_{a}\lexeq(\X^{\pol}_{\gamma_{1}}(s_{t},a; \netWorker{}),\X^\pol_ {\gamma_{0}}(s_{t},a; \netWorker{}))\). Let
+      \(\isRandAct{t}\) indicate if the action was chosen randomly.
     \end{minipage}
-    \State{}Carry out action \(a\), observe reward \(r\) and resulting state \(s'\)
-    \State{}Update values using exponential smoothing
-      \MS[t]{why only random/non-random for rho and enforcing? very inconsistent!!!}
+    \State{}\begin{minipage}[t]{0.9\textwidth}
+    Carry out action \(a_{t}\), observe reward \(r_{t}\) and resulting state \(s_{t+1}\).
+    Store the experience \((s_{t}, \isRandAct{t}, a_{t}, r_{t}, s_{t+1})\) in the experience replay
+    memory \(M\).
+    \end{minipage}
+    \If{a non-random action was chosen or \(\pexp > \plearn\)}
     \begin{align*}
-      \qquad a) & & \avgrew^{\pol}(s,a)  & \gets (1- a^{\pol} \alpha) \avgrew^{\pol}(s,a) + a^{\pol} \alpha [r + \max_{a}\V^{\pol}(s',a) - \V^{\pol}(s,a)]     \\
-      b) & & \V^{\pol}(s,a)        & \gets (1-\beta) \V^{\pol}(s,a) + \beta  \cdot \\
-         &        &                      & [r - \avgrew^{\pol}(s,a) + \max_{a} \V^{\pol}(s',a) +
-                                           a^{\pol} (\Psi_{V}^{\pol}(s,a) + \zeta \Psi_{W}^{\pol}(s,a))] \\
-      c) & & W^{\pol}(s,a)        & \gets (1-\delta) W^{\pol}(s,a) + \delta [-\V^{\pol}(s,a) +
-                                    \max_{a} W^{\pol}(s',a)]              \\
-      d) & & \Psi_{V}^{\pol}(s,a) & \gets (1-\xi \beta) \Psi_{V}^{\pol}(s,a) + \xi \beta [r - \avgrew^{\pol}(s,a) - V(s,a) + \max_{a}V^{\pol}(s',a)]\\
-      e) & & \Psi_{W}^{\pol}(s,a) & \gets (1-\xi \delta) \Psi_{W}^{\pol}(s,a) + \xi \delta [- V^{\pol}(s,a) - W^{\pol}(s,a) + \max_{a} W^{\pol}(s',a)]
+      \avgrew^{\pol}  \gets (1- \alpha) \avgrew^{\pol} + \alpha [r_{t} +
+      \max_{a}\X^\pol_{\gamma_1}(s_{t+1},a; \netWorker{}) - \X^\pol_{\gamma_1}(s_{t},a_{t}; \netWorker{})]
     \end{align*}
-    \State{Update discounted state-values}
+    \EndIf
+
+    \State{}Sample random mini-batch of experiences \((s_{i}, \isRandAct{i}, a_{i}, r_{i}, s_{i})\)
+    from \(M\) and do
     \begin{align*}
-      V^\pol_{\gamma_0}(s,a)    & \gets (1-\gamma) V^\pol_{\gamma_0}(s,a) + \gamma (r + \gamma_{0} \max_{a} V^\pol_{\gamma_0}(s',a)) \\
-      V^\pol_{\gamma_1}(s,a)    & \gets (1-\gamma) V^\pol_{\gamma_1}(s,a) + \gamma (r + \gamma_{1} \max_{a} V^\pol_{\gamma_1}(s',a))
+      y_{i,\gamma_0} & \gets r_{t} + \gamma_{0} \max_{a}
+                                        \X^\pol_{\gamma_0}(s_{t+1},a; \netTarget{}) - \avgrew^{\pol} \\
+      y_{i,\gamma_{1}} & \gets r_{t} + \gamma_{1} \max_{a}
+                                        \X^\pol_{\gamma_1}(s_{t+1},a; \netTarget{}) - \avgrew^{\pol}
     \end{align*}
-    \State{}Set \(s \gets s'\), \(t \gets t+1\) and decay parameters accordingly
+    \State{} \begin{minipage}[t]{0.9\textwidth} Update the average reward adjusted discounted
+      state-values using the sum of the gradients on \({(y_{i,\cdot} -
+      \X^\pol_{\cdot}(s_{t+1},a; \netWorker{}))}^{2}\) wrt. network parameters
+    \(\netWorker{}\).
+    \end{minipage}
+    \State{} Every \(C\) steps exponential smoothly set target network:
+      \(\netTarget \gets (1 - \gamma) \netTarget{} + \gamma \netWorker{}\)
+    \State{} Set \(s \gets s'\), \(t \gets t+1\) and decay parameters
     \EndWhile{}
   \end{algorithmic}
-  \caption{\label{alg}Model-free tabular version of the Blackwell-optimal RL algorithm.}
+  \caption{\label{alg:near}Near-Blackwell-optimal deep RL for unichain MDPs}
 \end{algorithm}
 
-% \MS{
-%   Optimisations:
-%   \begin{enumerate}
-%   \item Use Lemma 3 of Miller \& Veinott to get rid of W2
-%   \item Use Reference state as in Mahadevan to get rid of W
-%   \item Average reward freed reinforcement learning
-%   \end{enumerate}
-% }
 
+The model-free average reward adjusted deep RL algorithm is based on the tabular
+version of \citet{schneckenreither2020average} and depicted in Algorithm~\ref{alg:near}.
+%
+%
+%
+\MS[t]{describe network initialisation method (Uniform, HeAtAl, etc.)}
+%
+\MS[t]{Extensions: overestimate rho, rho minimum, Multiple Agents (shared state,  shared rho?),
+  init-phase (0.5 for expSmthRewRate, always adapt rho, same rho for all agents): exp smooth reward
+  as rho, replay memory actions, n-step (describe replay memory), gradient clipping }
+\MS[t]{Side info: Replay memory also stores (disallowed) filtered action indices for optimisation purposes and on
+episodic tasks needs to store a bool indicating an episode end. Uses Int8 for state features values.  }
 
-The reinforcement learning algorithm is depicted in Algorithm~\ref{alg}. After initialising all
-values the agent enters the loop in which the first task is to choose an action (step 3). In this
-action selection process we utilise an \(\epsilon\)-sensitive lexicographic order
-\(a=(a_{1},\ldots,a_{n}) \lex (b_{1},\ldots,b_{n})=b\) defined as \(a \lex b\) if and only if
+%
+%
+After initialising all values the agent enters the loop in which the first task is to choose an
+action (step 3). In this action selection process we utilise an \(\epsilon\)-sensitive lexicographic
+order \(a=(a_{1},\ldots,a_{n}) \lex (b_{1},\ldots,b_{n})=b\) defined as \(a \lex b\) if and only if
 \(| a_{j} - b_{j} | \leqslant \epsilon\) for all \(j < i\) and \(|a_{i} - b_{i}| > \epsilon\). Note
 that the resulting sets of actions may not be disjoint. Although this is an unusual order in
 programming, taking the maximum as in our algorithm is straight-forward and thus cheap to compute.
@@ -1218,8 +1256,8 @@ resolving current issues when scaling average reinforcement learning to complex 
 \label{sec:methods}
 
 This part proves (or rather ought to prove, as this is only the first version of such a proof)
-Blackwell-optimality of the average reward reinforcement learning algorithm shown in
-Algorithm~\ref{alg}. The idea is to prove \(n\)-discount optimality for \(n=-1\), \(n=0\), and
+Blackwell-optimality of the average reward adjusted reinforcement learning algorithm shown in
+Algorithm~\ref{alg:near}. The idea is to prove \(n\)-discount optimality for \(n=-1\), \(n=0\), and
 finally for \(n \geqslant 1\). But first recall the definition of \(n\)-discount-optimality.
 
 

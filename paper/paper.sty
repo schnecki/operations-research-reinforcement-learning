@@ -1,3 +1,14 @@
+
+% New
+
+\newcommand*{\ARA}{ARA-DiRL}
+\newcommand*{\X}{X}
+\newcommand*{\movavgrew}{\overline{\avgrew}}
+\newcommand*{\pexp}{p_{\mathsf{expl}}}
+\newcommand*{\plearn}{p_{\mathsf{learn}}}
+\newcommand*{\isRandAct}[1]{a_{#1}^{\mathsf{rd}}}
+
+
 % Nothing here yet
 
 \newcommand*{\States}{\mathcal{S}}
@@ -14,6 +25,7 @@
 
 \newcommand*{\DeltaD}{\Delta{}D}
 \newcommand*{\lex}{\prec_{\epsilon}}
+\newcommand*{\lexeq}{\preccurlyeq_{\epsilon}}
 
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 
@@ -37,8 +49,8 @@
 \newcommand*{\field}[1]{\mathbb{#1}}%
 \newcommand*{\N}{\field{N}}
 \newcommand{\Qtarget}{Q_{\mathsf{target}}}
-\newcommand{\netQTarget}{\theta_Q^T}
-\newcommand{\netQ}{\theta_Q}
+\newcommand{\netTarget}{\theta_\X^{T}}
+\newcommand{\netWorker}{\theta_\X^{W}}
 \newcommand{\netPTarget}{\theta_\pi^T}
 \newcommand{\netP}{\theta_\pi}
 
@@ -58,9 +70,3 @@
 
 \newcommand{\ActOrdPoolDQN}{\textsf{MLOrdPool\_DQN}}
 \newcommand{\ActShippedDQN}{\textsf{MLShipped\_DQN}}
-
-% --------------------
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-mast: paper.tex
-%%% End:
