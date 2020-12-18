@@ -144,16 +144,90 @@ the order release problem is solved by perfectly matching the lead times to the 
 corresponding optimisation problem faces ``sampling issues'' meaning that the flow times depend on
 the lead times. An extreme scenario of this problem is the so called ``lead time syndrome'', which
 describes a vicious cycle where increasing flow times perpetually inflate the lead times which leads
-to worse performance (see e.g., \citealt{Mather1978, knollmann2013control, Selcuk2006}. Therefore,
-\citet{SchneckenreitherHaeussler2019} propose to use reinforcement learning as approach to
-incorporate these effects in this optimisation problem. Reinforcement learning is an optimisation
-technique that stems from dynamic programming and its goal is to find the best stationary policy for
-a given problem. This policy is usually provided by assessing the states (or state-action pairs) of
-an underlying Markov Decision Process (MDP). The advantage of reinforcement learning over dynamic
-programming is that (i) the problem space is explored by an agent and thus only expectantly
-interesting parts of the problem space need to be assessed and (ii) the knowledge (acquisition) of
-transition probabilities becomes unnecessary as the states are evaluated by consecutively observed
-states solely.
+to worse performance (see e.g., \citealt{Mather1978, knollmann2013control, Selcuk2006}.
+%
+Thus, setting lead times dynamically harbors optimisation potential \citep{hoyt1978dynamic}, but may
+also substantially degrade the system performance.
+%
+\citet{schneckenreither2020order} have established
+following categorisation of dynamic lead time management approaches:
+
+\begin{itemize}
+\item \textsf{Reactive lead time management} approaches set lead times by reacting on
+  earlier flow times (e.g., \citealt{enns2004work, Selcuk2006}). Note that the forecast is always
+  based on \textit{past} data as the most recent system changes cannot be reflected by flow times
+  until the corresponding orders arrive in the FGI, which might take several
+  periods.
+\item
+  \textsf{Proactive lead time management} may incorporate \textit{past} data in conjunction with
+  the \textit{current} system state to set lead times (e.g., \citealt{Bertrand1983,
+    ChungHuang2002}). Put differently, these methods aim to find a function that provides lead times
+  based on the current state of the production system and possibly information from the past.
+
+\item \textsf{Predictive lead time management} may not only incorporate \textit{past} data and the
+  \textit{current} system state to set lead times, but also utilises the anticipated \textit{future}
+  system state to detect arising issues of future periods and react accordingly (e.g.
+  \citealt{PaterninaArboleda2001,schneckenreither2020order,Schneckenreither2019}). Thus, it extends
+  proactive lead time management from a flow time forecasting or simple lead time setting technique
+  to a lead time management approach that integrates the future behaviour of the system when setting
+  lead times. This allows reasoning of the system dynamics, as for instance triggering the lead time
+  system, and thus such an algorithm can react accordingly to find a more farsighted optimal lead
+  time update.
+\end{itemize}
+
+We hypothesis that dynamic lead time management approaches need to aim for a predictive design in
+order to be able to compete with state-of-the-art order release methods from literature. However,
+there only exist three papers that propose a predictive lead time management algorithm in
+literature.
+
+The first approach by \citet{PaterninaArboleda2001} introduces a predictive order release model by
+using reinforcement learning in a single product, four-station serial flow line and compare its
+performance (WIP costs) with conventional order release policies (e.g., Kanban and CONWIP).
+%
+% Reinforcement learning is an optimisation technique that stems from dynamic programming and its goal
+% is to find the best stationary policy for a given problem. This policy is usually provided by
+% assessing current and future states (or state-action pairs) of an underlying Markov Decision Process
+% (MDP).
+% The advantage of reinforcement learning over dynamic programming is that (i) the problem
+% space is explored by an agent and thus only expectantly interesting parts of the problem space need
+% to be assessed and (ii) the knowledge (acquisition) of transition probabilities becomes unnecessary
+% as the states are evaluated by consecutively observed states solely.
+%
+The algorithm of \citet{PaterninaArboleda2001} decides on whether or not to release an order after
+each system change, the completion of an operation of any order at any stage or a new order arrival,
+and assumes that any unsatisfied demand is lost. Thus, they use a continuous order release method
+although in practice order release decisions often need to be made on a periodical basis, e.g.\@
+daily (see \citealt{enns2004work,GeldersvanW1982}). They outperform existing control policies with their tabular
+based reinforcement learning agent.
+%
+Then, \citet{Schneckenreither2019} use several different reinforcement learning algorithms to make
+periodic order release decisions for a flow shop production system. The algorithm directly sets lead
+times for each product type, which are then used to release the orders in the order pool. They show
+that their approach outperforms static order release mechanisms by yielding lower costs, lateness
+and standard deviation of lateness, but conclude that research using average reward reinforcement
+learning methods harbor optimisation potential for the order release problem.
+%
+And finally, \citet{schneckenreither2020order} present a flow time estimation procedure to set lead
+times dynamically using an artificial neural network, which is used to forecast flow times. By
+implementing a rolling horizon order release simulation of the proceeding periods they lift their
+approach to a predictive lead time management approach, which is able to detect backorders of future
+periods and reacts by releasing orders earlier. Nonetheless, their method is unable to foresee the
+triggering of the lead time syndrome and therefore they introduce an upper lead time bound to
+prevent the negative effects of the lead time syndrome. Their model outperforms static and reactive
+lead time management approaches, especially for scenarios with high utilisation and high variability
+in processing times.
+
+
+As reinforcement learning stems from dynamic programming the future system state is by design
+considered as a main driver of decision making in the current period.
+% Reinforcement learning is an optimisation technique that stems from dynamic programming and
+Its goal is to find the best stationary policy for a given problem. % This policy is usually provided
+% by assessing current and future states (or state-action pairs) of an underlying Markov Decision
+% Process (MDP).
+The advantage of reinforcement learning over dynamic programming is that (i) the problem
+space is explored by an agent and thus only expectantly interesting parts of the problem space need
+to be assessed and (ii) the knowledge (acquisition) of transition probabilities becomes unnecessary
+as the states are evaluated by consecutively observed states solely.
 
 Over the past decades reinforcement learning has been applied to various problems, for which
 astonishing results have been reported. E.g.\@ only recently \citet{mnih2015human} have presented a
@@ -193,10 +267,11 @@ maintenance of an inventory system
 \citep{Das99_SolvingSemiMarkovDecisionProblemsUsingAverageRewardReinforcementLearning} to optimising
 transfer line in terms of maximizing demand, while keeping inventory levels of unfinished product as
 low as possible \citep{Mahadevan98_OptimizingProductionManufacturingUsingReinforcementLearning}.
-However, in practise usually decision have to be made on a daily basis \citep{enns2004work}.
-Therefore, we refrain from this adaption and concentrate on standard MDPs only. Furthermore, often
-continuous-time semi-MDP problems can be converted through uniformisation into equivalent discrete
-time instances \citep[see][]{Puterman94,bertsekas1995dynamic}.
+However, in practise usually decision have to be made on a daily basis
+\citep{enns2004work,GeldersvanW1982}. Therefore, we refrain from this adaption and concentrate on
+standard MDPs only. Furthermore, often continuous-time semi-MDP problems can be converted through
+uniformisation into equivalent discrete time instances
+\citep[see][]{Puterman94,bertsekas1995dynamic}.
 
 
 Like discounted reinforcement learning also average reward reinforcement learning is based on an
