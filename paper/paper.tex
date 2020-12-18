@@ -255,7 +255,7 @@ values and thus decrease the solution quality, as can for instance be observed i
 
 Therefore, most applications that incorporate and directly reflect costs or profit in the reward
 function use average reward reinforcement learning. \citet{aydin2000dynamic} use it in the setting
-of scheduling, while in a series of papers Mahadevan et al. investigated several problem domains
+of scheduling, while in a series of papers Mahadevan et al.\@ investigated several problem domains
 starting with simple MDPs
 \citep{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults,Mahadevan96_OptimalityCriteriaInReinforcementLearning}.
 After these foundational works for average reward reinforcement learning they introduced a
@@ -280,22 +280,26 @@ agent. By repeatedly choosing different actions the agent examines the problem s
 possible actions for any observed state. The advantage of average reward reinforcement learning over
 the widely applied discounted reinforcement learning framework is that the underlying optimisation
 technique is able to find better policies. This yields from the fact that in standard discounted
-reinforcement learning method the states are assessed independently and by a single value. In
-contrast to that average reward reinforcement learning splits up the evaluation of the average
-reward per step, a bias value that specifies the amount of collected rewards to reach the optimal
-path when starting in a suboptimal state and an error term which defines the number of steps to
-reach the optimal path
-\citep{Howard64,Puterman94,Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults}.
-Thus, while in average reward reinforcement learning these terms are learned separately in the
-discounted framework one value consisting of the addition of these values is estimated, where
-however the average reward is scaled by \(1/(1-\gamma)\) with the discount factor \(\gamma\) usually
-being set very close to \(1\), e.g. \(0.99\). In commonly applied unichain MDPs the average reward
-per step is equal for all states. Thus, independently assessing it is computationally unwisely.
-Therefore, we adapt an algorithm that uses a scalar value for the estimation of the average reward.
-Furthermore, as the average reward is scaled in the discounted state values it dominates the other
-two terms. This, combined with the iterative evaluation and the independently assessing of the
-average reward for each state lets standard discounted reinforcement learning struggle to find good
-policies.
+reinforcement learning method the states are assessed independently and by a single value. To be
+more precise, average reward reinforcement learning splits up the evaluation of the average reward
+per step, a bias value that specifies the amount of collected rewards to reach the optimal path when
+starting in a suboptimal state and an error term which defines the number of steps to reach the
+optimal path \citep{Howard64,Puterman94,
+  Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults}. % Thus,
+% while in average reward reinforcement learning these terms are learned separately
+In contrast to that in the standard discounted framework one single scalar value consisting of the
+addition of these subterms is estimated, where however the average reward is scaled by
+\(1/(1-\gamma)\). The discount factor \(\gamma\) is usually set very close to \(1\), e.g. \(0.99\),
+which leads to the fact that this subterm dominates the other two.
+%
+Further, in commonly applied unichain (and thus ergodic) MDPs the average reward per step is equal
+for all states. Thus, independently assessing it is not only computationally unwisely, but also
+problematic when iteratively annealed as done in reinforcement learning. Therefore, we adapt an
+algorithm that uses a scalar value for the estimation of the average reward over all states, and
+estimates for every state-action pair that incorporate the bias and error term. The later values are
+adjusted by the average reward.
+% This, combined with the iterative evaluation and the independently assessing of the average reward
+% for each state lets standard discounted reinforcement learning struggle to find good policies.
 % Thus, this incautious combining of different kinds of state values as done in discounted
 % reinforcement learning leads to the problems that (i) the average reward, which is equal for all
 % states of usually investigated unichain MDPs, is dominating and thus diluting the bias values, and
@@ -308,24 +312,23 @@ assessed state values of the production system. In contrast to the aforementione
 reward reinforcement learning our algorithm incorporates the optimisation of not only the average
 reward over time, but also the bias values, which is an important adaption in highly stochastic
 systems. Only the work by
-\cite{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}
+\citet{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}
 integrates this second-level refinement optimisation. However, their algorithm requires the
 selection of a reference state to prevent an infinite increase of state values. This results from
 the lack of feedback in the iterative process of optimising the different refinement optimisation
-levels. Furthermore, they asses the average reward independently.
+levels. Furthermore, they asses the average reward independently for each state.
 
-Therefore, we propose a novel average reward reinforcement learning algorithm, which is the first
-that solves the occurring cyclic constraint problem in the setting of average reward reinforcement
-learning, to assess orders for their release to the shop floor. These cyclic constraint problem
-emerges as the underlying constraint structure is based on the Laurent series expansion of the state
-values as shown by \cite{MillerVeinott1969}, and thus easily imposes an infinite number of
-interconnected constraints when handled unwisely.
-%
-The agent assesses the expected costs for the possible releases imposed by adapting the lead time.
-According to the agent's estimates it sets a planned lead time and with that releases orders into
-the production system.
-% upon releasing an order for the current and future periods
-% and, based on its estimates decides whether to release the order or not.
+In summary, we propose a novel average reward adjusted reinforcement learning algorithm to assess
+orders for their release to the shop floor. This is the first average reward adjusted reward
+learning algorithm that operates using a artificial neural network as function approximation. To
+ensure scalability we adapt a multi-agent approach, where each agent optimises the lead time
+management of a single product type. The agents do so by assessesing the expected costs for the
+possible releases imposed by adapting the lead time. According to the learned estimates each agent
+sets a planned lead time for the corresponding product type and with that releases orders into the
+production system. The highly optimised value-iteration algorithm uses improved n-step reinforcement
+learning with small action-based replay memories and worker agents to infer order release policies
+which outerperform \MS[t]{todo}.
+
 %
 % \MS[t]{TODO} We provide ample evidence of the viability of the approach and compare it to well-known
 % order release mechanisms. Furthermore, we show that the advantage of average reward reinforcement
@@ -362,12 +365,12 @@ the Markov property are referred to as Markov decision processes (MDPs)
 \citep[p.66]{sutton1998introduction}.
 % \MS{does our system possesses the Markov property at all? :-o }
 
-Thus, the action space is defined as \(F = \times_{s=1}^{\size{\States}} A_{s}\), where \(A_{s}\) is a
-finite set of possible actions. A \emph{policy} is a sequence \(\pol = (f_{1},f_{2},\ldots)\) of
+Thus, the action space is defined as \(F = \times_{s=1}^{\size{\States}} A_{s}\), where \(A_{s}\) is
+a finite set of possible actions. A \emph{policy} is a sequence \(\pol = (f_{1},f_{2},\ldots)\) of
 elements \(f_{t} \in F\). Using the policy \(\pol\) means that if the system is in state \(s\) at
 time \(t\) the action \(f_{t}(s)\), i.e.% that is
 the \(s\)-th component of \(f_{t}\), is chosen. A stationary policy \(\pol = (f,f,\ldots)\) does not
-depend on time. In the sequel we are concerned with stationary policies only. Thus the goal in
+depend on time. In the sequel we are concerned with stationary policies only. The goal in
 reinforcement learning (RL) is to find the best stationary policy \(\pol\) for a given problem,
 where the phrase ``best'' will be elaborated in detail below.
 
@@ -394,59 +397,28 @@ The aim in the discounted framework is to find an optimal policy \(\polopt_{\gam
 followed, maximises the state value for all states \(s\) as compared to any other policy
 \(\pol_{\gamma}\): \(V_{\gamma}^{\polopt_{\gamma}} - V_{\gamma}^{\pol_{\gamma}} \geqslant 0\). This
 criteria is usually referred to as \(\gamma\)-optimality as the discount factor \(\gamma\) is fixed.
-However, this also means that the actual value set for \(\gamma\) defines the policy that is
-optimised for. For instance, as can be seen in Figure~\ref{fig:printer} setting \(\gamma\) value to
+However, this also means that the actual value set for \(\gamma\) determines the best achievable
+policy. For instance, as can be seen in Figure~\ref{fig:printer} setting \(\gamma\) value to
 \(<0.8027\) the printer-loop is preferred over the mail-loop by the agent, although the mail-loop
-accumulates more reward over time, i.e. selecting the mail-loop is a sub-optimal choice.
-
+accumulates more reward over time, i.e.\@ selecting the mail-loop is a sub-optimal choice. Observe
+that the average reward received per step equals \(1\) for the printer-loop and \(2\) for the
+mail-loop. Thus, the (Blackwell-)optimal policy is to choose the mail-loop. However, if
+\(\gamma < 3^{-\frac{1}{5}} \approx 0.8027\) an agent using discounted reinforcement learning
+chooses the printer loop.
 
 \begin{figure}[t!]
   \centering
-  \begin{tikzpicture}[thin, scale=0.75]
-    % Nodes
-    \foreach \x in {1,...,5}{
-      \draw ({cos(\x*72-72)*2.5},{sin(\x*72-72)*2.5}) node(\x) [circle,draw,minimum size=25] {\footnotesize \(\x\)};
-    };
-    \foreach[evaluate={
-      \y=int(\x+5);
-    }]  \x in {2,...,3}{
-      \draw ({-cos(\x*72-72)*2.5+5},{sin(\x*72-72)*2.5}) node(\y) [circle,draw,minimum size=25]
-      {\footnotesize \(\x'\)};
-    };
-    \foreach [evaluate={
-      \y=int(\x+5);
-      \z=int(\x+5);
-    }] \x in {4,...,5}{
-      \draw ({-cos(\x*72-72)*2.5+5},{sin(\x*72-72)*2.5}) node(\z) [circle,draw,minimum size=25]
-      {\footnotesize \(\y'\)};
-    };
-
-
-    % Edges
-    \path[thin, ->, bend right, >=stealth] (1) edge[below left] node {\footnotesize\(\)} (2);
-    \path[thin, ->, bend right, >=stealth] (2) edge[above]      node {\footnotesize\(\)} (3);
-    \path[thin, ->, bend right, >=stealth] (3) edge[left ]      node {\footnotesize\(\)} (4);
-    \path[thin, ->, bend right, >=stealth] (4) edge[above]      node {\footnotesize\(\)} (5);
-    \path[thin, ->, bend right, >=stealth] (5) edge[above left] node {\footnotesize\(5\)} (1);
-
-    \path[thin, ->, bend left, >=stealth]         (1)  edge[below right] node {\footnotesize\(\)} (7);
-    \path[thin, ->, bend left, >=stealth]         (7)  edge[above right] node {\footnotesize\(\)} (8);
-    \path[thin, ->, dashed, bend left, >=stealth] (8)  edge[right]       node {\(\ldots\)} (9) ;
-    \path[thin, ->, bend left, >=stealth]         (9)  edge[above]       node {\footnotesize\(\)} (10);
-    \path[thin, ->, bend left, >=stealth]         (10) edge[above right] node {\footnotesize\(20\)} (1);
-
-    \draw (0,0) node[] { Printer };
-    \draw (5,0) node[] { Mail };
-
-  \end{tikzpicture}
-  \caption{\label{fig:printer} A MDP with two different deterministic policies. The only action choice is in
-    state \(1\), in which the agent can choose between doing the printer-loop or the mail-loop.
-    Observe that the average reward received per step equals \(1\) for the printer-loop and \(2\)
-    for the mail-loop. Thus, the (Blackwell-)optimal policy is to choose the mail-loop. However,
-    if \(\gamma < 3^{-\frac{1}{5}} \approx 0.8027\) an agent using discounted reinforcement
-    learning chooses the printer loop.
-    %
-    Adapted from \cite{Mahadevan96_OptimalityCriteriaInReinforcementLearning}.}
+  \input{figures/printer}
+  \caption{\label{fig:printer} A MDP with a single action choice in
+    state \(1\), i.e.\@ two different deterministic policies
+    % , in which the agent can choose between doing the printer-loop or the mail-loop  . The
+    % Observe that the average reward received per step equals \(1\) for the printer-loop and \(2\)
+    % for the mail-loop. Thus, the (Blackwell-)optimal policy is to choose the mail-loop. However,
+    % if \(\gamma < 3^{-\frac{1}{5}} \approx 0.8027\) an agent using discounted reinforcement
+    % learning chooses the printer loop.
+    % %
+    \citep[][adapted]{Mahadevan96_OptimalityCriteriaInReinforcementLearning}.
+  }
 \end{figure}
 
 One idea behind the \(\gamma\)-parameter of the discounted framework is to be able to balance
@@ -454,12 +426,11 @@ short-term rewards (low \(\gamma\)-values) and long-term rewards (high \(\gamma\
 what seems to be an advantage rather becomes a disadvantage for most applications. The issue is that
 the average reward value is non-linearly increased when \(\gamma\) approaches one. However, in
 almost all cases the aim is to perform well over time which in terms of reward means to first
-maximise for a the policy with highest average reward before more selectively choosing actions. That
-is, if several processes exist, we are searching for the ones with highest average reward before
-considering other criteria.
+maximise for a policy with highest average reward before more selectively choosing actions. That is,
+we are searching for the policies with highest average reward before considering other criteria.
 %
 Therefore, in almost all RL studies the discount factor is set to a value very close to \(1\), for
-instance to \(0.99\)~\cite[e.g.]{mnih2015human,mnih2016asynchronous,Lillicrap15}.
+instance to \(0.99\)~\citep[e.g.][]{mnih2015human,mnih2016asynchronous,Lillicrap15}.
 %
 By doing so the above mentioned non-linear relationship leads to the fact that the state value
 consists almost solely of the up-scaled average reward term, whereas the bias values can be
@@ -487,9 +458,9 @@ state \(s\) is defined as
 In the common case of unichain MDPs, in which only a single set of recurrent states exists, the
 average reward \(\avgrew^{\pol}(s)\) is equal for all states \(s\)
 \citep{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults,Puterman94}.
-For simplicity we concentrate on unichain MDPs in this work and thus may simply refer to it as
+In the sequel we focus on unichain MDPs in this work and thus may simply refer to it as
 \(\avgrew^{\pol}\). A policy that maximises the average reward in every state is called
-gain-optimal. Gain optimality is the least selective criteria an average reward reinforcement
+gain-optimal. Gain-optimality is the least selective criteria an average reward reinforcement
 learning aims for.
 
 Further, for an unichain aperiodic\footnote{In the periodic case the Cesaro limit of degree \(1\)
@@ -505,17 +476,21 @@ bias value is defined as
 where again \(R_{t}^{\pol}(s)\) is the reward received at time \(t\), starting in state \(s\) and
 following policy \(\pol\). Note that the bias values are bounded due to the subtraction of the
 average reward. Thus the bias value can be seen as the rewards that additionally sum up in case the
-process starts in state \(s\). A policy that is gain-optimal is also bias-optimal if it maximises
+process starts in state \(s\). A policy that is gain-optimal is also bias-optimal, if it maximises
 the bias values in every state and compared to every other policy.
 
 
 Especially for highly probabilistic systems bias-optimality is important. To clarify this consider
 Figure~\ref{fig:three-states} which again consists of two possible deterministic policies with the
 only choice in state \(1\). Both policies have the same average reward of \(1\). However, only
-selecting the A-loop is bias-optimal, as the actions with non-zero rewards are selected earlier.
-E.g.~consider starting in state 1. Under the policy \(\pol_{A}\) which takes the A-loop the reward
-sequence is \((2,0,2,0,\ldots)\), while for the other policy \(\pol_{B}\) it is
-\((0,2,0,2,\ldots)\).
+taking the A loop is bias-optimal, as its policy \(\pol_{A}\) leads to bias values
+\(V^{\pol_{A}}(1)=0.5\), \(V^{\pol_{A}}(0)=-0.5\) and \(V^{\pol_{A}}(2)=1.5\), while policy
+\(\pol_{B}\) which selects the B loop generates bias values \(V^{\pol_{B}}(1)=-0.5\),
+\(V^{\pol_{B}}(0)=-1.5\) and \(V^{\pol_{B}}(2)=0.5\).
+%
+This yields from the fact that the actions with non-zero rewards are selected earlier in policy
+\(\pol_{A}\). Consider starting in state 1. Under the policy \(\pol_{A}\) the reward sequence is
+\((2,0,2,0,\ldots)\), while for the other policy \(\pol_{B}\) it is \((0,2,0,2,\ldots)\).
 
 
 \begin{figure}[t!]
@@ -537,25 +512,20 @@ sequence is \((2,0,2,0,\ldots)\), while for the other policy \(\pol_{B}\) it is
 
 
   \end{tikzpicture}
-  \caption{\label{fig:three-states} A task with two different MDPs, A (going left in 1) and B
-    (going right). As in the previous example the only action choice is in state \(1\). Observe
-    that the average reward received per step equals \(1\) for both policies. However, only taking
-    the A loop is bias-optimal, as its policy \(\pol_{A}\) leads to bias values
-    \(V^{\pol_{A}}(1)=0.5\), \(V^{\pol_{A}}(0)=-0.5\) and \(V^{\pol_{A}}(2)=1.5\), while policy
-    \(\pol_{B}\) which selects the B loop generates bias values \(V^{\pol_{B}}(1)=-0.5\),
-    \(V^{\pol_{B}}(0)=-1.5\) and \(V^{\pol_{B}}(2)=0.5\). Adapted from
-    \cite{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults}.}
+  \caption{\label{fig:three-states} A MDP with two gain-optimal deterministic policies, \(\pol_{A}\)
+    going left in 1 is also bias-optimal, while \(\pol_{B}\) is not \citep[Adapted
+    from][]{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults}.}
 \end{figure}
 
 
-\subsection{More Refined Optimality Criteria}
+\subsection{Optimality Criteria}
 \label{subsec:More_Refined_Optimality_Criteria}
 
-The aforementioned and informally introduced notions of gain-optimality and bias-optimality can be
-generalised to \(n\)-discount-optimality and will now be defined formally.
+The aforementioned and informally introduced notions of gain- and bias-optimality are formalised and
+generalised to \(n\)-discount-optimality.
 
 \begin{definition}
-  Due to \cite{Veinott69} for MDPs a policy \(\polopt\) is \emph{\(n\)-discount-optimal} for
+  Due to \citet{Veinott69} for MDPs a policy \(\polopt\) is \emph{\(n\)-discount-optimal} for
   \(n=-1,0,1,\ldots\) for all states \(s \in \States\) with discount factor
   \(\gamma\) % and \(V_{\gamma}^{\pol}(s)\) being the value function as defined above
   %
@@ -566,32 +536,29 @@ generalised to \(n\)-discount-optimality and will now be defined formally.
 \end{definition}
 
 
-For the case of \(n=-1\) this lead to gain-optimality
-\(\avgrew^{\polopt}(s) - \avgrew^{\pol}(s) \geqslant 0\) for all policies \(\pol\) and states \(s\)
-\citep{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}. In
-the case of \(n=0\) it describes bias-optimality with \(V^{\polopt}(s) - V^{\pol}(s) \geqslant 0\)
-forall policies \(\pol\) and states \(s\)
-\citep{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}.
-%
 Only if a policy is \(n\)-discount-optimal for all \(n < m\) it can be \(m\)-discount
 optimal \citep{Puterman94,Veinott69}.
 %
-If a policy is \(\infty\)-discount-optimal then it is said to be
-Blackwell-optimal \citep{Blackwell62}.
+If a policy is \(\infty\)-discount-optimal then it is said to be Blackwell-optimal
+\citep{Blackwell62}.
 % weakening the argument!!!
-I.e.~for Blackwell-optimal policies \(\polopt\) there exists a discount factor \(\gammaopt < 1\)
+That is, for Blackwell-optimal policies \(\polopt\) there exists a discount factor \(\gammaopt < 1\)
 such that \(V_{\gamma}^{\polopt}(s) \geqslant V_{\gamma}^{\pol}(s)\) for all
 \(\gamma \geqslant \gammaopt\) and under all policies \(\pol\)
 \citep{Mahadevan96_SensitiveDiscountOptimalityUnifyingDiscountedAndAverageRewardReinforcementLearning,Blackwell62}.
 Informally that means there exists a discount factor \(<1\) which finds Blackwell-optimal policies.
-However, (i) in more complex, i.e. real world, MDPs this value can be arbitrary close to \(1\) and
+However, (i) in more complex, i.e.\@ real world, MDPs this value can be arbitrary close to \(1\) and
 (ii) the difference in state values may be very small, which (iii) due to the need of state value
 function approximation likely causes errors when choosing among different actions in the discounted
 framework.
-% Real world applications underlie much more complex MDPs as the ones of Figures~\ref{fig:printer}
-% and~\ref{fig:three-states}. Thus \(\gamma\)-values even very close to \(1\) can lead to sub-optimal
-% policies. To investigate these differences we will now present a more elective optimality criteria.
-%
+
+
+For the case of \(n=-1\) this lead to gain-optimality
+\(\avgrew^{\polopt}(s) - \avgrew^{\pol}(s) \geqslant 0\) for all policies \(\pol\) and states \(s\)
+\citep{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}. In
+the case of \(n=0\) it describes bias-optimality with \(V^{\polopt}(s) - V^{\pol}(s) \geqslant 0\)
+for all policies \(\pol\) and states \(s\)
+\citep{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}.
 %
 
 
@@ -614,8 +581,9 @@ using the Laurent series expansion as
 \end{align*}
 
 
-where \cite{Puterman94} shows that \(\lim_{\gamma \to 1} e_{\gamma}^{\pol}(s) = 0\). Note how the
-first term depending on the average reward \(\avgrew^{\pol}(s)\) converges to infinity as \(\gamma\)
+where the error term \(e_{\gamma}^{\pol}(s)\) exists of infinitely many subterms and
+\citet{Puterman94} shows that \(\lim_{\gamma \to 1} e_{\gamma}^{\pol}(s) = 0\). Note how the first
+term depending on the average reward \(\avgrew^{\pol}(s)\) converges to infinity as \(\gamma\)
 increases.
 
 
@@ -626,11 +594,12 @@ maximised.
 %
 Then for \(0\)-discount-optimality the agent has to choose the highest bias values.
 %
-Finally \(n\)-discount-optimality for \(n \geqslant 1\) requires to maximise the term
+Finally \(n\)-discount-optimality for \(n \geqslant 1\) requires to maximise the error term
 \(e_{\gamma}^{\pol}(s)\) which only exists as \(\gamma\) is strictly less than \(1\). Thus this term
-incorporates the number of steps its expected rewards on the path which are required for reaching
-the highest rewards. That is, it optimises the expected reward according to the occurrence on the
-paths, where shorter paths and those which collect the rewards sooner are preferred.
+incorporates the number of expected steps and their corresponding reward on the path to the
+Blackwell-optimal policy. That is, it optimises the expected reward collected to reach the Blackwell
+optimal policy according to the occurrence on the paths, where shorter paths and those which collect
+the rewards sooner are preferred.
 
 Note how the Laurent series expansion dissipates these values in single terms and therefore defines
 a divide and conquer methodological approach to reinforcement learning. Thus in average reward
