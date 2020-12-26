@@ -348,8 +348,10 @@ simulation model we use to evaluate the approach. \MS[t]{todo}
 
 \section{Average Reward Adjusted Reinforcement Learning}
 
-This section introduces average reward adjusted reinforcement learning in comparison to the discounted
-framework, elaborates on optimiality criteria and provides insights of the underlying algorithm.
+This section briefly reintroduces the most important concepts of average reward adjusted
+reinforcement learning, elaborates on optimality criteria and provides insights of the underlying
+algorithm. For a more extensive introduction to average reward reinforcement learning we refer to
+\citet{schneckenreither2020average}.
 
 Like \cite{MillerVeinott1969} we are considering problems that are observed in a sequence of points
 in time labeled \(1,2,\ldots\) and can be modelled using a finite set of states \(\States\),
@@ -384,66 +386,100 @@ defined as the expected discounted sum of rewards under the stationary policy \(
 starting in state \(s\). Note that the policy \(\pol_{\gamma}\) depends on the selected discount
 factor. That is
 \begin{align*}
-  V_{\gamma}^{\pol_{\gamma}}(s)=\lim_{N \to \infty} E[\sum_{t=0}^{N-1} \gamma^{t} R_{t}^{\pol_{\gamma}}(s)]\tcom
+  V_{\gamma}^{\pol_{\gamma}}(s)=\lim_{N \to \infty} \E[\sum_{t=0}^{N-1} \gamma^{t} R_{t}^{\pol_{\gamma}}(s)]\tcom
 \end{align*}
 
 where \(0 \leqslant \gamma < 1\) is the discount factor and
-\(R_{t}^{\pol}(s) = E_{\pol}[ r(s_{t},a_{t}) \mid s_{t} = s, a_{t} =
-a]\) % \MS[t]{check if correct!}
-the reward received at time \(t\) upon starting in state \(s\) by following policy \(\pol\)
+\(R_{t}^{\pol}(s) = \E_{\pol}[ r(s_{t},a_{t}) \mid s_{t} = s, a_{t} = a]\) the reward received at
+time \(t\) upon starting in state \(s\) by following policy \(\pol\)
 \citep{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults}.
+\MS[t]{how are the update rules?}
 
-The aim in the discounted framework is to find an optimal policy \(\polopt_{\gamma}\), which when
-followed, maximises the state value for all states \(s\) as compared to any other policy
-\(\pol_{\gamma}\): \(V_{\gamma}^{\polopt_{\gamma}} - V_{\gamma}^{\pol_{\gamma}} \geqslant 0\). This
-criteria is usually referred to as \(\gamma\)-optimality as the discount factor \(\gamma\) is fixed.
-However, this also means that the actual value set for \(\gamma\) determines the best achievable
-policy. For instance, as can be seen in Figure~\ref{fig:printer} setting \(\gamma\) value to
-\(<0.8027\) the printer-loop is preferred over the mail-loop by the agent, although the mail-loop
-accumulates more reward over time, i.e.\@ selecting the mail-loop is a sub-optimal choice. Observe
-that the average reward received per step equals \(1\) for the printer-loop and \(2\) for the
-mail-loop. Thus, the (Blackwell-)optimal policy is to choose the mail-loop. However, if
-\(\gamma < 3^{-\frac{1}{5}} \approx 0.8027\) an agent using discounted reinforcement learning
-chooses the printer loop.
+The Bellman Equation defined as
+\(V_{\gamma}^{\pol}(s) = \E_{\pol}[r + \gamma V_{\gamma}^{\pol}(s')]\) \citep[see
+e.g.][p.70]{sutton1998introduction} provides a way to assess the state values using two
+consecutively observed states \(s, s'\) and the observed reward \(r\) returned by the system. When
+this formula is used as an update rule it provides an algorithm that converges the state values by
+iteratively adapting the state value estimates.
+%
+There are four major issues with discounted RL, which results in the fact that it is inapplicable
+for many problems of operations research.
 
-\begin{figure}[t!]
-  \centering
-  \input{figures/printer}
-  \caption{\label{fig:printer} A MDP with a single action choice in
-    state \(1\), i.e.\@ two different deterministic policies
-    % , in which the agent can choose between doing the printer-loop or the mail-loop  . The
-    % Observe that the average reward received per step equals \(1\) for the printer-loop and \(2\)
-    % for the mail-loop. Thus, the (Blackwell-)optimal policy is to choose the mail-loop. However,
-    % if \(\gamma < 3^{-\frac{1}{5}} \approx 0.8027\) an agent using discounted reinforcement
-    % learning chooses the printer loop.
-    % %
-    \citep[][adapted]{Mahadevan96_OptimalityCriteriaInReinforcementLearning}.
-  }
-\end{figure}
 
-One idea behind the \(\gamma\)-parameter of the discounted framework is to be able to balance
-short-term rewards (low \(\gamma\)-values) and long-term rewards (high \(\gamma\)-values). However,
-what seems to be an advantage rather becomes a disadvantage for most applications. The issue is that
-the average reward value is non-linearly increased when \(\gamma\) approaches one. However, in
-almost all cases the aim is to perform well over time which in terms of reward means to first
-maximise for a policy with highest average reward before more selectively choosing actions. That is,
-we are searching for the policies with highest average reward before considering other criteria.
-%
-Therefore, in almost all RL studies the discount factor is set to a value very close to \(1\), for
-instance to \(0.99\)~\citep[e.g.][]{mnih2015human,mnih2016asynchronous,Lillicrap15}.
-%
-By doing so the above mentioned non-linear relationship leads to the fact that the state value
-consists almost solely of the up-scaled average reward term, whereas the bias values can be
-neglected. This leads to diluted state values and thus difficulties in distinguishing actions which
-impose policies that possess the same average reward.
-%
-In contrast to that, average reward RL separately assesses these values and according to these
-selectively chooses the best action, comparing one after the other.
-%
-To illustrate the idea reconsider Figure~\ref{fig:printer}. First the agent picks the policy
-according to the highest average reward. Thus, all actions are assessed by an average reward of
-\(2\) which is inferred from the Mail-loop. This however, makes choosing the Printer-loop
-unattractive; i.e. the policy converges to the optimal policy of choosing the Mail loop.
+\begin{enumerate}
+\item Standard discounted RL can only infer suboptimal policies as the discount factor is strictly
+  less than one, i.e.\@ \(\gamma < 1\).
+\item It is very difficult to specify a desired balance between the short-term and long-term
+  (average reward) rewards. This results from the fact that the long-term rewards are scaled
+  exponentially, where the factor depends on the chosen \(\gamma\) value.
+\item Episodic MDPs with an average reward per step that is non-zero cannot be solved, as the
+  average reward is ignored in the terminal states.
+\item The average reward is independently assessed for each state, even though it is the dominating
+  part for all state values and thus is shared between more than one or, for unichain MDPs, even all
+  states. This usually leads to an exponentially increased number of learning steps required for
+  policies to converge.
+\end{enumerate}
+
+
+% The aim in the discounted framework is to find an optimal policy \(\polopt_{\gamma}\), which when
+% followed, maximises the state value for all states \(s\) as compared to any other policy
+% \(\pol_{\gamma}\): \(V_{\gamma}^{\polopt_{\gamma}} - V_{\gamma}^{\pol_{\gamma}} \geqslant 0\). This
+% criteria is usually referred to as \(\gamma\)-optimality as the discount factor \(\gamma\) is fixed.
+% However, this also means that the actual value set for \(\gamma\) determines the best achievable
+% policy. For instance, as can be seen in Figure~\ref{fig:printer} setting \(\gamma\) value to
+% \(<0.8027\) the printer-loop is preferred over the mail-loop by the agent, although the mail-loop
+% accumulates more reward over time, i.e.\@ selecting the mail-loop is a sub-optimal choice. Observe
+% that the average reward received per step equals \(1\) for the printer-loop and \(2\) for the
+% mail-loop. Thus, the (Blackwell-)optimal policy is to choose the mail-loop. However, if
+% \(\gamma < 3^{-\frac{1}{5}} \approx 0.8027\) an agent using discounted reinforcement learning
+% chooses the printer loop.
+
+% \begin{figure}[t!]
+%   \centering
+%   \input{figures/printer}
+%   \caption{\label{fig:printer} A MDP with a single action choice in
+%     state \(1\), i.e.\@ two different deterministic policies
+%     % , in which the agent can choose between doing the printer-loop or the mail-loop  . The
+%     % Observe that the average reward received per step equals \(1\) for the printer-loop and \(2\)
+%     % for the mail-loop. Thus, the (Blackwell-)optimal policy is to choose the mail-loop. However,
+%     % if \(\gamma < 3^{-\frac{1}{5}} \approx 0.8027\) an agent using discounted reinforcement
+%     % learning chooses the printer loop.
+%     % %
+%     \citep[][adapted]{Mahadevan96_OptimalityCriteriaInReinforcementLearning}.
+%   }
+% \end{figure}
+
+% One idea behind the \(\gamma\)-parameter of the discounted framework is to be able to balance
+% short-term rewards (low \(\gamma\)-values) and long-term rewards (high \(\gamma\)-values). However,
+% what seems to be an advantage rather becomes a disadvantage for most applications. The issue is that
+% the average reward value is non-linearly increased when \(\gamma\) approaches one. However, in
+% almost all cases the aim is to perform well over time which in terms of reward means to first
+% maximise for a policy with highest average reward before more selectively choosing actions. That is,
+% we are searching for the policies with highest average reward before considering other criteria.
+% %
+% Therefore, in almost all RL studies the discount factor is set to a value very close to \(1\), for
+% instance to \(0.99\)~\citep[e.g.][]{mnih2015human,mnih2016asynchronous,Lillicrap15}.
+% %
+% By doing so the above mentioned non-linear relationship leads to the fact that the state value
+% consists almost solely of the up-scaled average reward term, whereas the bias values can be
+% neglected. This leads to diluted state values and thus difficulties in distinguishing actions which
+% impose policies that possess the same average reward.
+% %
+% In contrast to that, average reward RL separately assesses these values and according to these
+% selectively chooses the best action, comparing one after the other.
+% %
+% To illustrate the idea reconsider Figure~\ref{fig:printer}. First the agent picks the policy
+% according to the highest average reward. Thus, all actions are assessed by an average reward of
+% \(2\) which is inferred from the Mail-loop. This however, makes choosing the Printer-loop
+% unattractive; i.e. the policy converges to the optimal policy of choosing the Mail loop.
+
+Especially due to the fourth issue standard discounted RL is not well applicable in the operations
+research domain. This mainly results from the fact that a continuous assessing of the state values
+using costs or profit is often required, which leads to intractable long learning phases with high
+exploration rate even for small sized problems. But as high exploration rates produce errors in the
+state value estimations \citep{MillerVeinott1969} finding a well working parameterisation is
+difficult. Average reward reinforcement learning overcomes these issues by separately assessing
+addends of the state values.
 
 
 \subsection{Average Reward Reinforcement Learning}
@@ -460,8 +496,8 @@ average reward \(\avgrew^{\pol}(s)\) is equal for all states \(s\)
 \citep{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults,Puterman94}.
 In the sequel we focus on unichain MDPs in this work and thus may simply refer to it as
 \(\avgrew^{\pol}\). A policy that maximises the average reward in every state is called
-gain-optimal. Gain-optimality is the least selective criteria an average reward reinforcement
-learning aims for.
+gain-optimal. % Gain-optimality is the least selective criteria an average reward reinforcement
+% learning aims for.
 
 Further, for an unichain aperiodic\footnote{In the periodic case the Cesaro limit of degree \(1\)
   is required to ensure stationary state transition probabilities and thus stationary bias
@@ -608,13 +644,13 @@ combined value for a fixed \(\gamma\)-value is learned.
 
 The addends, where \(n=-1,0,\ldots\) denote the coefficients of the Laurent series expansion,
 can be reformulated to following constraint problem with expected reward
-\(R^{\pol}(s) = E_{\pol}[ r(s, a) ] = \sum_{a \in \mathcal{A}(s)}p(a | s) r(s, a)\) as shown by
+\(R^{\pol}(s) = \E_{\pol}[ r(s, a) ] = \sum_{a \in \mathcal{A}(s)}p(a | s) r(s, a)\) as shown by
 \cite{MillerVeinott1969} and \citet[p.346]{Puterman94}:
 
 \begin{align}
-  \label{eq:constr1}\avgrew^{\pol}(s) - E[\avgrew^{\pol}(s)] & = 0 &  & \text{for } n = -1 \\
-  \label{eq:constr2}\avgrew^{\pol}(s) + V^{\pol}(s) - E[V^{\pol}(s)] & = R^{\pol}(s) && \text{for } n = 0 \\
-  \label{eq:constr3}W^{\pol}_{n-1}(s) + W^{\pol}_{n}(s) - E[W^{\pol}_{n}(s)] & = 0 && \text{for } n \geqslant 1, \text{where } W_{0}^{\pol}(s) = V^{\pol}(s)
+  \label{eq:constr1}\avgrew^{\pol}(s) - \E[\avgrew^{\pol}(s)] & = 0 &  & \text{for } n = -1 \\
+  \label{eq:constr2}\avgrew^{\pol}(s) + V^{\pol}(s) - \E[V^{\pol}(s)] & = R^{\pol}(s) && \text{for } n = 0 \\
+  \label{eq:constr3}W^{\pol}_{n-1}(s) + W^{\pol}_{n}(s) - \E[W^{\pol}_{n}(s)] & = 0 && \text{for } n \geqslant 1, \text{where } W_{0}^{\pol}(s) = V^{\pol}(s)
 \end{align}
 
 \citet[p.343ff]{Puterman94} shows that due to the given degree of freedom if \(n=-1,0,\ldots,M\)
