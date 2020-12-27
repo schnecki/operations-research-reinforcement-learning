@@ -50,14 +50,24 @@
 \usepackage{paper}
 
 
+\newcommand\theauthor{
+  Manuel Schneckenreither% \inst{1}
+  % \orcidID{0000-0002-4812-4665}
+  \and Stefan Haeussler% \inst{2}
+  % \orcidID{0000-0003-2589-1367}
+}
+\newcommand\thetitle{Average Reward Adjusted Deep Reinforcement Learning: Near-Blackwell-Optimal
+  Policies for Order Release}
+
+
 % \usepackage{academicons}
 % \usepackage{cite}
 \usepackage[hidelinks,
 plainpages=false,
-pdftitle={Reinforcement Learning Methods for Operations Research Applications -- Reloaded},
-pdfauthor={Manuel Schneckenreither and Stefan Haeussler},
-pdfsubject={Reinforcement Learning Methods for Operations Research Applications -- Reloaded},
-pdfkeywords={production planning, order release, machine learning, reinforcement learning,
+pdftitle={\thetitle{}},
+pdfauthor={\theauthor{}},
+pdfsubject={\thetitle{}},
+pdfkeywords={average reward adjusted reinforcement learning, production planning, order release, machine learning,
   operations research},
 ]{hyperref}
 \usepackage{url}
@@ -69,14 +79,11 @@ pdfkeywords={production planning, order release, machine learning, reinforcement
   \else \begin{center}\textcolor{blue}{\textbf{MS:} #2} \end{center} \fi}
 
 % \newcolumntype{x}[1]{>{\centering\arraybackslash\hspace{0pt}}p{#1}}
-\title{
-  Reinforcement Learning Methods for Operations Research Applications -- Reloaded
-}
-\author{Manuel Schneckenreither% \inst{1}
-  % \orcidID{0000-0002-4812-4665}
-  \and Stefan Haeussler% \inst{2}
-  % \orcidID{0000-0003-2589-1367}
-}
+
+\author{\theauthor}
+\date{\today}
+\title{\thetitle}
+
 
 % \authorrunning{Schneckenreither and Haeussler}
 \institute{
@@ -85,6 +92,7 @@ pdfkeywords={production planning, order release, machine learning, reinforcement
   University of Innsbruck, Austria\\
   email: \email{manuel.schneckenreither@uibk.ac.at,stefan.haeussler@uibk.ac.at}
 }
+
 
 \begin{document}
 
@@ -372,9 +380,7 @@ a finite set of possible actions. A \emph{policy} is a sequence \(\pol = (f_{1},
 elements \(f_{t} \in F\). Using the policy \(\pol\) means that if the system is in state \(s\) at
 time \(t\) the action \(f_{t}(s)\), i.e.% that is
 the \(s\)-th component of \(f_{t}\), is chosen. A stationary policy \(\pol = (f,f,\ldots)\) does not
-depend on time. In the sequel we are concerned with stationary policies only. The goal in
-reinforcement learning (RL) is to find the best stationary policy \(\pol\) for a given problem,
-where the phrase ``best'' will be elaborated in detail below.
+depend on time. In the sequel we are concerned with stationary policies only.
 
 
 \subsection{Discounted Reinforcement Learning}
@@ -393,7 +399,81 @@ where \(0 \leqslant \gamma < 1\) is the discount factor and
 \(R_{t}^{\pol}(s) = \E_{\pol}[ r(s_{t},a_{t}) \mid s_{t} = s, a_{t} = a]\) the reward received at
 time \(t\) upon starting in state \(s\) by following policy \(\pol\)
 \citep{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults}.
-\MS[t]{how are the update rules?}
+%
+The aim in the discounted framework is to find an optimal policy \(\polopt_{\gamma}\), which when
+followed, maximises the state value for all states \(s\) as compared to any other policy
+\(\pol_{\gamma}\): \(V_{\gamma}^{\polopt_{\gamma}} - V_{\gamma}^{\pol_{\gamma}} \geqslant 0\). This
+criteria is usually referred to as \(\gamma\)-optimality as the discount factor \(\gamma\) is fixed.
+However, this also means that the actual value set for \(\gamma\) determines the best achievable
+policy. For instance, as can be seen in Figure~\ref{fig:printer} setting \(\gamma <0.8027\) the
+printer-loop is preferred over the mail-loop, although the mail-loop accumulates more
+reward over time, i.e.\@ selecting the mail-loop is a sub-optimal choice. Observe that the average
+reward received per step equals \(1\) for the printer-loop and \(2\) for the mail-loop. Thus, the
+(Blackwell-)optimal policy is to choose the mail-loop. However, if
+\(\gamma < 3^{-\frac{1}{5}} \approx 0.8027\) an agent using discounted reinforcement learning
+chooses the printer loop as going the printer loop has a higher evaluation.
+%
+\begin{figure}[t!]
+  \centering
+  \input{figures/printer}
+  \caption{\label{fig:printer} A MDP with a single action choice in
+    state \(1\), i.e.\@ two different deterministic policies
+    % , in which the agent can choose between doing the printer-loop or the mail-loop  . The
+    % Observe that the average reward received per step equals \(1\) for the printer-loop and \(2\)
+    % for the mail-loop. Thus, the (Blackwell-)optimal policy is to choose the mail-loop. However,
+    % if \(\gamma < 3^{-\frac{1}{5}} \approx 0.8027\) an agent using discounted reinforcement
+    % learning chooses the printer loop.
+    % %
+    \citep[][adapted]{Mahadevan96_OptimalityCriteriaInReinforcementLearning}.
+  }
+\end{figure}
+%
+
+Therefore, in the seek of a more general optimality criteria for determining the best stationary
+policy \(\pol\) for a given problem, we introduce \(n\)-discount-optimality.
+
+
+% \subsection{Optimality Criteria}
+% \label{subsec:More_Refined_Optimality_Criteria}
+
+% The aforementioned and informally introduced notions of gain- and bias-optimality are formalised and
+% generalised to \(n\)-discount-optimality as follows.
+
+\begin{definition}[\(n\)-Discount-Optimality]
+  Due to \citet{Veinott69} for a MDP a policy \(\polopt\) is \emph{\(n\)-discount-optimal} for
+  \(n=-1,0,1,\ldots\) for all states \(s \in \States\) with discount factor
+  \(\gamma\) % and \(V_{\gamma}^{\pol}(s)\) being the value function as defined above
+  %
+  if and only if
+  \begin{align*}
+    \lim_{\gamma \to 1}(1-\gamma)^{-n}\ (V_{\gamma}^{\polopt}(s) - V_{\gamma}^{\pol}(s)) \geqslant 0 \tpkt
+  \end{align*}
+\end{definition}
+
+
+Only if a policy is \(n\)-discount-optimal for all \(n < m\) it can be \(m\)-discount
+optimal \citep{Puterman94,Veinott69}.
+%
+If a policy is \(\infty\)-discount-optimal then it is said to be Blackwell-optimal
+\citep{Blackwell62}.
+% weakening the argument!!!
+That is, for Blackwell-optimal policies \(\polopt\) there exists a discount factor \(\gammaopt < 1\)
+such that \(V_{\gamma}^{\polopt}(s) \geqslant V_{\gamma}^{\pol}(s)\) for all
+\(\gamma \geqslant \gammaopt\) and under all policies \(\pol\)
+\citep{Mahadevan96_SensitiveDiscountOptimalityUnifyingDiscountedAndAverageRewardReinforcementLearning,Blackwell62}.
+Informally that means there exists a discount factor \(\gamma <1\) which finds Blackwell-optimal
+policies. However, (i) in more complex, i.e.\@ real world, MDPs this value can be arbitrary close to
+\(1\) and (ii) the difference in state values may be very small, which (iii) due to the need of
+state value function approximation likely causes errors when choosing among different actions in the
+discounted framework.
+
+
+% In the sequel we present the Laurent series expansion which not only links discounted reinforcement
+% learning with average reward reinforcement learning, but also connects to \(n\)-discount-optimality.
+
+% Furthermore, for the rest of the paper we occasionally write drop the \(V(s)\) and $V_{\gamma}$ instead of
+% \(V^{\pol}(s)\) and \(V^{\pol}_{\gamma}\) when the policy is clear from the context.
+
 
 The Bellman Equation defined as
 \(V_{\gamma}^{\pol}(s) = \E_{\pol}[r + \gamma V_{\gamma}^{\pol}(s')]\) \citep[see
@@ -420,34 +500,6 @@ for many problems of operations research.
   policies to converge.
 \end{enumerate}
 
-
-% The aim in the discounted framework is to find an optimal policy \(\polopt_{\gamma}\), which when
-% followed, maximises the state value for all states \(s\) as compared to any other policy
-% \(\pol_{\gamma}\): \(V_{\gamma}^{\polopt_{\gamma}} - V_{\gamma}^{\pol_{\gamma}} \geqslant 0\). This
-% criteria is usually referred to as \(\gamma\)-optimality as the discount factor \(\gamma\) is fixed.
-% However, this also means that the actual value set for \(\gamma\) determines the best achievable
-% policy. For instance, as can be seen in Figure~\ref{fig:printer} setting \(\gamma\) value to
-% \(<0.8027\) the printer-loop is preferred over the mail-loop by the agent, although the mail-loop
-% accumulates more reward over time, i.e.\@ selecting the mail-loop is a sub-optimal choice. Observe
-% that the average reward received per step equals \(1\) for the printer-loop and \(2\) for the
-% mail-loop. Thus, the (Blackwell-)optimal policy is to choose the mail-loop. However, if
-% \(\gamma < 3^{-\frac{1}{5}} \approx 0.8027\) an agent using discounted reinforcement learning
-% chooses the printer loop.
-
-% \begin{figure}[t!]
-%   \centering
-%   \input{figures/printer}
-%   \caption{\label{fig:printer} A MDP with a single action choice in
-%     state \(1\), i.e.\@ two different deterministic policies
-%     % , in which the agent can choose between doing the printer-loop or the mail-loop  . The
-%     % Observe that the average reward received per step equals \(1\) for the printer-loop and \(2\)
-%     % for the mail-loop. Thus, the (Blackwell-)optimal policy is to choose the mail-loop. However,
-%     % if \(\gamma < 3^{-\frac{1}{5}} \approx 0.8027\) an agent using discounted reinforcement
-%     % learning chooses the printer loop.
-%     % %
-%     \citep[][adapted]{Mahadevan96_OptimalityCriteriaInReinforcementLearning}.
-%   }
-% \end{figure}
 
 % One idea behind the \(\gamma\)-parameter of the discounted framework is to be able to balance
 % short-term rewards (low \(\gamma\)-values) and long-term rewards (high \(\gamma\)-values). However,
@@ -495,9 +547,17 @@ In the common case of unichain MDPs, in which only a single set of recurrent sta
 average reward \(\avgrew^{\pol}(s)\) is equal for all states \(s\)
 \citep{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults,Puterman94}.
 In the sequel we focus on unichain MDPs in this work and thus may simply refer to it as
-\(\avgrew^{\pol}\). A policy that maximises the average reward in every state is called
-gain-optimal. % Gain-optimality is the least selective criteria an average reward reinforcement
+\(\avgrew^{\pol}\). A policy \(\polopt\) that maximises the average reward
+\(\avgrew^{\polopt}(s) - \avgrew^{\pol}(s) \geqslant 0\) in every state \(s\) as compared to any
+other policy \(\pol\) is called gain-optimal.
+%
+% A policy that maximises the average reward in every state is called
+% gain-optimal
+% \citep{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}.
+% Gain-optimality is the least selective criteria an average reward reinforcement
 % learning aims for.
+\citet{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}
+shows that \(n\)-discount-optimality for \(n=-1\) describes gain-optimality.
 
 Further, for an unichain aperiodic\footnote{In the periodic case the Cesaro limit of degree \(1\)
   is required to ensure stationary state transition probabilities and thus stationary bias
@@ -512,8 +572,11 @@ bias value is defined as
 where again \(R_{t}^{\pol}(s)\) is the reward received at time \(t\), starting in state \(s\) and
 following policy \(\pol\). Note that the bias values are bounded due to the subtraction of the
 average reward. Thus the bias value can be seen as the rewards that additionally sum up in case the
-process starts in state \(s\). A policy that is gain-optimal is also bias-optimal, if it maximises
-the bias values in every state and compared to every other policy.
+process starts in state \(s\). A policy \(\polopt\) that is gain-optimal is also bias-optimal, if it
+maximises the bias values \(V^{\polopt}(s) - V^{\pol}(s) \geqslant 0\) in every state \(s\) and
+compared to every other policy \(\pol\). Bias-optimality is given by setting \(n=0\) in the
+definition of \(n\)-discount-optimality
+\citep{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}.
 
 
 Especially for highly probabilistic systems bias-optimality is important. To clarify this consider
@@ -554,57 +617,6 @@ This yields from the fact that the actions with non-zero rewards are selected ea
 \end{figure}
 
 
-\subsection{Optimality Criteria}
-\label{subsec:More_Refined_Optimality_Criteria}
-
-The aforementioned and informally introduced notions of gain- and bias-optimality are formalised and
-generalised to \(n\)-discount-optimality.
-
-\begin{definition}
-  Due to \citet{Veinott69} for MDPs a policy \(\polopt\) is \emph{\(n\)-discount-optimal} for
-  \(n=-1,0,1,\ldots\) for all states \(s \in \States\) with discount factor
-  \(\gamma\) % and \(V_{\gamma}^{\pol}(s)\) being the value function as defined above
-  %
-  if and only if
-  \begin{align*}
-    \lim_{\gamma \to 1}(1-\gamma)^{-n}\ (V_{\gamma}^{\polopt}(s) - V_{\gamma}^{\pol}(s)) \geqslant 0 \tpkt
-  \end{align*}
-\end{definition}
-
-
-Only if a policy is \(n\)-discount-optimal for all \(n < m\) it can be \(m\)-discount
-optimal \citep{Puterman94,Veinott69}.
-%
-If a policy is \(\infty\)-discount-optimal then it is said to be Blackwell-optimal
-\citep{Blackwell62}.
-% weakening the argument!!!
-That is, for Blackwell-optimal policies \(\polopt\) there exists a discount factor \(\gammaopt < 1\)
-such that \(V_{\gamma}^{\polopt}(s) \geqslant V_{\gamma}^{\pol}(s)\) for all
-\(\gamma \geqslant \gammaopt\) and under all policies \(\pol\)
-\citep{Mahadevan96_SensitiveDiscountOptimalityUnifyingDiscountedAndAverageRewardReinforcementLearning,Blackwell62}.
-Informally that means there exists a discount factor \(<1\) which finds Blackwell-optimal policies.
-However, (i) in more complex, i.e.\@ real world, MDPs this value can be arbitrary close to \(1\) and
-(ii) the difference in state values may be very small, which (iii) due to the need of state value
-function approximation likely causes errors when choosing among different actions in the discounted
-framework.
-
-
-For the case of \(n=-1\) this lead to gain-optimality
-\(\avgrew^{\polopt}(s) - \avgrew^{\pol}(s) \geqslant 0\) for all policies \(\pol\) and states \(s\)
-\citep{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}. In
-the case of \(n=0\) it describes bias-optimality with \(V^{\polopt}(s) - V^{\pol}(s) \geqslant 0\)
-for all policies \(\pol\) and states \(s\)
-\citep{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}.
-%
-
-
-In the sequel we present the Laurent series expansion which not only links discounted reinforcement
-learning with average reward reinforcement learning, but also connects to \(n\)-discount-optimality.
-
-% Furthermore, for the rest of the paper we occasionally write drop the \(V(s)\) and $V_{\gamma}$ instead of
-% \(V^{\pol}(s)\) and \(V^{\pol}_{\gamma}\) when the policy is clear from the context.
-
-
 \subsection{The Laurent Series Expansion of Discounted State Values}
 \label{subsec:The_Laurent_Series_Expansion_of_Discounted_State_Values}
 
@@ -615,8 +627,7 @@ using the Laurent series expansion as
 \begin{align*}
   V_{\gamma}^{\pol}(s) = \frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol}(s) + e_{\gamma}^{\pol}(s) \tcom
 \end{align*}
-
-
+%
 where the error term \(e_{\gamma}^{\pol}(s)\) exists of infinitely many subterms and
 \citet{Puterman94} shows that \(\lim_{\gamma \to 1} e_{\gamma}^{\pol}(s) = 0\). Note how the first
 term depending on the average reward \(\avgrew^{\pol}(s)\) converges to infinity as \(\gamma\)
@@ -625,34 +636,39 @@ increases.
 
 However, an important insight is the connection between \(n\)-discount-optimality and the Laurent
 series expansion of \(V_{\gamma}^{\pol}(s)\). Each addend corresponds to one step in
-\(n\)-discount-optimality. That is for \((-1)\)-discount-optimality the average reward must be
-maximised.
+\(n\)-discount-optimality. That is for \((-1)\)-discount-optimality the addend describes (a scaled
+version of) the term to maximise for gain-optimality,
+% the average reward must be
+% maximised.
 %
-Then for \(0\)-discount-optimality the agent has to choose the highest bias values.
+for \(0\)-discount-optimality the term to maximise for bias-optimality, and
 %
-Finally \(n\)-discount-optimality for \(n \geqslant 1\) requires to maximise the error term
-\(e_{\gamma}^{\pol}(s)\) which only exists as \(\gamma\) is strictly less than \(1\). Thus this term
-incorporates the number of expected steps and their corresponding reward on the path to the
-Blackwell-optimal policy. That is, it optimises the expected reward collected to reach the Blackwell
-optimal policy according to the occurrence on the paths, where shorter paths and those which collect
-the rewards sooner are preferred.
+finally \(n\)-discount-optimality for \(n \geqslant 1\) requires to maximise the error term
+\(e_{\gamma}^{\pol}(s)\). The later only exists as \(\gamma\) is strictly less than \(1\). Thus this
+term incorporates the number of expected steps and their corresponding reward on the path to the
+Blackwell-optimal policy. Put differently, it optimises the expected reward collected to reach the
+Blackwell optimal policy according to the occurrence on the paths, where shorter paths and those
+which collect the rewards sooner are preferred.
 
-Note how the Laurent series expansion dissipates these values in single terms and therefore defines
-a divide and conquer methodological approach to reinforcement learning. Thus in average reward
-reinforcement learning these terms are learned separately, while in the discounted framework the
-combined value for a fixed \(\gamma\)-value is learned.
+% Note how the Laurent series expansion dissipates these values in single terms and therefore defines
+% a divide and conquer methodological approach to reinforcement learning. Thus in average reward
+% reinforcement learning these terms are learned separately, while in the discounted framework a
+% single scalar value for each state with a fixed \(\gamma\)-value is estimated.
 
-The addends, where \(n=-1,0,\ldots\) denote the coefficients of the Laurent series expansion,
-can be reformulated to following constraint problem with expected reward
-\(R^{\pol}(s) = \E_{\pol}[ r(s, a) ] = \sum_{a \in \mathcal{A}(s)}p(a | s) r(s, a)\) as shown by
-\cite{MillerVeinott1969} and \citet[p.346]{Puterman94}:
-
+These addends, where \(n=-1,0,\ldots\) denote the coefficients of the Laurent series expansion and
+thus correspond to the \(n\) of the definition of \(n\)-discount-optimality, can be reformulated to
+following constraint problem \citep[p.346]{MillerVeinott1969,Puterman94}.
+%
 \begin{align}
   \label{eq:constr1}\avgrew^{\pol}(s) - \E[\avgrew^{\pol}(s)] & = 0 &  & \text{for } n = -1 \\
   \label{eq:constr2}\avgrew^{\pol}(s) + V^{\pol}(s) - \E[V^{\pol}(s)] & = R^{\pol}(s) && \text{for } n = 0 \\
   \label{eq:constr3}W^{\pol}_{n-1}(s) + W^{\pol}_{n}(s) - \E[W^{\pol}_{n}(s)] & = 0 && \text{for } n \geqslant 1, \text{where } W_{0}^{\pol}(s) = V^{\pol}(s)
 \end{align}
-
+%
+The error term \(e_{\gamma}^{\pol}(s)\) is given by
+\(e_{\gamma}^{\pol}(s) = \sum_{n=1}^{\infty}W^{\pol}_{n}(s)\) and the expected reward
+\(R^{\pol}(s) = \E_{\pol}[ r(s, a) ]\). % = \sum_{a \in \mathcal{A}(s)}p(a | s) r(s, a)\)
+%
 \citet[p.343ff]{Puterman94} shows that due to the given degree of freedom if \(n=-1,0,\ldots,M\)
 constraints are satisfying the above conditions for all states \(s\), then only
 \(\avgrew^{\pol}(s), V^{\pol}(s), W^{\pol}_{1}, \ldots, W^{\pol}_{M-1}\) are unique, whereas
@@ -684,9 +700,31 @@ to be solved in \ARA{} as compared to (at least) \(2N+1\) nested constraints for
 Therefore, it is cheap to compute \(\X_{\gamma}^{\pol}(s)\), while it is rather expensive to find
 the correct values of \(V^{\pol}(s)\) directly, especially in an iterative manner as RL is.
 
+\subsection{Average Reward Adjusted Reinforcement Learning}
+\label{subsec:Average_Reward_Adjusted_Reinforcement_Learning}
 
-\subsection{Algorithm}
-\label{subsec:Algorithm}
+In the sequel we briefly present the needed formalism of average reward adjusted RL, where for a
+more comprehensive version see \citep{schneckenreither2020average}. \MS[t]{todo}
+
+
+\begin{definition}
+  Due to \citet{schneckenreither2020average} the \textit{average reward adjusted (discounted) state
+    value} $\X_{\gamma}^{\pol}(s)$ of a state $s$ under policy $\pol$ and with discount factor
+  $0 \leqslant \gamma \leqslant 1$ is given as
+  \(\X_{\gamma}^{\pol}(s) \defsym V^{\pol}(s) + e_{\gamma}^{\pol}(s)\).
+\end{definition}
+%
+With the Laurent Series expensive this reformulates to
+\(\X_{\gamma}^{\pol}(s) = V_{\gamma}^{\pol}(s) - \frac{\avgrew^{\pol}}{1-\gamma}\). Therefore,
+\(X_{\gamma}^{\pol}(s)\) describes the discounted state value adjusted by the average reward term.
+The Bellman Equation is given by
+\(\X_{\gamma}^{\pol}(s) = \E_{\pol}[r_{t} + \gamma \X_{\gamma}^{\pol}(s_{t+1}) - \avgrew^{\pol}
+\mid s_{t} = s]\). By turning this formula into an update rule it builds the foundation of our
+algorithm.
+
+
+% \subsection{Algorithm}
+% \label{subsec:Algorithm}
 
 
 \begin{algorithm}[t!]
@@ -694,7 +732,8 @@ the correct values of \(V^{\pol}(s)\) directly, especially in an iterative manne
     \State{}Initialise state \(s_{0}\) and network parameters \(\netTarget, \netWorker\) randomly, set
     an exploration rate \(0 \leqslant \plearn \leqslant \pexp \leqslant 1\), exponential smoothing learning rates
     \(0 < \alpha, \gamma < 1\), and discount factors
-    \(0 < \gamma_{0} < \gamma_{1} \leqslant 1\).
+    \(0 < \gamma_{0} < \gamma_{1} \leqslant 1\), where \(\gamma_{1} = 1\) is
+    usually a good choice.
     \While{the stopping criterion is not fulfilled}
     \State{}\begin{minipage}[t]{0.9\textwidth} With probability \(\pexp\) choose a random action and
       probability \(1-\pexp\) one that fulfills
@@ -735,8 +774,9 @@ the correct values of \(V^{\pol}(s)\) directly, especially in an iterative manne
 \end{algorithm}
 
 
-The model-free average reward adjusted deep RL algorithm is based on the tabular
-version of \citet{schneckenreither2020average} and depicted in Algorithm~\ref{alg:near}.
+\paragraph{Average Reward Adjusted Deep RL Algorithm.} %
+The model-free average reward adjusted RL algorithm is based on the tabular version of
+\citet{schneckenreither2020average} and depicted in Algorithm~\ref{alg:near}.
 %
 %
 %
