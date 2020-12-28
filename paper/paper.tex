@@ -454,9 +454,12 @@ policy \(\pol\) for a given problem, we introduce \(n\)-discount-optimality.
 Only if a policy is \(n\)-discount-optimal for all \(n < m\) it can be \(m\)-discount
 optimal \citep{Puterman94,Veinott69}.
 %
-If a policy is \(\infty\)-discount-optimal then it is said to be Blackwell-optimal
+If a policy is \(-1\)-discount-optimal it is called gain-optimal, if it is \(0\)-discount-optimal it
+is also called bias-optimal.
+%
+Furthermore, if a policy is \(\infty\)-discount-optimal then it is said to be Blackwell-optimal
 \citep{Blackwell62}.
-% weakening the argument!!!
+%
 That is, for Blackwell-optimal policies \(\polopt\) there exists a discount factor \(\gammaopt < 1\)
 such that \(V_{\gamma}^{\polopt}(s) \geqslant V_{\gamma}^{\pol}(s)\) for all
 \(\gamma \geqslant \gammaopt\) and under all policies \(\pol\)
@@ -465,17 +468,28 @@ Informally that means there exists a discount factor \(\gamma <1\) which finds B
 policies. However, (i) in more complex, i.e.\@ real world, MDPs this value can be arbitrary close to
 \(1\) and (ii) the difference in state values may be very small, which (iii) due to the need of
 state value function approximation likely causes errors when choosing among different actions in the
-discounted framework.
+discounted framework. \citet{schneckenreither2020average} establishes a practically relevant
+definition for near-Blackwell-optimality.
 
+\begin{definition}
+  If an algorithm infers for any MDP bias-optimal policies, and for a given MDP can in theory be
+  configured to infer Blackwell-optimal policies, but in practise this ability is naturally limited
+  due to the finite accuracy of floating-point representation of modern computer systems, it is said
+  to be \emph{near-Blackwell-optimal}. An according to a near-Blackwell-optimal algorithm inferred
+  Blackwell-optimal policy is called near-Blackwell-optimal.
+\end{definition}
 
+Note that standard discounted RL does not meet the requirements of near-Blackwell-optimality, as it
+generally does not infer bias-optimal policies. Only by chance the resulting policy could be
+bias-optimal.
+%
 % In the sequel we present the Laurent series expansion which not only links discounted reinforcement
 % learning with average reward reinforcement learning, but also connects to \(n\)-discount-optimality.
-
+%
 % Furthermore, for the rest of the paper we occasionally write drop the \(V(s)\) and $V_{\gamma}$ instead of
 % \(V^{\pol}(s)\) and \(V^{\pol}_{\gamma}\) when the policy is clear from the context.
-
-
-The Bellman Equation defined as
+%
+The corresponding Bellman equation defined as
 \(V_{\gamma}^{\pol}(s) = \E_{\pol}[r + \gamma V_{\gamma}^{\pol}(s')]\) \citep[see
 e.g.][p.70]{sutton1998introduction} provides a way to assess the state values using two
 consecutively observed states \(s, s'\) and the observed reward \(r\) returned by the system. When
@@ -487,13 +501,13 @@ for many problems of operations research.
 
 
 \begin{enumerate}
-\item Standard discounted RL can only infer suboptimal policies as the discount factor is strictly
-  less than one, i.e.\@ \(\gamma < 1\).
+\item In general standard discounted RL can only infer suboptimal policies as the discount factor is
+  strictly less than one, i.e.\@ \(\gamma < 1\).
 \item It is very difficult to specify a desired balance between the short-term and long-term
-  (average reward) rewards. This results from the fact that the long-term rewards are scaled
-  exponentially, where the factor depends on the chosen \(\gamma\) value.
-\item Episodic MDPs with an average reward per step that is non-zero cannot be solved, as the
-  average reward is ignored in the terminal states.
+  (average) rewards. This results from the fact that the long-term rewards are scaled exponentially,
+  where the factor depends on the chosen \(\gamma\) value.
+\item Episodic MDPs with an average reward per step that is non-zero cannot be solved correctly, as
+  the average reward is ignored in the terminal states.
 \item The average reward is independently assessed for each state, even though it is the dominating
   part for all state values and thus is shared between more than one or, for unichain MDPs, even all
   states. This usually leads to an exponentially increased number of learning steps required for
@@ -530,8 +544,8 @@ research domain. This mainly results from the fact that a continuous assessing o
 using costs or profit is often required, which leads to intractable long learning phases with high
 exploration rate even for small sized problems. But as high exploration rates produce errors in the
 state value estimations \citep{MillerVeinott1969} finding a well working parameterisation is
-difficult. Average reward reinforcement learning overcomes these issues by separately assessing
-addends of the state values.
+difficult. Average reward reinforcement learning overcomes these issues by separately assessing the
+subterms of the state values directly.
 
 
 \subsection{Average Reward Reinforcement Learning}
@@ -703,29 +717,25 @@ the correct values of \(V^{\pol}(s)\) directly, especially in an iterative manne
 \subsection{Average Reward Adjusted Reinforcement Learning}
 \label{subsec:Average_Reward_Adjusted_Reinforcement_Learning}
 
-In the sequel we briefly present the needed formalism of average reward adjusted RL, where for a
-more comprehensive version see \citep{schneckenreither2020average}. \MS[t]{todo}
-
+Thus, average reward adjusted RL can be seen as a specialised version of average reward RL, where it
+targets unichain MDPs only. In the sequel we briefly present the needed formalism of average reward
+adjusted RL. For more comprehensive version we refer to \citet{schneckenreither2020average}.
 
 \begin{definition}
-  Due to \citet{schneckenreither2020average} the \textit{average reward adjusted (discounted) state
-    value} $\X_{\gamma}^{\pol}(s)$ of a state $s$ under policy $\pol$ and with discount factor
-  $0 \leqslant \gamma \leqslant 1$ is given as
+  The \textit{average reward adjusted (discounted) state value} $\X_{\gamma}^{\pol}(s)$ of a state
+  $s$ under policy $\pol$ and with discount factor $0 \leqslant \gamma \leqslant 1$ is given as
   \(\X_{\gamma}^{\pol}(s) \defsym V^{\pol}(s) + e_{\gamma}^{\pol}(s)\).
 \end{definition}
 %
-With the Laurent Series expensive this reformulates to
+With the Laurent Series expansion this reformulates to
 \(\X_{\gamma}^{\pol}(s) = V_{\gamma}^{\pol}(s) - \frac{\avgrew^{\pol}}{1-\gamma}\). Therefore,
 \(X_{\gamma}^{\pol}(s)\) describes the discounted state value adjusted by the average reward term.
 The Bellman Equation is given by
-\(\X_{\gamma}^{\pol}(s) = \E_{\pol}[r_{t} + \gamma \X_{\gamma}^{\pol}(s_{t+1}) - \avgrew^{\pol}
-\mid s_{t} = s]\). By turning this formula into an update rule it builds the foundation of our
-algorithm.
-
-
-% \subsection{Algorithm}
-% \label{subsec:Algorithm}
-
+\(\X_{\gamma}^{\pol}(s) = \E_{\pol}[r_{t} + \gamma \X_{\gamma}^{\pol}(s_{t+1}) - \avgrew^{\pol} \mid
+s_{t} = s]\). The corresponding Bellman optimality equation then is given by
+\(\X_{\gamma}^{\polopt}(s) = \max_{a} \E_{\polopt}[r_{t} + \gamma \X_{\gamma}^{\polopt}(s_{t+1}) -
+\avgrew^{\pol} \mid s_{t} = s]\). By turning this formula into an update rule it builds the
+foundation of our algorithm.
 
 \begin{algorithm}[t!]
   \begin{algorithmic}[1]
@@ -742,7 +752,7 @@ algorithm.
     \end{minipage}
     \State{}\begin{minipage}[t]{0.9\textwidth}
     Carry out action \(a_{t}\), observe reward \(r_{t}\) and resulting state \(s_{t+1}\).
-    Store the experience \((s_{t}, \isRandAct{t}, a_{t}, r_{t}, s_{t+1})\) in the experience replay
+    Store the experience \((s_{t}, a_{t}, \isRandAct{t}, r_{t}, s_{t+1})\) in the experience replay
     memory \(M\).
     \end{minipage}
     \If{a non-random action was chosen or \(\pexp > \plearn\)}
@@ -776,7 +786,41 @@ algorithm.
 
 \paragraph{Average Reward Adjusted Deep RL Algorithm.} %
 The model-free average reward adjusted RL algorithm is based on the tabular version of
-\citet{schneckenreither2020average} and depicted in Algorithm~\ref{alg:near}.
+\citet{schneckenreither2020average} and depicted in Algorithm~\ref{alg:near}. The algorithm operates
+on a target network \(\netTarget{}\) and a worker network \(\netWorker{}\) as in
+\citet{mnih2015human}. % The target network reduces fluctuations in the state value estimates and
+% therefore reduces the
+%
+In the action selection process a \(\epsilon\)-sensitive lexicographic order
+\(a=(a_{1},\ldots,a_{n}) \lex (b_{1},\ldots,b_{n})=b\) is used. It is defined as \(a \lex b\) if and
+only if \(| a_{j} - b_{j} | \leqslant \epsilon\) for all \(j < i\) and
+\(|a_{i} - b_{i}| > \epsilon\). Note that the resulting sets of actions may not be disjoint, but
+taking the maximum as required in our algorithm is straight-forward and thus cheap to compute. The
+first action selection criteria selects the actions which maximise the bias values, the second the
+error term.
+%
+Equation~\ref{eq:constr2} of the average reward RL constraints is used to estimate the average
+reward based on the \MS[t]{reformulate avg RL constraints using s' etc.?} currently inferred state
+values of two consecutive states and the returned reward. % As the average
+% reward is equal among all states estimating the average reward is based on many observations.
+This infers a solid average reward prediction of the current policy in few steps only and thus
+quickly leads to better policies, as ones with higher gain are preferred.
+\citet{schneckenreither2020average} and
+\citet{Tadepalli98_ModelbasedAverageRewardReinforcementLearning} find that updating the average
+reward by Equation~\ref{eq:constr2} is superior as compared to exponentially smoothing the actual
+observed rewards. This makes sense as the later rather evaluates past policies.
+
+The average reward adjusted state value, which is approximated based on the Bellman optimality
+equation, is estimated twice. Once to infer the bias values with a very high discount factor
+\(\gamma_{1}\), e.g.\@ \(\gamma_{1} = 1.0\), and a second time with a discount factor
+\(\gamma_{0} < \gamma_{1}\). The later is used to more selectively choose actions in case more than
+one action leads to bias-optimal policies. The predetermined discount value \(\gamma_{0}\) is a
+measure for farsightedness. Lower values prefer to partially collect reward in fewer steps and
+higher values are used to prefer actions for which the full bias is collected earlier.
+%
+The corresponding update values are saved to calculate the gradients based on the quadratic errors.
+Every \(C\) steps the target network exponentially adapts the parameters of the worker network.
+%
 %
 %
 %
@@ -787,73 +831,6 @@ The model-free average reward adjusted RL algorithm is based on the tabular vers
   as rho, replay memory actions, n-step (describe replay memory), gradient clipping }
 \MS[t]{Side info: Replay memory also stores (disallowed) filtered action indices for optimisation purposes and on
 episodic tasks needs to store a bool indicating an episode end. Uses Int8 for state features values.  }
-
-%
-%
-After initialising all values the agent enters the loop in which the first task is to choose an
-action (step 3). In this action selection process we utilise an \(\epsilon\)-sensitive lexicographic
-order \(a=(a_{1},\ldots,a_{n}) \lex (b_{1},\ldots,b_{n})=b\) defined as \(a \lex b\) if and only if
-\(| a_{j} - b_{j} | \leqslant \epsilon\) for all \(j < i\) and \(|a_{i} - b_{i}| > \epsilon\). Note
-that the resulting sets of actions may not be disjoint. Although this is an unusual order in
-programming, taking the maximum as in our algorithm is straight-forward and thus cheap to compute.
-%
-The first action selection criteria maximises the average reward. In case of unichain and thus
-ergodic MDPs only one scalar average reward value over all states is learned and thus the problem
-simplified by abolishing the comparison in the first component. Then the set of actions which
-maximise the bias values are selected. Finally, \(\Delta V^\pol_\gamma(s,a)\) is used to estimate
-the slope of the error term \(e_{\gamma}^{\pol}(s,a)\), which can be either positive or negative.
-Therefore, there is the need of a distinction of which actions to maximise according to the
-discounted state value difference
-\(\Delta V^{\pol}_{\gamma}(s,a) = V^\pol_{\gamma_1}(s,a) - V^\pol_{\gamma_0}(s,a)\). As the aim is
-to collect rewards as soon as possible, a Blackwell-optimal reinforcement learning agents maximises
-the error term, thus any actions converging to
-\(\frac{\avgrew^{\pol}(s,a)}{1-\gamma_{0}} + \V^{\pol}(s,a)\) from above are preferred over those
-that converge from below. Within these sets the action which maximises
-\(\Delta V^{\pol}_{\gamma}(s,a)\) is selected. If multiple such actions the agent can choose
-randomly among these.
-
-As usual in reinforcement learning the equations are integrated by exponentially smoothing the
-values utilising parameters \(\alpha, \beta, \gamma, \delta\).
-% Further, as in this paper we concentrate on unichain MDPs the average reward
-% \(\avgrew^{\pol}(s,a)\) can be learned as a scalar value \(\avgrew^{\pol}\), whereas the algorithm
-% is supports multichain MDPs, cf. step \(5a\).
-Step \(5a\) uses the Bellman equation for average reward reinforcement learning
-(cf.~\citealt{Howard64, tadepalli1998model}) to find the average reward. Then step \(5b\), \(5c\)
-and \(5d\) depict Equations (\ref{eq:constr2}) and (\ref{eq:constr3}) for \(n=0\), \(n=1\) and
-\(n=2\). The need of learning values for \(n=2\) stems from the fact that the actual values
-corresponding to the highest \(n\) are offset by vector \(u\).
-
-% For \(n=0\) (step \(5b\)) the bias values are learned and further to ensure a unique solution of
-% \(V^{\pol}\) step \(5c\) solves the constraints for \(n=1\). Thus, the first three assignments of
-% step \(5\) correspond to the above constraint system for \(n=-1,0,1\). The last line of step \(5\)
-% evaluates the deviation of \(W^{\pol}(s,a)\), which ought to be \(0\) once the system is correctly
-% solved and if an action of the optimal policy \(\polopt\) was taken.
-Step \(6\) infers the discounted state values using learning rate \(\gamma\) and two discount rates
-\(0.5 \leqslant \gamma_{0} < \gamma_{1} < 1\) to estimate the state value difference
-\(\Delta V^{\pol}_{\gamma}(s,a)\).
-
-Steps \(7\) and \(8\) are crucial, but were not considered in average reward reinforcement learning
-before. They feed back the deviations \(\Psi_{\cdot}(s,a)\) into the constraint problem creating a
-recursive system of equations. Depending on the underlying MDP when this constraint is omitted one
-likely observes steadily increasing deviations and therefore a wrong solution. This feedback loop
-however is only activated in case a non-random action was chosen, as otherwise the deviations
-\(\Psi_{\cdot}(s,a) > 0\) \citep{MillerVeinott1969}.
-
-%
-%
-% Steps \(5d\) and \(5e\) calculate the deviations of actual values and expected values. In case the
-% agent performs a non-random action
-%
-Recall that the algorithm evaluates the slope of \(e_{\gamma}^{\pol}(s)\) by learning the state
-values using two different \(\gamma\) settings and discounted reinforcement learning. The slope of
-\(e_{\gamma}^{\pol}(s)\) combined with the observation that for Blackwell-optimal policies
-\(\polopt\) there exists a discount factor \(\gammaopt < 1\) such that
-\(V_{\gamma}^{\polopt}(s) \geqslant V_{\gamma}^{\pol}(s)\) for all \(\gamma \geqslant \gammaopt\)
-and under all policies \(\pol\)
-\citep{Mahadevan96_SensitiveDiscountOptimalityUnifyingDiscountedAndAverageRewardReinforcementLearning,Blackwell62}
-provides the most selective criteria for our algorithm, which theoretically can find
-Blackwell-optimal policies\footnote{This claim is only not fully proven yet. See the appendix for a
-  first version of the proof. } (see Section~\ref{sec:methods} in Appendix).
 
 
 \subsection{Proof-of-Concept}
@@ -1143,6 +1120,8 @@ not for every order as done by \cite{Ackerman1963}.
 
 \subsection{Algorithm Setup}
 \label{subsec:Algorithm_Setup}
+
+\MS[t]{Algorithm adaptions}
 
 \paragraph{Markov Decision Process.} The underlying MDP is unichain and looks as follows.
 Both, state space $\mathcal{S}$ and action space $\mathcal{A}$ are discrete. Any state
