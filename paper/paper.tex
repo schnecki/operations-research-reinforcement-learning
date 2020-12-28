@@ -42,6 +42,9 @@
 \newtheorem*{definition*}{Definition}
 
 
+\usepackage{lineno}
+
+
 \usepackage{xcolor}
 \usepackage{colortbl}
 \usepackage{relsize}
@@ -833,289 +836,150 @@ Every \(C\) steps the target network exponentially adapts the parameters of the 
 episodic tasks needs to store a bool indicating an episode end. Uses Int8 for state features values.  }
 
 
-\subsection{Proof-of-Concept}
-\label{subsec:Proof-of-Concept}
-
-Reconsider the task depicted in Figure~\ref{fig:three-states}. The Blackwell-optimal MDP
-\(\pol_{A}\), that is the one that chooses the A-loop, is shown on the left side of
-Figure~\ref{fig:three-states2}. Recall that the bias values for \(\pol_{A}\) are
-\(V^{\pol_{A}}(0)=-0.5\), \(V^{\pol_{A}}(1)=0.5\) and \(V^{\pol_{A}}(2)=1.5\). Our model-based
-implementation infers the values \(\avgrew^{\pol_{A}} = 1\), \(V^{\pol_{A}}(0)=-0.5\), \(V^{\pol_{A}}(1)=0.5\)
-and \(V^{\pol_{A}}(2)=1.4391\) fully automatically in \(200k\) steps. Furthermore, the addition of
-\(V^{\pol_{A}}(2) + \Psi^{\pol_{A}}_{V}(2) = 1.4998\), where \(\Psi^{\pol_{A}}_{V}(2)\) is the exponentially
-smoothed deviation for state \(2\). Thus the model-based algorithm is able to correctly approximate
-the mathematical solution.
-
-The right side of Figure~\ref{fig:three-states2} shows the same MDP for the model-free version. In
-model-free reinforcement learning state-action pairs as opposed to state values are estimated. Thus
-each state is replicated as often, as actions are available in that state. Therefore, state \(1\) is
-replaced by states-action pairs \((1,l)\) and \((1,r)\) for moving to the left (taking the A-loop)
-and to the right respectively. The dashed line indicates that these states are connected and thus
-the agent has to choose among them when reaching either. In this case the inferred bias values are
-\(V^{\pol_{A}}(0,r) = -0.5\), \(V^{\pol_{A}}(1,l)=V^{\pol_{A}}(1,r)=0.5\), and \(V^{\pol_{A}}(2,l)=1.5\). The above given tabular model-free
-average reward reinforcement learning algorithm is able to exactly infer these values in less than
-100k steps. This provides evidence that the algorithm in general infers correct solutions in regard to
-the underlying constraints.
-
-% \MS{Occasionally we write \(V^{\pol_{A}}(s)\) and $V_{\gamma}$ instead of \(V^{\pol}(s)\) and
-% \(V^{\pol}_{\gamma}\) when the policy is clear from the context.}
-
-Furthermore, in the later case \(V^{\pol_{A}}(1,l)=V^{\pol_{A}}(1,r)=0.5\), that is if the agent
-resides in state \(1\) it has to choose among the both available actions. This cannot be done on
-basis of the average reward, nor on the bias values. Therefore, it infers the slopes of the error
-terms using the difference of the discounted state values \(V^{\pol_{A}}_{\gamma_{1}}(1,l) = 5.56\)
-and \(V^{\pol_{A}}_{\gamma_{0}}(1,l) = 2.67\) for state-action pair \((1,l)\) and
-\(V^{\pol_{A}}_{\gamma_{1}}(1,r) = 5.16\) and \(V^{\pol_{A}}_{\gamma_{0}}(1,r) = 1.67\) for
-\((1,r)\), yielding \(\Delta V^{\pol_{A}}_\gamma(1,l) = -2.89\) and
-\(\Delta V^{\pol_{A}}_\gamma(1,r) = -3.49\), where \(\gamma_{0} = 0.5\) and \(\gamma_{1}=0.8\).
-
-The idea is that rewards are collected as soon as possible, thus the error term has to be maximised
-when \(\gamma \to 1\). As we have
-\(2.5 = \frac{\avgrew^{\pol_{A}}}{1-\gamma_{0}} + V^{\pol_{A}}(1,a) < V^{\pol_{A}}_{\gamma_{0}}(1,l)
-= 2.67\), while \(2.5 \geqslant 1.67\), we choose action \(l\) as it is the only action with
-positive error term.
-
-
-% Current state:                               A
-% Period:                                      5000
-% Alpha:                                       0.0050
-% Beta:                                        0.0700
-% Delta:                                       0.0700
-% Gamma:                                       0.0700
-% Epsilon:                                     1.2913
-% Exploration:                                 0.8609
-% Algorithm:                                   BORL with gammas  (0.5,0.8); state values for rho; Deciding on V
-% Zeta (for forcing V instead of W):           1.0000
-% Xi (ratio of W error forcing to V):          0.2000
-% Scaling (V,W,R0,R1) by V Config:             Tabular representation (no scaling needed)
-% Psi Rho/Psi V/Psi W:                         (0.0000,0.0000,0.0000)
-% Rho:                                         1.0000
-% V                                       W
-% [+0.0000]right: -0.5000                 [+0.0000]right: 0.2061
-% [+1.0000]left : 0.5000                  [+1.0000]left : -0.2939
-% [+1.0000]right: 0.5000                  [+1.0000]right: -2.2939
-% [+2.0000]left : 1.5000                  [+2.0000]left : -1.7939
-% R0                                      R1
-% [+0.0000]right: 1.3333                  [+0.0000]right: 4.4444
-% [+1.0000]left : 2.6667                  [+1.0000]left : 5.5556
-% [+1.0000]right: 1.6667                  [+1.0000]right: 5.1556
-% [+2.0000]left : 3.3333                  [+2.0000]left : 6.4444
-% PsiV
-% [+0.0000]right: -0.0000
-% [+1.0000]left : -0.0000
-% [+1.0000]right: -0.0000
-% [+2.0000]left : -0.0000
-
-
-\begin{figure}[t!]
-  \centering
-  \begin{tikzpicture}[thin, scale=0.75]
-    % Nodes
-    \draw (-3,0) node(0) [circle,draw,minimum size=25] {\footnotesize \(0\)};
-    \draw (0,0)  node(1) [circle,draw,minimum size=25] {\footnotesize \(1\)};
-    \draw (3,0)  node(2) [circle,draw,minimum size=25] {\footnotesize \(2\)};
-
-    % Edges
-    \path[thin, ->, bend right, >=stealth] (1) edge[above] node {\footnotesize\(2\)} (0);
-    \path[thin, ->, bend right, >=stealth] (2) edge[above] node {\footnotesize\(2\)} (1);
-    \path[thin, ->, bend right, >=stealth] (0) edge[below] node {\footnotesize\(0\)} (1);
-    % \path[thin, ->, bend right, >=stealth] (1) edge[below] node {\footnotesize\(0\)} (2);
-
-    \draw (-1.5,0) node[] { A };
-    \draw (1.5,0) node[] { B };
-
-    \draw (6,0) node(B0) [circle,draw,minimum size=25] {\footnotesize \((0,r)\)};
-    \draw (9,1.0)  node(B1l) [circle,draw,minimum size=25] {\footnotesize \((1,l)\)};
-    \draw (9,-1.0)  node(B1r) [circle,draw,minimum size=25] {\footnotesize \((1,r)\)};
-    \draw (12,0)  node(B2) [circle,draw,minimum size=25] {\footnotesize \((2,l)\)};
-
-    \path[thin, ->, bend right, >=stealth] (B1l) edge[above] node {\footnotesize\(2\)} (B0);
-    \path[thin, ->, bend right, >=stealth] (B2) edge[above] node {\footnotesize\(2\)} (B1l);
-    \path[thin, ->, bend right, >=stealth] (B0) edge[below] node {\footnotesize\(0\)} (B1l);
-    \path[thin, ->, bend right, >=stealth] (B1r) edge[below] node {\footnotesize\(0\)} (B2);
-
-    \path[thin, dashed] (B1r.west) edge[below] node {} (B1l.west);
-    \path[thin, dashed] (B1r.east) edge[below] node {} (B1l.east);
-
-
-  \end{tikzpicture}
-  \caption{\label{fig:three-states2} The left side depicts the Blackwell-optimal MDP of
-    Figure~\ref{fig:three-states}, that is the MDP that takes the A loop. On the right side is the
-    model-free version of the same MDP with policy \(\pol_{A}\). As in the model-free scenario
-    state-action pairs are evaluated state \(1\) is split into a state that takes the left loop
-    and one that traverses to the right. They are linked with dashed lines to indicate that these
-    states are connected and the agent has to decide for one among them. The bias values for the
-    model-free version are \(V^{\pol_{A}}(0,r) = -0.5\),
-    \(V^{\pol_{A}}(1,l)=V^{\pol_{A}}(1,r)=0.5\), and \(V^{\pol_{A}}(2,l)=1.5\).}
-\end{figure}
-
-
 \section{Experimental Evaluation}
 \label{sec:Experimental_Evaluation}
 
-This section introduces the simulation model and the parameterisation of the algorithm. To be able
-to compare the performance of the algorithm we chose to implement the same setup as has been used by
-\cite{SchneckenreitherHaeussler2019}.
+
+This section introduces the simulation model and the parameterisation of the algorithm. To provide a
+proof-of-concept for the proposed algorithm we adapt the flow shop presented in
+\citet{schneckenreither2020order}. However, our algorithms operates on discrete lead times on a
+product type basis and thus is not directly comparable to their order based lead time management
+approach. Nonetheless, this section is largely based on the corresponding section of
+\citet{schneckenreither2020order}.
 
 \subsection{Simulation Model}
 \label{subsec:Simulation_Model}
 
+We adapt the simulation model of a make-to-order (MTO) flow shop with six different
+products and six work-centers of \citet{schneckenreither2020order} and examine the system under
+moderate and high utilisation in combination with moderate or high variability in demand and
+processing times. This section provides the details of the simulation model and the experimental
+setup.
+
+% \subsection{Make-To-Order Flow Shop}
+% \label{subsec:make-to-order_flow_shop}
+% \subsection{Simulation model}
+% \label{subsec:Simulation_model}
+
+
+The simulation model is depicted in Figure~\ref{fig:ps}, where the customers initiate the process by
+placing orders as indicated by the dashed line.
+%
 \begin{figure*}[t!]
   \centering
-  \input{productionsystem}                      % Figure production system
-  \caption{Production system of the simulation model with routing, processing time distributions and
-    demand.} \label{fig:ps}
+  \input{figures/productionsystem}                      % Figure production system
+  \caption{Production System of the Simulation Model with routing, processing time distributions and
+    demand interarrival time distributions.} \label{fig:ps}
 \end{figure*}
-
-Therefore, we use the hypothetical flow shop make-to-order manufacturing system similar to the
-system analyzed by \cite{Lee1997} and later by \cite{Schneckenreither2019}. The simulation model
-consists of three work centres; each consists of a single machine and can process only one order at
-a time. Figure~\ref{fig:ps} depicts the make-to-order production system setup.
 %
-The number of orders arriving is uniformly distributed between 3 and 15 order per period and
-thus with a mean of 9 order per period.
 %
-% Orders arrive
-% uniformly between 3 and 15 orders per period and thus a mean of 9 orders per period, or
-In other words, on average every $0.11$ periods one order arrives in the order pool.
+The manufacturer produces six different product types, each of which is identified by a natural
+number ${1,2,\ldots,6}$ and has a different routing through the production system. The routing setup
+is provided by corresponding labels of the edges. For instance, product types $1-3$ are routed from
+machine $M1$ to machine $M2$, while the other products are transferred to machine $M3$. The
+production system consists of three production stages with diverging material flow and no return
+visits.
 %
-Incoming orders are queued at the order pool until released. The due date slack ($\DDS$), that is
-the periods until incoming orders are due, is set to 7 periods.
+The incoming orders are uniformly distributed among the product types.
 %
-Once orders are released they are queued at each work center and wait until being processed by the
-machine. The queuing priority is first-come-first-serve. No preemptions are allowed. Order
-routings are deterministic and embrace two production stages with diverging shape and no return
-visits. This results in 2 different products. The operation times of the work centres are
-uniformly distributed, cf. Table~\ref{tbl:costs}. These characteristics lead to a utilization rate
-of 90\% for the bottleneck work center (WC3) in steady state. % Planning periods were set to 960
-% minutes (16 hours).
-
-% \begin{figure}[b!]
-%   \centering
-%   \def\arraystretch{1.2}          %  1 is the default, change whatever you need
-%   \begin{table}[t!]
-%     \centering
-%     \begin{tabular}{|l||c|c|c|}
-        %         \hline
-        %     %         BEGIN RECEIVE ORGTBL optime
-        %         Work Center & WC1 & WC2 & WC3\\
-        %         \hline
-        %         Operation time & \(\mathcal{U}(70,130)\) & \(\mathcal{U}(130,170)\) & \(\mathcal{U}(180,200)\)\\
-        %     %         END RECEIVE ORGTBL optime
-        %         \hline
-        %       \end{tabular}
-        %   %       \egroup
-
-        %         \caption{\label{tab:OTs}Operation times.}
-        %   %       \end{figure}
-        %         \end{table}
-\begin{table}[t]
-  \centering
-  \begin{tabular}{|l||c|c|c|}
-    % BEGIN RECEIVE ORGTBL values
-    \hline
-    Work Center & WC1 & WC2 & WC3\\
-    \hline
-    Operation time & \(\mathcal{U}(70,130)\) & \(\mathcal{U}(130,170)\) & \(\mathcal{U}(180,200)\)\\
-    % END RECEIVE ORGTBL optime
-    \hline
-    \multicolumn{4}{c}{}\\
-    \hline
-    Cost & Wc p. Order/Period & Fc p. Order/Period & Bc p. Order/Period \\
-    \hline
-    Value & 3 & 10 & 20 \\
-    \hline
-    % END RECEIVE ORGTBL values
-  \end{tabular}
-
-  \caption{\label{tbl:costs}Operation times (upper half) and costs setup (in monetary unit).}
-\end{table}
+A period lasts $960$ minutes ($=16$ hours) which represent two \(8\)-hour shifts. At the
+beginning of each period orders can be released into the production system assuming material
+availability for all orders at their release date. Upon release, the orders are
+placed in the buffer at machine $M1$. Buffers and inventories are plotted as filled squares. Thus,
+each workstation is equipped with a buffer which queues the orders until processing is started. All
+buffers use a first-come-first-serve dispatching rule.
+%
+Furthermore, each workstation processes only one order at a time and early deliveries are
+prohibited. Orders completed ahead of their due date remain in the finished goods inventory (\fgi{})
+until they are due and sent to the customer.
 
 
-        %         \begin{figure}[b!]
-        %         \centering
-        %         \def\arraystretch{1.2}          %  1 is the default, change whatever you need
-        %         \setlength\tabcolsep{1.7pt}
-        %         \begin{tabular}{|l||c|c|c|c|c|c|}
+\paragraph{Processing Times.} The machine processing time distributions are given under the
+corresponding node labels of the machines. To simulate high or moderate variance the processing
+times for all machines are  drawn from an exponential or an uniform distribution,
+respectively. There is one bottleneck machine ($M5$) and therefore we refer to product
+types $2$ and $5$, those routed through machine $M5$, as
+bottleneck products whereas products $1,3,4,6$ are non-bottleneck products.
 
-        %       \end{tabular}
-        %         \egroup
-        %         \caption{Operation times.}
-        %         \label{tab:OTs}
-        %         \end{figure}
+\paragraph{Demand.} The incoming orders are placed in the order pool with a due date slack of
+\dds{} periods, that is each order arriving within period $t$ will be due at the end of period
+$t+\dds{}$. The due date slack of \(\dds{}\) was chosen to (i) ensure sufficient time between the
+first occurrence of orders in the order pool and the latest possible release of orders and (ii) to
+have a clear cause and effect relationship between the order release decision and the cost
+performance in the analysis.
+%
+To simulate high and moderate variability of the demand process the interarrival time between
+consecutive incoming orders is either drawn from an exponential ($\Exp$) or an uniform ($\Unif$)
+distribution, which are adjusted to yield the desired bottleneck utilisation level of either $70\%$
+with $\Exp(135)$ and $\Unif(95,175)$, or $80\%$ with $\Exp(118)$ and $\Unif(78,158)$. These values
+were chosen as they comprise the non-linear relationship between flow times and high utilisation
+levels.
+
+\paragraph{Order Release.}
+%
+Before the order release decision is made, all orders in the order pool are sorted by due date. This
+portrays the implementation of a sequencing rule. According to this sequence, orders are considered
+for release in the beginning of each period starting with the highest priority order.
+
+In our model, orders are released by specifying lead times
+$\lt_{1}, \lt_{2}, \ldots, \lt_{6} \geqslant 1$, where the index corresponds to the product type and
+$\lt_{i} \in \mathbb{N}$.
+%
+%
+By setting a lead time $\lt_{i}$ a \emph{planned release date} is computed for each
+order $j$ of product type $i$ in the order pool given by
+%
+\begin{linenomath*}
+  \begin{equation}
+    \prd{}_j= \dd{}_j - \lt_{i}\ ,
+    \label{eq:Orel}
+  \end{equation}
+\end{linenomath*}
+
+where $\dd_{j}$ denotes the due date of the order.  For dynamic order releases the lead times
+$\lt_{i}$ may vary from period to period, whereas in static order release methods the lead times are
+predetermined and fixed (\citealt{RagatzMabert1988,KimBobrowski1995}).
+%
+For both approaches a job of product type $i$ with lead time $\lt{}_{i}$ in period $t$ and due date
+$\dd_{j}$ is released at the end of period $t$ if and only if $t \geqslant \prd{}_{j}$.
+%
+Thus, in the dynamic setting  the planned
+release date $\prd{}_{j}$ of order $j$ can be updated several times before it is actually released
+to the production system.
+%
+However, once an order is released its release cannot be revoked.
+%
+% If there are several orders with the same due date the order release
+% sequence is randomized.
+%
+Hence, if the set lead time corresponds with the actual flow time the product is finished in the
+same period as it is shipped. If the lead times are set either too long or short,
+the order has to wait in the \fgi{} until it is due or the order is late and backorder (BO) costs
+occur.
+
+\paragraph{Costs.}
+%
+The cost parameters are set by assuming an increase in value from raw material ($1$~Dollar per order
+and period) to the final product ($4$~Dollar per order and period) and the backorder costs are set
+very high ($16$~Dollar per order and period) due to the MTO environment. All costs are assessed
+based on the production system state at the end of each period.
 
 
-To evaluate the performance of the different order release models we define
-following performance measures similar to literature
-(e.g.,~\citealt{Baykasoglu2011,Thuerer2012}):
-\begin{itemize}
-\item \textbf{Cost related measures:} average total holding costs for  WIP and finished goods inventory,
-  costs for backorders. There are no earnings,
-  thus the algorithms minimizes the costs. The setup for the actual values of the costs is given in
-  Table~\ref{tbl:costs} and shows that late deliveries are especially expensive. All costs are per
-  order and period, and are measured and reported at the end of each period.
-
-  % \begin{table}[t]
-  %   \centering
-  %   \begin{tabular}{|l||c|c|c|}
-  %     %     BEGIN RECEIVE ORGTBL values
-        %         \hline
-        %         Work Center & WC1 & WC2 & WC3\\
-        %         \hline
-        %         Operation time & \(\mathcal{U}(70,130)\) & \(\mathcal{U}(130,170)\) & \(\mathcal{U}(180,200)\)\\
-        %     %         END RECEIVE ORGTBL optime
-        %         \hline
-        %         \multicolumn{4}{c}{}\\
-        %         \hline
-        %         Cost & Wc p. Order/Period & Fc p. Order/Period & Bc p. Order/Period \\
-        %         \hline
-        %         Value & 3 & 10 & 20 \\
-        %         \hline
-        %     %         END RECEIVE ORGTBL values
-        %       \end{tabular}
-
-        %         \caption{\label{tbl:costs}Operation times and costs setup (in monetary unit).}
-        %         \end{table}
-
-        %         \SH{The costs were set as follows: $Wc:Fc:Bc = 1:1.5:2.5$?}
-\item \textbf{Delivery related measures:} % mean service level -- percentage of
-        %         orders on time (\%SL),
-  mean tardiness of late orders (TA), standard deviation of
-  lateness ($\sigma$TA).
-\item \textbf{Flow time related measures:} mean shop floor throughput time (time
-  duration from release until entry of finished goods inventory; SFTT).
-\end{itemize}
-
-The length of each simulation run to evaluate the performance was 6000 periods including a warm-up
-period of 1000 periods. Welch’s procedure was applied to approximate the length of the warm-up
-period (see~\citealt{law:simulationc}).
-
-        %         Each order release method was evaluated on 25 predefined demand
-        %         streams.
-
-
-        %         \MS{TODO}
 \subsection{Conventional Order Release Rules}
 
-As external benchmark for comparison we use
-        %         use two different order release rules. First, we use immediate release which releases orders as
-        %         soon as they arrive at the order pool. And second, we
-different parameterized backward infinite loading (\BIL{}) techniques:
-
-\begin{equation*}
-  RD_{j} = DD_{j} - LT_{j} \tcom
-  \label{eq:BIL}
-\end{equation*}
-
-where the release date \(RD_{j}\) of product type \(j\) is calculated by the difference of the due
-date \(DD_{j}\) and the lead time \(LT_{j}\). Note that we set lead times for each product type and
-not for every order as done by \cite{Ackerman1963}.
-
-        %         The
-        %         variants are named according to the used lead time $LT$. For example in case of $\BILOne$ we have
-        %         $LT=1$. \MS{@Equation 1: Use LT$_{j}$ or LT?}
-
-        %         \MS[t]{do we?}
+As external benchmark for comparison we use different parameterized backward infinite loading
+(\BIL{}) techniques \citep{Ackerman1963}. \BIL{} uses Equation~\ref{eq:Orel} with a predetermined
+and fixed lead times \(\lt_{i}\).
+%
+% \begin{equation*}
+%   \rd_{j} = \dd_{j} - \lt_{j} \tcom
+%   \label{eq:BIL}
+% \end{equation*}
+%
+% where the release date \(RD_{j}\) of product type \(j\) is calculated by the difference of the due
+% date \(DD_{j}\) and the lead time \(LT_{j}\).
+Note that we set lead times for each product type and not for every order as done by
+\cite{Ackerman1963}.
 
 
 \subsection{Algorithm Setup}

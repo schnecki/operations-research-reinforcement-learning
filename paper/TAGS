@@ -1,156 +1,167 @@
 
-paper.tex,8988
+figures/printer.tex,33
+  \newcommand\bend{\bend20,597
+
+paper.tex,8563
 \newcommand\numberthis{\numberthis9,157
-\newcommand{\SH}\SH67,1737
-\newcommand\MS[2][r]{\MS[2][r]68,1817
-\section{Introduction}Introduction126,4804
-\label{sec:introduction}sec:introduction127,4827
-(e.g., \citealt{alt146,6516
-queuing theory (\citealt{alt149,6808
-performance (see e.g., \citealt{alt156,7324
-\cite{SchneckenreitherHaeussler2019}SchneckenreitherHaeussler2019157,7414
-astonishing results have been reported. E.g. only recently \cite{mnih2015human}mnih2015human168,8323
-classic Atari 2600 games~\citep{p170,8523
-Go~\citep{p172,8709
-process~\citep{p175,8994
-\citep{p176,9089
-\citep{p177,9154
-average reward value \citep{p185,9630
-\cite{SchneckenreitherHaeussler2019}SchneckenreitherHaeussler2019187,9794
-function use average reward reinforcement learning. For instance \cite{aydin2000dynamic}aydin2000dynamic192,9963
-\citep{p195,10197
-\citep{p198,10514
-\citep{p200,10688
-\citep{p202,10916
-low as possible \citep{p204,11118
-\citep{p216,12048
-as future work by \cite{SchneckenreitherHaeussler2019}SchneckenreitherHaeussler2019226,12870
-\cite{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies231,13283
-values as shown by \cite{MillerVeinott1969}MillerVeinott1969241,14070
-\citealt{alt260,15398
-Section~\ref{sec:Experimental_Evaluation}sec:Experimental_Evaluation261,15460
-approach. Then~\ref{sec:Preliminary}sec:Preliminary262,15556
-Section~\ref{sec:conclusion}sec:conclusion263,15634
-\section{Average Reward Reinforcement Learning}Average266,15695
-\label{sec:Average_Reward_Reinforcement_Learning}sec:Average_Reward_Reinforcement_Learning267,15743
-Like \cite{MillerVeinott1969}MillerVeinott1969272,15986
-Markov property \citep[p.63]{p[p.63]281,16872
-\citep[p.66]{p[p.66]283,17044
-\subsection{Discounted Reinforcement Learning}Discounted296,17853
-\label{subsec:Discounted_Reinforcement_Learning}subsec:Discounted_Reinforcement_Learning297,17900
-\citep{p309,18531
-seen in Figure~\ref{fig:printer}fig:printer316,19112
-  \caption{\label{fig:printer}fig:printer360,21115
-    Adapted from \cite{Mahadevan96_OptimalityCriteriaInReinforcementLearning}Mahadevan96_OptimalityCriteriaInReinforcementLearning367,21651
-instance to \(0.99\)~\cite[e.g.]{[e.g.]380,22561
-To illustrate the idea reconsider Figure~\ref{fig:printer}fig:printer390,23153
-\subsection{Average Reward Reinforcement Learning}Average396,23523
-\label{subsec:Average_Reward_Reinforcement_Learning}subsec:Average_Reward_Reinforcement_Learning397,23574
-Due to \cite{Howard64}Howard64399,23628
-\citep{p408,24041
-  values \citep{p416,24634
-Figure~\ref{fig:three-states}fig:three-states432,25536
-  \caption{\label{fig:three-states}fig:three-states459,26809
-    \cite{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults}Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults466,27435
-\subsection{More Refined Optimality Criteria}More470,27550
-\label{subsec:More_Refined_Optimality_Criteria}subsec:More_Refined_Optimality_Criteria471,27596
-  Due to \cite{Veinott69}Veinott69477,27839
-\citep{p490,28427
-\citep{p493,28669
-optimal \citep{p496,28855
-Blackwell-optimal \citep{p499,28960
-\citep{p504,29264
-\subsection{The Laurent Series Expansion of Discounted State Values}The524,30497
-\label{subsec:The_Laurent_Series_Expansion_of_Discounted_State_Values}subsec:The_Laurent_Series_Expansion_of_Discounted_State_Values525,30566
-\cite{MillerVeinott1969}MillerVeinott1969528,30639
-where \cite{Puterman94}Puterman94536,30987
-\cite{MillerVeingsott1969}MillerVeingsott1969562,32661
-  \label{eq:constr1}eq:constr1565,32734
-  \label{eq:constr2}eq:constr2566,32828
-  \label{eq:constr3}eq:constr3567,32937
-\citet[p.343ff]{t[p.343ff]570,33107
-\subsection{Algorithm}Algorithm578,33728
-\label{subsec:Algorithm}subsec:Algorithm579,33751
-  \caption{\label{alg}alg620,36499
-The reinforcement learning algorithm is depicted in Algorithm~\ref{alg}alg633,36855
-(cf.~\citealt{alt662,39125
-and \(5d\) depict Equations (\ref{eq:constr2}eq:constr2663,39223
-\(\Psi_{\cdot}(s,a) > 0\) \citep{p681,40657
-\citep{p694,41342
-  first version of the proof. } (see Section~\ref{sec:methods}sec:methods697,41642
-\subsection{Proof-of-Concept}Proof-of-Concept700,41721
-\label{subsec:Proof-of-Concept}subsec:Proof-of-Concept701,41751
-Reconsider the task depicted in Figure~\ref{fig:three-states}fig:three-states703,41784
-Figure~\ref{fig:three-states2}fig:three-states2705,41957
-The right side of Figure~\ref{fig:three-states2}fig:three-states2713,42580
-  \caption{\label{fig:three-states2}fig:three-states2806,48008
-    Figure~\ref{fig:three-states}fig:three-states807,48096
-\section{Experimental Evaluation}Experimental817,48734
-\label{sec:Experimental_Evaluation}sec:Experimental_Evaluation818,48768
-\cite{SchneckenreitherHaeussler2019}SchneckenreitherHaeussler2019822,49005
-\subsection{Simulation Model}Simulation824,49044
-\label{subsec:Simulation_Model}subsec:Simulation_Model825,49074
-    demand.} \label{fig:ps}fig:ps831,49316
-system analyzed by \cite{Lee1997}Lee1997835,49454
-a time. Figure~\ref{fig:ps}fig:ps837,49651
-uniformly distributed, cf. Table~\ref{tbl:costs}tbl:costs853,50600
-  \caption{\label{tbl:costs}tbl:costs895,52041
-(e.g.,~\citealt{alt914,52707
-  Table~\ref{tbl:costs}tbl:costs919,53021
-period (see~\citealt{alt955,54705
-\subsection{Conventional Order Release Rules}Conventional962,54885
-  \label{eq:BIL}eq:BIL971,55285
-not for every order as done by \cite{Ackerman1963}Ackerman1963976,55518
-\subsection{Algorithm Setup}Algorithm985,55809
-\label{subsec:Algorithm_Setup}subsec:Algorithm_Setup986,55838
-\citep{p1061,60356
-\citep{p1063,60546
-\cite{mnih2015human}mnih2015human1065,60740
-We use the same setup for the neural network as done by \cite{Schneckenreither2019}Schneckenreither20191069,60851
-\section{Preliminary Results}Preliminary1084,61725
-\label{sec:Preliminary}sec:Preliminary1085,61755
-\cite{Schneckenreither2019}Schneckenreither20191092,62071
-The parameter setup is given in Table~\ref{tbl:params}tbl:params1101,62802
-\cite{mnih2015human}mnih2015human1104,63086
-  \caption{\label{tbl:params}tbl:params1122,63596
-Table~\ref{tbl:res}tbl:res1127,63688
-  \def\arraystretch{\arraystretch1152,65381
-  \caption{\label{tbl:res}tbl:res1177,66804
-\section{Conclusion}Conclusion1183,66942
-\label{sec:conclusion}sec:conclusion1184,66963
-\appendix1213,68855
-\section{N-Discount-Optimality}N-Discount-Optimality1216,68867
-\label{sec:methods}sec:methods1217,68899
-Algorithm~\ref{alg}alg1221,69100
-  Due to \cite{Veinott69}Veinott691226,69310
-\subsection{\(\mathbf{(-1)}\)-Discount-Optimality\cite{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}.}\(\mathbf1237,69751
-\subsection{\(\mathbf{0}\)-Discount-Optimality\cite{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}.}\(\mathbf1256,70955
-\subsection{\(\mathbf{n}\)-Discount-Optimality for \(\mathbf{n \geqslant 1}\).}\(\mathbf1276,71899
-  \label{fig:e}fig:e1332,75080
-slope of the error term. Figure~\ref{fig:e}fig:e1336,75208
-  positive infinity, cf. Figure~\ref{fig:e}fig:e1354,76469
-  \label{lem:err}lem:err1360,76636
-  \(y_{m} = \E_{\pol} [ y_{m} ] - y_{m-1}\) for all \(m \geqslant 1\)~\cite[p.346]{[p.346]1370,77099
-      as normal limits.~\cite[p.592ff]{[p.592ff]1408,78638
-    of the states \cite[]{[]1410,78841
-  \label{cor:diff}cor:diff1474,82186
-  \label{cor:cont}cor:cont1490,83093
-  The claim follows directly from Corollary~\ref{cor:diff}cor:diff1496,83266
-  $\gamma \to 1$. Furthermore, by Lemma~\ref{lem:err}lem:err1510,83867
-  \label{thm:minmax}thm:minmax1515,84041
-  In Theorem~\ref{thm:minmax}thm:minmax1537,85229
-    \label{eq:errorAvgRew}eq:errorAvgRew1571,87220
-  Then due to Corollaries~\ref{cor:diff}cor:diff1585,87991
-we conclude Blackwell optimality of the algorithm. Figure~\ref{fig:e}fig:e1621,89828
-\subsection{Refinements}Refinements1626,90070
-\label{subsec:Refinements}subsec:Refinements1627,90095
-The main limitation of the straightforward approach of Theorem~\ref{thm:minmax}thm:minmax1629,90123
-depend on correct bias values. In this approach we utilise Equation~\ref{eq:errorAvgRew}eq:errorAvgRew1638,90850
-Therefore in the implementation we propose to replace Theorem~\ref{thm:minmax}thm:minmax1643,91209
-\begin{theorem}\label{thm:err}thm:err1646,91321
-  for all \(\gamma\)-values (see proof of Theorem~\ref{thm:minmax}thm:minmax1663,92250
-  by the characteristics on the term specified in Corollaries~\ref{cor:diff}cor:diff1666,92549
-\section{Bellman Optimality Formulas and Derivations (Incomplete)}Bellman1676,93174
-\label{sec:bellman_optimality}sec:bellman_optimality1677,93241
+\newcommand\theauthor{\theauthor56,1263
+\newcommand\thetitle{\thetitle62,1426
+\newcommand{\SH}\SH80,1936
+\newcommand\MS[2][r]{\MS[2][r]81,2016
+\section{Introduction}Introduction128,4169
+is the governing factor \citep[][p.223]{p[][p.223]145,5594
+setting of favorable lead times so difficult (e.g., \citealt{alt148,5877
+times, which is well known from practice and queuing theory (\citealt{alt151,6170
+to worse performance (see e.g., \citealt{alt158,6752
+Thus, setting lead times dynamically harbors optimisation potential \citep{p160,6842
+\citet{t163,6996
+  earlier flow times (e.g., \citealt{alt168,7219
+  the \textit{current} system state to set lead times (e.g., \citealt{alt174,7606
+  \citealt{alt181,8172
+The first approach by \citet{t194,9001
+The algorithm of \citet{t207,9969
+daily (see \citealt{alt211,10364
+Then, \citet{t214,10515
+And finally, \citet{t221,11091
+astonishing results have been reported. E.g.\@ only recently \citet{t244,12829
+many classic Atari 2600 games~\citep{p246,13027
+\citet{t247,13102
+learning. Also games like Go~\citep{p248,13201
+improve the ramp-up process~\citep{p251,13494
+dispatching rules \citep{p252,13591
+\citep{p253,13674
+average reward value \citep{p261,14152
+\citet{t263,14332
+function use average reward reinforcement learning. \citet{t268,14503
+\citep{p271,14727
+\citep{p274,15044
+\citep{p276,15218
+\citep{p278,15446
+low as possible \citep{p280,15648
+\citep{p282,15816
+\citep[see][]{p[see][]285,16067
+optimal path \citep{p298,17100
+\citet{t326,19319
+\citealt{alt354,21524
+\section{Average Reward Adjusted Reinforcement Learning}Average360,21817
+\citet{t365,22160
+Like \cite{MillerVeinott1969}MillerVeinott1969367,22198
+Markov property \citep[p.63]{p[p.63]376,23084
+\citep[p.66]{p[p.66]378,23256
+\subsection{Discounted Reinforcement Learning}Discounted389,23890
+\label{subsec:Discounted_Reinforcement_Learning}subsec:Discounted_Reinforcement_Learning390,23937
+\citep{p404,24673
+policy. For instance, as can be seen in Figure~\ref{fig:printer}fig:printer411,25256
+  \caption{\label{fig:printer}fig:printer422,25932
+    \citep[][adapted]{p[][adapted]430,26496
+  Due to \citet{t446,27061
+optimal \citep{p458,27583
+\citep{p464,27851
+\citep{p469,28115
+discounted framework. \citet{t474,28626
+\(V_{\gamma}^{\pol}(s) = \E_{\pol}[r + \gamma V_{\gamma}^{\pol}(s')]\) \citep[seep[see496,29917
+state value estimations \citep{p549,33584
+\subsection{Average Reward Reinforcement Learning}Average554,33818
+Due to \cite{Howard64}Howard64556,33870
+\citep{p565,34283
+\citet{t576,34986
+  values \citep{p581,35350
+\citep{p596,36315
+Figure~\ref{fig:three-states}fig:three-states600,36514
+  \caption{\label{fig:three-states}fig:three-states631,38089
+    going left in 1 is also bias-optimal, while \(\pol_{B}\) is not \citep[Adaptedp[Adapted632,38190
+\subsection{The Laurent Series Expansion of Discounted State Values}The637,38390
+\label{subsec:The_Laurent_Series_Expansion_of_Discounted_State_Values}subsec:The_Laurent_Series_Expansion_of_Discounted_State_Values638,38459
+\cite{MillerVeinott1969}MillerVeinott1969641,38532
+\citet{t649,38965
+following constraint problem \citep[p.346]{p[p.346]677,40742
+  \label{eq:constr1}eq:constr1680,40832
+  \label{eq:constr2}eq:constr2681,40927
+  \label{eq:constr3}eq:constr3682,41037
+\citet[p.343ff]{t[p.343ff]689,41439
+\citep[see][p.346]{p[see][p.346]700,42246
+Our algorithm, based on the tabular version of \citet{t703,42469
+independent of \(s\), i.e.\@ equivalent for all states of the MDP~\cite[p.346]{[p.346]708,42958
+\subsection{Average Reward Adjusted Reinforcement Learning}Average720,43812
+\label{subsec:Average_Reward_Adjusted_Reinforcement_Learning}subsec:Average_Reward_Adjusted_Reinforcement_Learning721,43872
+adjusted RL. For more comprehensive version we refer to \citet{t725,44136
+  \(\X_{\gamma}^{\pol}(s) \defsym V^{sym730,44444
+  \caption{\label{alg:near}alg:near786,47629
+\citet{t792,47868
+\citet{t794,48050
+Equation~\ref{eq:constr2}eq:constr2805,48732
+\citet{t811,49266
+\citet{t812,49306
+reward by Equation~\ref{eq:constr2}eq:constr2813,49402
+\section{Experimental Evaluation}Experimental839,51014
+\label{sec:Experimental_Evaluation}sec:Experimental_Evaluation840,51048
+\citet{t845,51267
+\citet{t848,51545
+\subsection{Simulation Model}Simulation850,51581
+\label{subsec:Simulation_Model}subsec:Simulation_Model851,51611
+In our simulation model, depicted in Figure~\ref{fig:ps}fig:ps864,52171
+    demand interarrival time distributions.} \label{fig:ps}fig:ps871,52540
+\subsubsection{Processing Times} The machine processing time distributions are given under theProcessing901,54264
+\subsubsection{Demand}Demand908,54758
+\subsubsection{Order Release}Order922,55776
+portrays the implementation of a sequencing rule \citep[for a review on order pool sequencing rulesp[for925,55909
+    \label{eq:Orel}eq:Orel940,56574
+predetermined and fixed (\citealt{alt946,56825
+\subsubsection{Costs}Costs965,57705
+\subsection{Conventional Order Release Rules}Conventional1117,64552
+  \label{eq:BIL}eq:BIL1126,64952
+not for every order as done by \cite{Ackerman1963}Ackerman19631131,65185
+\subsection{Algorithm Setup}Algorithm1140,65476
+\label{subsec:Algorithm_Setup}subsec:Algorithm_Setup1141,65505
+\citep{p1218,70052
+\citep{p1220,70242
+\cite{mnih2015human}mnih2015human1222,70436
+We use the same setup for the neural network as done by \cite{Schneckenreither2019}Schneckenreither20191226,70547
+\section{Preliminary Results}Preliminary1241,71421
+\label{sec:Preliminary}sec:Preliminary1242,71451
+\cite{Schneckenreither2019}Schneckenreither20191249,71767
+The parameter setup is given in Table~\ref{tbl:params}tbl:params1258,72498
+\cite{mnih2015human}mnih2015human1261,72782
+  \caption{\label{tbl:params}tbl:params1279,73292
+Table~\ref{tbl:res}tbl:res1284,73384
+  \def\arraystretch{\arraystretch1309,75077
+  \caption{\label{tbl:res}tbl:res1334,76500
+\section{Conclusion}Conclusion1340,76638
+\label{sec:conclusion}sec:conclusion1341,76659
+\section{N-Discount-Optimality}N-Discount-Optimality1373,78563
+\label{sec:methods}sec:methods1374,78595
+Algorithm~\ref{alg:near}alg:near1378,78805
+  Due to \cite{Veinott69}Veinott691383,79020
+\subsection{\(\mathbf{(-1)}\)-Discount-Optimality\cite{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}.}\(\mathbf1394,79461
+\subsection{\(\mathbf{0}\)-Discount-Optimality\cite{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}.}\(\mathbf1413,80665
+\subsection{\(\mathbf{n}\)-Discount-Optimality for \(\mathbf{n \geqslant 1}\).}\(\mathbf1433,81609
+  \label{fig:e}fig:e1489,84790
+slope of the error term. Figure~\ref{fig:e}fig:e1493,84918
+  positive infinity, cf. Figure~\ref{fig:e}fig:e1511,86179
+  \label{lem:err}lem:err1517,86346
+  \(y_{m} = \E_{\pol} [ y_{m} ] - y_{m-1}\) for all \(m \geqslant 1\)~\cite[p.346]{[p.346]1527,86809
+      as normal limits.~\cite[p.592ff]{[p.592ff]1565,88348
+    of the states \cite[]{[]1567,88551
+  \label{cor:diff}cor:diff1631,91896
+  \label{cor:cont}cor:cont1647,92803
+  The claim follows directly from Corollary~\ref{cor:diff}cor:diff1653,92976
+  $\gamma \to 1$. Furthermore, by Lemma~\ref{lem:err}lem:err1667,93577
+  \label{thm:minmax}thm:minmax1672,93751
+  In Theorem~\ref{thm:minmax}thm:minmax1694,94939
+    \label{eq:errorAvgRew}eq:errorAvgRew1728,96930
+  Then due to Corollaries~\ref{cor:diff}cor:diff1742,97701
+we conclude Blackwell optimality of the algorithm. Figure~\ref{fig:e}fig:e1778,99538
+\subsection{Refinements}Refinements1783,99780
+\label{subsec:Refinements}subsec:Refinements1784,99805
+The main limitation of the straightforward approach of Theorem~\ref{thm:minmax}thm:minmax1786,99833
+depend on correct bias values. In this approach we utilise Equation~\ref{eq:errorAvgRew}eq:errorAvgRew1795,100560
+Therefore in the implementation we propose to replace Theorem~\ref{thm:minmax}thm:minmax1800,100919
+\begin{theorem}\label{thm:err}thm:err1803,101031
+  for all \(\gamma\)-values (see proof of Theorem~\ref{thm:minmax}thm:minmax1820,101960
+  by the characteristics on the term specified in Corollaries~\ref{cor:diff}cor:diff1823,102259
+\section{Bellman Optimality Formulas and Derivations (Incomplete)}Bellman1833,102884
+\label{sec:bellman_optimality}sec:bellman_optimality1834,102951
+
+figures/productionsystem.tex,0
 
 productionsystem.tex,0
