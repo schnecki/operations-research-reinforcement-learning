@@ -766,33 +766,29 @@ foundation of our algorithm.
     Store the experience \((s_{t}, a_{t}, \isRandAct{t}, r_{t}, s_{t+1})\) in the experience replay
     memory \(M\).
     \end{minipage}
+    \State{Sample random mini-batch of experiences from \(M\)}
+    \State{Reset gradients: \(d\netWorker{} \gets 0\)}
+    \For{each experience \(i\) with \((s_{t}, \isRandAct{t}, a_{t}, r_{t}, s_{t+1})\)}
     \If{a non-random action was chosen or \(\pexp > \plearn\)}
-    \begin{align*}
-      \avgrew^{\pol}  & \gets (1- \alpha) \avgrew^{\pol} + \alpha [r_{t} +
+    \State{\(
+      \avgrew^{\pol}  \gets (1- \alpha) \avgrew^{\pol} + \alpha [r_{t} +
       \max_{a}\X^\pol_{\gamma_1}(s_{t+1},a; \netWorker{}) - \X^\pol_{\gamma_1}(s_{t},a_{t};
-                        \netWorker{})]
-      % \\ \avgrew^{\pol}  & \gets \max(\avgrew^{\pol}, \avgrew_{\min}^{\pol})\\
-      % \avgrew_{\min}^{\pol} & \gets (1 - \alpha_{\min}) \avgrew_{\min}^{\pol} + \alpha_{\min} 0.975
-      % \cdot \avgrew^{\pol}
-    \end{align*}
+                        \netWorker{})]\)}
     \EndIf
-
-    \State{}Sample random mini-batch of experiences \((s_{i}, \isRandAct{i}, a_{i}, r_{i}, s_{i})\)
-    from \(M\) and do
-    \begin{align*}
-      y_{i,\gamma_0} & \gets r_{t} + \gamma_{0} \max_{a}
-                                        \X^\pol_{\gamma_0}(s_{t+1},a; \netTarget{}) - \avgrew^{\pol} \\
-      y_{i,\gamma_{1}} & \gets r_{t} + \gamma_{1} \max_{a}
-                                        \X^\pol_{\gamma_1}(s_{t+1},a; \netTarget{}) - \avgrew^{\pol}
-    \end{align*}
-    \State{} \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth} Update the average reward adjusted discounted
-      state-values using the sum of the gradients on \({(y_{i,\cdot} -
-      \X^\pol_{\cdot}(s_{t+1},a; \netWorker{}))}^{2}\) wrt. network parameters
-    \(\netWorker{}\).
+    \State{\(y_{i,\gamma_0} \gets r_{t} + \gamma_{0} \max_{a}
+                                        \X^\pol_{\gamma_0}(s_{t+1},a; \netTarget{}) - \avgrew^{\pol}\)}
+    \State{\(y_{i,\gamma_{1}} \gets r_{t} + \gamma_{1} \max_{a}
+                                        \X^\pol_{\gamma_1}(s_{t+1},a; \netTarget{}) - \avgrew^{\pol}\)}
+    \State{Sum gradients on \({(y_{i,\cdot} - \X^\pol_{\cdot}(s_{t+1},a;
+        \netWorker{}))}^{2}\) wrt. parameters \(\netWorker{}\) in \(d\netWorker{}\)}
+    \EndFor
+    \State{}%
+    \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth}
+      Perform update with sum of the gradients \(d\netWorker{}\) on \(\netWorker{}\)
     \end{minipage}
-    \State{} Every \(C\) steps exponential smoothly set target network:
-      \(\netTarget \gets (1 - \gamma) \netTarget{} + \gamma \netWorker{}\)
-    \State{} Set \(s \gets s'\), \(t \gets t+1\) and decay parameters
+    \State{Every \(C\) steps exponential smoothly set target network:
+      \(\netTarget \gets (1 - \gamma) \netTarget{} + \gamma \netWorker{}\)}
+    \State{Set \(s \gets s'\), \(t \gets t+1\) and decay parameters}
     \EndWhile{}
   \end{algorithmic}
   \caption{\label{alg:near}Near-Blackwell-optimal deep RL for unichain MDPs}
@@ -1097,16 +1093,26 @@ maximisation functions with minimisations.
 \paragraph*{Adapted Algorithm.}
 Our implementation includes several optimisations, that help the algorithm in finding better
 policies and stabilise the learning process. These are the above discussed independent agents that
-operate on the same state, \(n\)-step learning \citep{mnih2016asynchronous}, overestimating
-\(\avgrew^{\pol}\), using multiple parallel worker agents that operate on the same environment to
-collect a broader range of experiences, storing experiences according to their action and uniformly
-sampling over the actions to ensure each action is constantly trained to prevent catastrophic
-forgetting.
-%
-N-step RL collects a set of consecutive experiences and
+operate on the same state, \(n\)-step learning \citep{mnih2016asynchronous}, overestimating the
+average reward \(\avgrew^{\pol}\). Algorithm~\ref{alg:full} depicts the algorithm including the
+extensions.
 
-\MS[t]{explanation
-  missing}
+%
+N-step RL collects a set of consecutive experiences, in our case retrieved from the replay memory,
+and connects the state values starting from the latest observed experience, such that the newly
+computed state value of the corresponding experience propagates to the experience of the previous
+period. This allows a faster convergence, as values bootstrap over multiple periods in contrast to
+just one step.
+
+\MS[t]{rhoMinimum, (shared rho)?, init-phase, (gradient clipping)?}
+
+Furthermore, we use multiple parallel worker agents that operate on the same
+environment to collect a broader range of experiences, storing experiences according to their action
+and uniformly sampling over the actions to ensure each action is constantly trained to prevent
+catastrophic forgetting.
+
+
+\MS[t]{explanation missing}
 
 
 % The algorithm depicted above is designed as a tabular version. We have adapted it to use neural
@@ -1136,14 +1142,16 @@ episodic tasks needs to store a bool indicating an episode end. Uses Int8 for st
     \(0 < \gamma_{0} < \gamma_{1} \leqslant 1\), where \(\gamma_{1} = 1\) is
     usually a good choice.
     \While{the stopping criterion is not fulfilled}
+    \State{\(\isRandAct{t} \gets \mathsf{False}\)}
+    \ForEach{independent agent \(\agent_{1},\agent_{2},\ldots,\agent_{n_{\mathsf{ag}}}\)}
     \State{}%
-    \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth}
-      With probability \(\pexp\) choose a random action and
-      probability \(1-\pexp\) one that fulfills
+    \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth-\leftmargin+2pt}
+      With probability \(\frac{\pexp}{n_{\mathsf{ag}}}\) choose a random action and
+      probability \(1-\frac{\pexp}{n_{\mathsf{ag}}}\) one that fulfills
       \(\min_{a}\lexeq(\X^{\pol}_{\gamma_{1}}(s_{t},a; \netWorker{}),\X^\pol_ {\gamma_{0}}(s_{t},a;
-      \netWorker{}))\). Let \(\isRandAct{t} = \mathsf{True}\) indicate that the action was chosen
-      randomly
+      \netWorker{}))\). Set \(\isRandAct{t} \gets \mathsf{True}\) if the action was chosen randomly
     \end{minipage}
+    \EndFor
     \State{}%
     \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth}
     Carry out action \(a_{t}\), observe reward \(r_{t}\) and resulting state \(s_{t+1}\).
@@ -1157,8 +1165,8 @@ episodic tasks needs to store a bool indicating an episode end. Uses Int8 for st
       Sample random mini-batch of \(\nstep\) consecutive experiences from \(M\), each with
       \((s_{i}, \isRandAct{i}, a_{i}, r_{i}, s_{i})\) where \(i \in {1,2,\ldots,\nstep}\).
     \end{minipage}
-    \For{each mini-batch}
-    \For{each experience, starting with the latest seen experience \(\nstep\)}
+    \ForEach{mini-batch}
+    \ForEach{experience, starting with the latest seen experience \(\nstep\)}
     \If{experience \(\nstep\) or (\(\isRandAct{i}\) and  \(\pexp \leqslant \plearn\))}
       \State{\(\target_{\gamma0} \gets \min_{a} \X^\pol_{\gamma_0}(s_{t+1},a; \netTarget{})\)}
       \State{\(\target_{\gamma1} \gets \min_{a} \X^\pol_{\gamma_1}(s_{t+1},a; \netTarget{})\)}
@@ -1168,8 +1176,9 @@ episodic tasks needs to store a bool indicating an episode end. Uses Int8 for st
       \min_{a}\X^\pol_{\gamma_1}(s_{t+1},a; \netWorker{}) - \X^\pol_{\gamma_1}(s_{t},a_{t};
       \netWorker{})]\)
     \EndIf
-    \State{\(\target_{\gamma_0}  \gets r_{t} + \gamma_{0} \target_{\gamma_{0}} - \avgrew^{\pol}  \)}
-    \State{\(\target_{\gamma_{1}}  \gets r_{t} + \gamma_{1} \target_{\gamma_{1}} - \avgrew^{\pol}\)}
+    \State{Compute overestimate of \(\avgrew^{\pol}\) and store in \(\avgrew_{\Overestim}^{\pol}\)}
+    \State{\(\target_{\gamma_0}  \gets r_{t} + \gamma_{0} \target_{\gamma_{0}} - \avgrew_{\Overestim}^{\pol}  \)}
+    \State{\(\target_{\gamma_{1}}  \gets r_{t} + \gamma_{1} \target_{\gamma_{1}} - \avgrew_{\Overestim}^{\pol}\)}
     \State{\(d\netWorker{} \gets d\netWorker{} + \partial{(\target_{\gamma_{0}} - \X^\pol_{\gamma_{0}}(s_{t+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
     \State{\(d\netWorker{} \gets d\netWorker{} +
       \partial{(\target_{\gamma_{1}} - \X^\pol_{\gamma_{1}}(s_{t+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
@@ -1182,7 +1191,7 @@ episodic tasks needs to store a bool indicating an episode end. Uses Int8 for st
     \State{} Set \(s \gets s'\), \(t \gets t+1\) and decay parameters
     \EndWhile{}
   \end{algorithmic}
-  \caption{\label{alg:fin}Near-Blackwell-optimal deep RL for unichain MDPs}
+  \caption{\label{alg:full}Near-Blackwell-optimal deep RL for unichain MDPs}
 \end{algorithm}
 
 
