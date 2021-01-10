@@ -54,10 +54,11 @@
 
 
 \newcommand\theauthor{
-  Manuel Schneckenreither% \inst{1}
+  Manuel Schneckenreither\inst{1}
   % \orcidID{0000-0002-4812-4665}
-  \and Stefan Haeussler% \inst{2}
+  \and Stefan Haeussler\inst{1}
   % \orcidID{0000-0003-2589-1367}
+  \and Juanjo Peiró\inst{2}
 }
 \newcommand\thetitle{Average Reward Adjusted Deep Reinforcement Learning: Near-Blackwell-Optimal
   Policies for Order Release}
@@ -90,10 +91,11 @@ pdfkeywords={average reward adjusted reinforcement learning, production planning
 
 % \authorrunning{Schneckenreither and Haeussler}
 \institute{
-  Department of Information Systems,
-  Production and Logistics Management,
-  University of Innsbruck, Austria\\
-  email: \email{manuel.schneckenreither@uibk.ac.at,stefan.haeussler@uibk.ac.at}
+  Department of Information Systems, Production and Logistics Management, University of Innsbruck, Austria\\
+  \email{manuel.schneckenreither@uibk.ac.at,stefan.haeussler@uibk.ac.at}
+  \and
+  Departament d’Estadística i Investigació Operativa, Universitat de València, Spain\\
+  \email{juanjo.peiro@uv.es}
 }
 
 
@@ -123,6 +125,12 @@ pdfkeywords={average reward adjusted reinforcement learning, production planning
   \keywords{operations research, production planning, order release, machine learning, reinforcement
     learning}
 \end{abstract}
+
+
+\MS[t]{ideas: Similar Selçuk (2013) detect that a high update frequency has a negative effect and
+  thus should be reduced. They conclude that the lead times ought to control the WIP level, instead
+  of the due date reliability as changes are directly seen (Knollmann and Windt, 2013). For a review
+  of analytical works in the context of the LTS see Bendul and Knollmann (2016).}
 
 
 \section{Introduction}\label{sec:introduction}
@@ -376,7 +384,6 @@ state \(s_{t}\) and chosen action \(a_{t}\). In other words, we expect the syste
 Markov property \citep[p.63]{sutton1998introduction}. Reinforcement learning processes that possess
 the Markov property are referred to as Markov decision processes (MDPs)
 \citep[p.66]{sutton1998introduction}.
-% \MS{does our system possesses the Markov property at all? :-o }
 
 Thus, the action space is defined as \(F = \times_{s=1}^{\size{\States}} A_{s}\), where \(A_{s}\) is
 a finite set of possible actions. A \emph{policy} is a sequence \(\pol = (f_{1},f_{2},\ldots)\) of
@@ -748,20 +755,25 @@ foundation of our algorithm.
     \(0 < \gamma_{0} < \gamma_{1} \leqslant 1\), where \(\gamma_{1} = 1\) is
     usually a good choice.
     \While{the stopping criterion is not fulfilled}
-    \State{}\begin{minipage}[t]{0.9\textwidth} With probability \(\pexp\) choose a random action and
+    \State{}\begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth}
+      With probability \(\pexp\) choose a random action and
       probability \(1-\pexp\) one that fulfills
       \(\max_{a}\lexeq(\X^{\pol}_{\gamma_{1}}(s_{t},a; \netWorker{}),\X^\pol_ {\gamma_{0}}(s_{t},a; \netWorker{}))\). Let
       \(\isRandAct{t}\) indicate if the action was chosen randomly.
     \end{minipage}
-    \State{}\begin{minipage}[t]{0.9\textwidth}
+    \State{}\begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth}
     Carry out action \(a_{t}\), observe reward \(r_{t}\) and resulting state \(s_{t+1}\).
     Store the experience \((s_{t}, a_{t}, \isRandAct{t}, r_{t}, s_{t+1})\) in the experience replay
     memory \(M\).
     \end{minipage}
     \If{a non-random action was chosen or \(\pexp > \plearn\)}
     \begin{align*}
-      \avgrew^{\pol}  \gets (1- \alpha) \avgrew^{\pol} + \alpha [r_{t} +
-      \max_{a}\X^\pol_{\gamma_1}(s_{t+1},a; \netWorker{}) - \X^\pol_{\gamma_1}(s_{t},a_{t}; \netWorker{})]
+      \avgrew^{\pol}  & \gets (1- \alpha) \avgrew^{\pol} + \alpha [r_{t} +
+      \max_{a}\X^\pol_{\gamma_1}(s_{t+1},a; \netWorker{}) - \X^\pol_{\gamma_1}(s_{t},a_{t};
+                        \netWorker{})]
+      % \\ \avgrew^{\pol}  & \gets \max(\avgrew^{\pol}, \avgrew_{\min}^{\pol})\\
+      % \avgrew_{\min}^{\pol} & \gets (1 - \alpha_{\min}) \avgrew_{\min}^{\pol} + \alpha_{\min} 0.975
+      % \cdot \avgrew^{\pol}
     \end{align*}
     \EndIf
 
@@ -773,7 +785,7 @@ foundation of our algorithm.
       y_{i,\gamma_{1}} & \gets r_{t} + \gamma_{1} \max_{a}
                                         \X^\pol_{\gamma_1}(s_{t+1},a; \netTarget{}) - \avgrew^{\pol}
     \end{align*}
-    \State{} \begin{minipage}[t]{0.9\textwidth} Update the average reward adjusted discounted
+    \State{} \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth} Update the average reward adjusted discounted
       state-values using the sum of the gradients on \({(y_{i,\cdot} -
       \X^\pol_{\cdot}(s_{t+1},a; \netWorker{}))}^{2}\) wrt. network parameters
     \(\netWorker{}\).
@@ -965,7 +977,7 @@ very high ($16$~Dollar per order and period) due to the MTO environment. All cos
 based on the production system state at the end of each period.
 
 
-\subsection{Conventional Order Release Rules}
+\subsection{Conventional Order Release Rule}
 
 As external benchmark for comparison we use different parameterized backward infinite loading
 (\BIL{}) techniques \citep{Ackerman1963}. \BIL{} uses Equation~\ref{eq:Orel} with a predetermined
@@ -978,8 +990,9 @@ and fixed lead times \(\lt_{i}\).
 %
 % where the release date \(RD_{j}\) of product type \(j\) is calculated by the difference of the due
 % date \(DD_{j}\) and the lead time \(LT_{j}\).
-Note that we set lead times for each product type and not for every order as done by
-\cite{Ackerman1963}.
+%
+% Note that we set lead times for each product group and not for every order as done by
+% \cite{Ackerman1963}.
 
 
 \subsection{Algorithm Setup}
@@ -987,56 +1000,86 @@ Note that we set lead times for each product type and not for every order as don
 
 \MS[t]{Algorithm adaptions}
 
-\paragraph{Markov Decision Process.} The underlying MDP is unichain and looks as follows.
-Both, state space $\mathcal{S}$ and action space $\mathcal{A}$ are discrete. Any state
-$s \in \mathcal{S}$ of the \textit{state space} is composed of the following information for each
-product $p$:
-        %         The following information is presented to the algorithm for both Product 1 and Product 2 as follows.
+\paragraph{Markov Decision Process.} The underlying MDP is unichain and looks as follows. Both,
+state space $\mathcal{S}$ and action space $\mathcal{A}$ are discrete.
+%
+% Recall that we gproducts routed over the bottleneck machine \(M5\) are bottleneck products.
+%
+Any state $s \in \mathcal{S}$ of the \textit{state space} is composed of the following information
+for both groups \(g\), i.e.\@ for bottleneck and non-bottleneck products:
 \begin{itemize}
 
-\item The currently set lead time $LT_{p} \in \{1,2,\ldots,\DDS\}$ (Recall:
+\item The currently set lead time $LT_{g} \in \{1,2,\ldots,\DDS\}$ (Recall:
   $\text{Due Date Period} - \text{Lead Time} = \text{Release Period}$). Note that we bound the
   maximum lead time with due date slack $\DDS$, which is $7$ in our setup.
 
-\item Counters $OP_{p,d}\in \N$ for the number of orders in the order pool divided in time buckets
+\item Counters $OP_{g,d}\in \N$ for the number of orders in the order pool divided in time buckets
   with $d \in \{1,2,\ldots,\DDS \}$, which stands for the number of periods until the due date.
 
   % \item Flag for each machine whether it is idle or not.
 
-\item Counters $Q_{i}\in \N$ standing for the number of orders for each queue $i$.
+\item Counters $Q_{g,i,d}\in \N$ for the number of orders in the machine and queue \(i \in
+  \{M_{1}, M_{2}, \ldots , M_{6}\}\) divided in
+  time buckets with $d \in \{1,2,\ldots,\DDS \}$, which stands for the number of periods until the
+  due date.
 
-\item Counters $FGI_{p,d} \in \N$ of orders in the finished goods inventory divided in time
-  buckets with $d \in \{-5,-4,-3,\ldots, \DDS \}$, which stands for the number of periods until the
-  due date. Orders with a due date with more than 5 periods ago are listed in the counter
-  $FGI_{-5}$.
+\item Counters $FGI_{g,d} \in \N$ of orders in the finished goods inventory divided in time
+  buckets with $d \in \{1, 2,\ldots, \DDS \}$, which stands for the number of periods until the
+  due date. Orders with a due date with more than 3 periods ago are listed in the counter
+  $FGI_{-3}$.
 
-\item Counters $S_{p,d} \in \N$ of shipped orders from the last period divided in time buckets
-  with $d \in\{-5,-4,-3,\ldots, \DDS \}$, which stands for the number of periods until the due date.
-  Orders with a due date with more than 5 periods ago are listed in the counter $S_{-5}$.
+\item Counters $S_{g,d} \in \N$ of shipped orders from the last period divided in time buckets
+  with $d \in\{-3,-2,\ldots, \DDS \}$, which stands for the number of periods until the due date.
+  Orders with a due date with more than 3 periods ago are listed in the counter $S_{-3}$.
 
 \end{itemize}
 
-\noindent The algorithm implicitly learns a function which maps the current state of the
-production system to a release decision. In an optimal situation it does so by multiply exploring
-every action for each state and assessing its economic viability.
-
+The algorithm implicitly learns a function which maps the current state of the production
+system to a lead time update and thus a release decision. In an optimal situation it does so by
+multiply exploring every action for each state and assessing its economic viability.
+%
 Orders are released once the due date is within the interval $[t,t+\text{lead time}]$, whereas $t$
-is the current period. Clearly, this yields bulk releases (either all or no orders with the same
-due date and product type are released). % Note that we do not present past state
-        %         information to the neural network.
+is the current period. Clearly, this yields bulk releases, meaning that either all or no orders with
+the same due date and of the same product group are
+released.
 
-The \textit{actions space} is composed of two independent decisions. These are the relative changes
-of the lead times to the currently set lead times $LT_{p} \in \{1,2,\ldots,\DDS\}$ for each product
-$p$. Recall that $p=2$.
-        %
-Furthermore, we restrict the action space for each state $s_{t+1}$ according to the last set lead
-time $LT_{p}$ from state $s_{t}$ by restricting the change of the lead time for consecutive
-periods to a maximum of 1. Thus, if $LT_{p}$ is the current lead time for product $p$ the action
-space for this product is given by $\{1,2,\ldots,\DDS\} \cap \{LT_{p}-1,LT_{p},LT_{p}+1\}$. Put
-differently the algorithm can increase or decrease the lead time by 1 or leave it as it is, as
-long as it acts within the discrete action space given by the set $\{1,2,\ldots,\DDS\}$ for each
-type of product. Thus the action space over all products is given by the full enumeration of
-available actions of the individual products.
+The \textit{action space} is composed of two decisions, the relative change of the lead times to the
+currently set lead times $LT_{g} \in \{1,2,\ldots,\DDS\}$ for each product group $g$.
+%
+We restrict the lead time update for state $s_{t+1}$ according to the lead time $LT_{g}$ from state
+$s_{t}$ by a maximum change of 1. Thus, if $LT_{g}$ is the current lead time of product group $g$
+the agent can choose a lead time in $\{1,2,\ldots,\DDS\} \cap \{LT_{g}-1,LT_{g},LT_{g}+1\}$. % Put
+% differently the algorithm can increase or decrease the lead time by 1 or leave it as it is, as long
+% as it acts within the discrete action space given by the set $\{1,2,\ldots,\DDS\}$ for each product
+% group.
+A naive approach is to define one action for each combination of actions over all product groups.
+Although applicable in our setup, as we only define two groups that yield \(9\) actions, it simply
+does not scale.
+%
+\begin{figure*}[t!]
+  \centering
+  \input{figures/indep_agents}                      % Figure production system
+  \caption{Illustration of independent agents as agent one increases the lead time}\label{fig:indep-agents}
+\end{figure*}
+%
+Therefore, we invent and implement \textit{independent agents}, each operating on the same system
+state, but choosing actions independently for the designated product group.
+Figure~\ref{fig:indep-agents} illustrates the idea, where wlog. we use two agents and for simplicity
+omit the reward and truncate the state to the lead times. Agent one chooses to increase the lead
+time from \(3\) to \(4\). Thus, the future state, seen from agent one, depends on the probability of
+agent two choosing to increase (\(\inc\)), decrease (\(\dec\)) or not change (\(\pers\)) the lead
+time. Note that the Markov property the agent, that is
+\(p(s_{t+1}, r_{t} \mid s_{t}, a_{t}) = p((4,\cdot), r_{t} \mid (3,3), \inc) \), is not touched by
+this adaption. While for agent one the reward and future state only depends on the current state and
+action taken, the corresponding probabilities for future state and reward change during the learning
+process as the other agent starts to behave differently.
+%
+\MS[t]{independent agents, true?}This allows us to investigate the algorithms behaviour for action
+solution spaces. In particular, we present the algorithm the above defined solution space not only
+on the basis of product groups \(g\), but also for each product type \(p\).
+That means, the state space, as well as the action space operates on a product type basis. Note that
+without independent agents this is infeasible due to \(3^{6} = 729\) possible actions.
+
 
         %         We allow the agent a higher increase
         %         of the lead time, compared to the decrease, to give it the chance to react quickly to high
@@ -1047,27 +1090,104 @@ available actions of the individual products.
 \paragraph*{Reward.}
 In each period the agent chooses an action which generates a reward while traversing to the next
 period by simulating the production system. The rewards are the accumulated costs at the end of the
-period. These costs are consist of the number of backorders, the current WIP level and the number of
-orders in the inventory.
-        %
-        %         The costs are divided by the normalizing parameter $\eta$ (see Table~\ref{tbl:variants}) and then
-        %         clipped (cut off) to the interval $[-0.5,0.5]$.
+period consisting of the backorders, the WIP orders and the number of orders in the FGI. The
+objective is to minimise the returned reward. Therefore, we adapt the algorithm by swapping all
+maximisation functions with minimisations.
 
 \paragraph*{Adapted Algorithm.}
-The algorithm depicted above is designed as a tabular version. We have adapted it to use neural
-networks for the approximation of the different kind of state-action pair value functions. This is
-required due to the exponential growth of the state space. The implementation collects the observed
-information for each state-action function in a replay memory and randomly selects \(128\) data
-points out of a collection of \(30k\) memories in each period and trains these on the neural
-network. This technique is called experience replay memory
-\citep{lin1993reinforcement,mnih2015human} and ought to overcome we instabilities. Nonetheless, this
-approximation results in the fact that the algorithm can be unstable or may even diverge
-\citep{tsitsiklis1997analysis}. Additionally we use a target and a worker network, whereas the
-target network is overwritten every \(10k\) steps by the worker network. This has been proposed by
-\cite{mnih2015human} and should further stabilize the algorithm.
+Our implementation includes several optimisations, that help the algorithm in finding better
+policies and stabilise the learning process. These are the above discussed independent agents that
+operate on the same state, \(n\)-step learning \citep{mnih2016asynchronous}, overestimating
+\(\avgrew^{\pol}\), using multiple parallel worker agents that operate on the same environment to
+collect a broader range of experiences, storing experiences according to their action and uniformly
+sampling over the actions to ensure each action is constantly trained to prevent catastrophic
+forgetting.
+%
+N-step RL collects a set of consecutive experiences and
+
+\MS[t]{explanation
+  missing}
+
+
+% The algorithm depicted above is designed as a tabular version. We have adapted it to use neural
+% networks for the approximation of the different kind of state-action pair value functions. This is
+% required due to the exponential growth of the state space. The implementation collects the observed
+% information for each state-action function in a replay memory and randomly selects \(128\) data
+% points out of a collection of \(30k\) memories in each period and trains these on the neural
+% network. This technique is called experience replay memory
+% \citep{lin1993reinforcement,mnih2015human} and ought to overcome we instabilities. Nonetheless, this
+% approximation results in the fact that the algorithm can be unstable or may even diverge
+% \citep{tsitsiklis1997analysis}. Additionally we use a target and a worker network, whereas the
+% target network is overwritten every \(10k\) steps by the worker network. This has been proposed by
+% \cite{mnih2015human} and should further stabilize the algorithm.
+
+\MS[t]{Extensions: overestimate rho, rho minimum, Multiple Agents (shared state,  shared rho?),
+  init-phase (0.5 for expSmthRewRate, always adapt rho, same rho for all agents): exp smooth reward
+  as rho, replay memory actions, n-step (describe replay memory), gradient clipping }
+\MS[t]{Side info: Replay memory also stores (disallowed) filtered action indices for optimisation purposes and on
+episodic tasks needs to store a bool indicating an episode end. Uses Int8 for state features values.  }
+
+
+\begin{algorithm}[t!]
+  \begin{algorithmic}[1]
+    \State{}Initialise state \(s_{0}\) and network parameters \(\netTarget, \netWorker\) randomly, set
+    an exploration rate \(0 \leqslant \plearn \leqslant \pexp \leqslant 1\), exponential smoothing learning rates
+    \(0 < \alpha, \gamma < 1\), and discount factors
+    \(0 < \gamma_{0} < \gamma_{1} \leqslant 1\), where \(\gamma_{1} = 1\) is
+    usually a good choice.
+    \While{the stopping criterion is not fulfilled}
+    \State{}%
+    \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth}
+      With probability \(\pexp\) choose a random action and
+      probability \(1-\pexp\) one that fulfills
+      \(\min_{a}\lexeq(\X^{\pol}_{\gamma_{1}}(s_{t},a; \netWorker{}),\X^\pol_ {\gamma_{0}}(s_{t},a;
+      \netWorker{}))\). Let \(\isRandAct{t} = \mathsf{True}\) indicate that the action was chosen
+      randomly
+    \end{minipage}
+    \State{}%
+    \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth}
+    Carry out action \(a_{t}\), observe reward \(r_{t}\) and resulting state \(s_{t+1}\).
+    Store the experience \((s_{t}, a_{t}, \isRandAct{t}, r_{t}, s_{t+1})\) in the experience replay
+    memory \(M\).
+    \end{minipage}
+    \If{\(t \mod{\nstep} \equiv 0\)}
+    \State{Reset gradient: \(d\netWorker{} \gets 0\)}
+    \State{}%
+    \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth-\leftmargin+2pt}
+      Sample random mini-batch of \(\nstep\) consecutive experiences from \(M\), each with
+      \((s_{i}, \isRandAct{i}, a_{i}, r_{i}, s_{i})\) where \(i \in {1,2,\ldots,\nstep}\).
+    \end{minipage}
+    \For{each mini-batch}
+    \For{each experience, starting with the latest seen experience \(\nstep\)}
+    \If{experience \(\nstep\) or (\(\isRandAct{i}\) and  \(\pexp \leqslant \plearn\))}
+      \State{\(\target_{\gamma0} \gets \min_{a} \X^\pol_{\gamma_0}(s_{t+1},a; \netTarget{})\)}
+      \State{\(\target_{\gamma1} \gets \min_{a} \X^\pol_{\gamma_1}(s_{t+1},a; \netTarget{})\)}
+    \EndIf
+    \If{a non-random action was chosen or \(\pexp > \plearn\)}\\
+    \hspace{2.4cm}\(\avgrew^{\pol} \gets (1- \alpha) \avgrew^{\pol} + \alpha [r_{t} +
+      \min_{a}\X^\pol_{\gamma_1}(s_{t+1},a; \netWorker{}) - \X^\pol_{\gamma_1}(s_{t},a_{t};
+      \netWorker{})]\)
+    \EndIf
+    \State{\(\target_{\gamma_0}  \gets r_{t} + \gamma_{0} \target_{\gamma_{0}} - \avgrew^{\pol}  \)}
+    \State{\(\target_{\gamma_{1}}  \gets r_{t} + \gamma_{1} \target_{\gamma_{1}} - \avgrew^{\pol}\)}
+    \State{\(d\netWorker{} \gets d\netWorker{} + \partial{(\target_{\gamma_{0}} - \X^\pol_{\gamma_{0}}(s_{t+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
+    \State{\(d\netWorker{} \gets d\netWorker{} +
+      \partial{(\target_{\gamma_{1}} - \X^\pol_{\gamma_{1}}(s_{t+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
+    \EndFor{}
+    \EndFor{}
+    \State{Perform update of \(\netWorker{}\) using \(d\netWorker{}\)}
+    \EndIf{}
+    \State{Every \(C\) steps exponential smoothly set target network:
+    \(\netTarget \gets (1 - \gamma) \netTarget{} + \gamma \netWorker{}\)}
+    \State{} Set \(s \gets s'\), \(t \gets t+1\) and decay parameters
+    \EndWhile{}
+  \end{algorithmic}
+  \caption{\label{alg:fin}Near-Blackwell-optimal deep RL for unichain MDPs}
+\end{algorithm}
+
 
 \paragraph*{Neural Network Setup.}
-        %
+%
 We use the same setup for the neural network as done by \cite{Schneckenreither2019}. However as they
 use a actor-critic agent, whereas we approximate state-action-values the output of the network is a
 one dimensional vector as opposed to a matrix. Therefore we use a single three layer fully-connected

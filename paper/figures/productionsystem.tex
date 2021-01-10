@@ -1,4 +1,4 @@
-\begin{tikzpicture}[queue/.style={regular polygon,regular polygon sides=4,inner sep=0.075cm},scale=0.89]
+\begin{tikzpicture}[queue/.style={regular polygon,regular polygon sides=4,inner sep=0.075cm},scale=0.78]
 
   \draw (-3.5,0) node[] {$\ldots$};
   \draw (-4.1,-1.75) node[] {\scriptsize Due Date:};
@@ -73,7 +73,7 @@
 
   % Paths
   \path (OP.center) edge[->, bend left=10, above]
-  node[xshift=0.088cm,yshift=0.05cm,align=center] {\scriptsize Order \\[-1ex] \scriptsize Release} (Q1);
+  node[xshift=0.09cm,yshift=0.05cm,align=center] {\scriptsize Order \\[-1ex] \scriptsize Release} (Q1);
 
   \path (M1) edge[->, bend left=10, above]                 node[xshift=-0.1cm,yshift=-0.05cm] {$\scriptstyle 1,2,3$} (Q2);
   \path (M1) edge[->, bend right=10,below]                 node[xshift=-0.1cm,yshift=-0.05cm] {$\scriptstyle 4,5,6$} (Q3);
@@ -84,7 +84,7 @@
   \path (M3) edge[->, bend right=10,above,very near start]      node[yshift=-0.075cm] {$\scriptstyle 5$}     (Q5);
   \path (M3) edge[->, bend right=10,above,near start]      node {$\scriptstyle 6$}     (Q6);
   \path (M4) edge[->, bend left=10,above,near start]       node[xshift=0.1cm] {$\scriptstyle 1,4$} (\fgi{});
-  \path (M5) edge[->, bend left=10,above,near start]       node[xshift=0.1cm, yshift=-0.07cm] {$\scriptstyle 2,5$} (\fgi{});
+  \path (M5) edge[->, bend left=10,above,near start]       node[xshift=0.075cm, yshift=-0.07cm] {$\scriptstyle 2,5$} (\fgi{});
   \path (M6) edge[->, bend right=10,below,near start]      node[xshift=0.15cm,yshift=0.07cm] {$\scriptstyle 3,6$} (\fgi{});
 
   \path (\fgi{}) edge[->,near start] node[xshift=0.1cm,align=left] {\tiny Not \\[-1ex]
