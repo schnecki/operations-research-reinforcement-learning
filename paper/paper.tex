@@ -1086,7 +1086,7 @@ without independent agents this is infeasible due to \(3^{6} = 729\) possible ac
 \paragraph*{Reward.}
 In each period the agent chooses an action which generates a reward while traversing to the next
 period by simulating the production system. The rewards are the accumulated costs at the end of the
-period consisting of the backorders, the WIP orders and the number of orders in the FGI. The
+period consisting of the backorders, the WIP orders and the number of orders in the FGI\@. The
 objective is to minimise the returned reward. Therefore, we adapt the algorithm by swapping all
 maximisation functions with minimisations.
 
@@ -1094,15 +1094,28 @@ maximisation functions with minimisations.
 Our implementation includes several optimisations, that help the algorithm in finding better
 policies and stabilise the learning process. These are the above discussed independent agents that
 operate on the same state, \(n\)-step learning \citep{mnih2016asynchronous}, overestimating the
-average reward \(\avgrew^{\pol}\). Algorithm~\ref{alg:full} depicts the algorithm including the
-extensions.
+average reward \(\avgrew^{\pol}\) and ensuring to constantly reduce the average reward as searching
+for policies with higher average costs is unnecessary. Algorithm~\ref{alg:full} depicts a detailed
+view on the algorithm including the extensions and with the minimisation objective.
 
-%
+% N-Step
 N-step RL collects a set of consecutive experiences, in our case retrieved from the replay memory,
 and connects the state values starting from the latest observed experience, such that the newly
 computed state value of the corresponding experience propagates to the experience of the previous
 period. This allows a faster convergence, as values bootstrap over multiple periods in contrast to
 just one step.
+% Overestimating
+The idea behind overestimating the average reward is to constantly seek for better policies than the
+currently known. We overestimate the reward by subtracting \(10\%\) of the computed average reward
+\(\avgrew^{\pol}\) and an exponentially smoothed average reward of the actually returned reward
+values of greedy actions. Thus, if the computed and actually observed average reward coincide, the
+overestimation equals \(0\).
+% Rho Minimum
+Preventing an increase of the average reward with \(\avgrew_{\max}^{\pol}\) reduces the search space
+and provides a methodology for constantly improving the policy
+
+
+\MS[t]{describe algorithm}
 
 \MS[t]{rhoMinimum, (shared rho)?, init-phase, (gradient clipping)?}
 
@@ -1136,11 +1149,11 @@ episodic tasks needs to store a bool indicating an episode end. Uses Int8 for st
 
 \begin{algorithm}[t!]
   \begin{algorithmic}[1]
-    \State{}Initialise state \(s_{0}\) and network parameters \(\netTarget, \netWorker\) randomly, set
-    an exploration rate \(0 \leqslant \plearn \leqslant \pexp \leqslant 1\), exponential smoothing learning rates
-    \(0 < \alpha, \gamma < 1\), and discount factors
-    \(0 < \gamma_{0} < \gamma_{1} \leqslant 1\), where \(\gamma_{1} = 1\) is
-    usually a good choice.
+    \State{}Initialise state \(s_{0}\) and network parameters \(\netTarget, \netWorker\) randomly,
+    set an exploration rate \(0 \leqslant \plearn \leqslant \pexp \leqslant 1\), exponential
+    smoothing learning rates \(0 < \alpha_{\max}, \alpha, \gamma < 1\), a sufficiently large default
+    value for \(\avgrew_{\max}^{\pol}\) and discount factors \(0 < \gamma_{0} < \gamma_{1} \leqslant
+    1\)
     \While{the stopping criterion is not fulfilled}
     \State{\(\isRandAct{t} \gets \mathsf{False}\)}
     \ForEach{independent agent \(\agent_{1},\agent_{2},\ldots,\agent_{n_{\mathsf{ag}}}\)}
@@ -1171,12 +1184,15 @@ episodic tasks needs to store a bool indicating an episode end. Uses Int8 for st
       \State{\(\target_{\gamma0} \gets \min_{a} \X^\pol_{\gamma_0}(s_{t+1},a; \netTarget{})\)}
       \State{\(\target_{\gamma1} \gets \min_{a} \X^\pol_{\gamma_1}(s_{t+1},a; \netTarget{})\)}
     \EndIf
-    \If{a non-random action was chosen or \(\pexp > \plearn\)}\\
-    \hspace{2.4cm}\(\avgrew^{\pol} \gets (1- \alpha) \avgrew^{\pol} + \alpha [r_{t} +
+    \If{a non-random action was chosen or \(\pexp > \plearn\)}
+    \State{\(\avgrew^{\pol} \gets (1- \alpha) \avgrew^{\pol} + \alpha [r_{t} +
       \min_{a}\X^\pol_{\gamma_1}(s_{t+1},a; \netWorker{}) - \X^\pol_{\gamma_1}(s_{t},a_{t};
-      \netWorker{})]\)
+      \netWorker{})]\)}
+    \State{\(\avgrew^{\pol} \gets \min(\avgrew^{\pol}, \avgrew_{\max}^{\pol})\)}
+    \State{\(\avgrew_{\max}^{\pol} \gets (1- \alpha_{\max}) \avgrew_{\max}^{\pol} +
+    \alpha_{\max} 1.025 \avgrew^{\pol}\)}
     \EndIf
-    \State{Compute overestimate of \(\avgrew^{\pol}\) and store in \(\avgrew_{\Overestim}^{\pol}\)}
+    \State{Compute overestimate of \(\avgrew^{\pol}\) and store result in \(\avgrew_{\Overestim}^{\pol}\)}
     \State{\(\target_{\gamma_0}  \gets r_{t} + \gamma_{0} \target_{\gamma_{0}} - \avgrew_{\Overestim}^{\pol}  \)}
     \State{\(\target_{\gamma_{1}}  \gets r_{t} + \gamma_{1} \target_{\gamma_{1}} - \avgrew_{\Overestim}^{\pol}\)}
     \State{\(d\netWorker{} \gets d\netWorker{} + \partial{(\target_{\gamma_{0}} - \X^\pol_{\gamma_{0}}(s_{t+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
@@ -1188,7 +1204,7 @@ episodic tasks needs to store a bool indicating an episode end. Uses Int8 for st
     \EndIf{}
     \State{Every \(C\) steps exponential smoothly set target network:
     \(\netTarget \gets (1 - \gamma) \netTarget{} + \gamma \netWorker{}\)}
-    \State{} Set \(s \gets s'\), \(t \gets t+1\) and decay parameters
+    \State{Set \(s \gets s'\), \(t \gets t+1\) and decay parameters}
     \EndWhile{}
   \end{algorithmic}
   \caption{\label{alg:full}Near-Blackwell-optimal deep RL for unichain MDPs}
@@ -1197,6 +1213,7 @@ episodic tasks needs to store a bool indicating an episode end. Uses Int8 for st
 
 \paragraph*{Neural Network Setup.}
 %
+\MS[t]{TODO}
 We use the same setup for the neural network as done by \cite{Schneckenreither2019}. However as they
 use a actor-critic agent, whereas we approximate state-action-values the output of the network is a
 one dimensional vector as opposed to a matrix. Therefore we use a single three layer fully-connected
