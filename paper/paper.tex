@@ -1070,11 +1070,14 @@ this adaption. While for agent one the reward and future state only depends on t
 action taken, the corresponding probabilities for future state and reward change during the learning
 process as the other agent starts to behave differently.
 %
-\MS[t]{independent agents, true?}This allows us to investigate the algorithms behaviour for action
-solution spaces. In particular, we present the algorithm the above defined solution space not only
-on the basis of product groups \(g\), but also for each product type \(p\).
-That means, the state space, as well as the action space operates on a product type basis. Note that
-without independent agents this is infeasible due to \(3^{6} = 729\) possible actions.
+\MS[t]{independent agents, true?}This allows us to investigate the algorithms behaviour for even
+larger solution spaces. In particular, this adaption enables us to present the algorithm the above
+defined solution space not only on the basis of product groups \(g\), but also for each product type
+\(p\). That means, the state space, as well as the action space operates on a product type basis.
+Note that without independent agents this is infeasible due to \(3^{6} = 729\) possible actions.
+Removing the dependency between the lead times of different product types reduces the possibilities,
+and thus the number of ANN output layer nodes, to \(18\). Therefore, this is a vital adaption that
+ensures scalability.
 
 
         %         We allow the agent a higher increase
@@ -1084,19 +1087,21 @@ without independent agents this is infeasible due to \(3^{6} = 729\) possible ac
 
 
 \paragraph*{Reward.}
-In each period the agent chooses an action which generates a reward while traversing to the next
+In each period the agents choose actions which generates a reward while traversing to the next
 period by simulating the production system. The rewards are the accumulated costs at the end of the
 period consisting of the backorders, the WIP orders and the number of orders in the FGI\@. The
 objective is to minimise the returned reward. Therefore, we adapt the algorithm by swapping all
 maximisation functions with minimisations.
 
 \paragraph*{Adapted Algorithm.}
-Our implementation includes several optimisations, that help the algorithm in finding better
-policies and stabilise the learning process. These are the above discussed independent agents that
-operate on the same state, \(n\)-step learning \citep{mnih2016asynchronous}, overestimating the
-average reward \(\avgrew^{\pol}\) and ensuring to constantly reduce the average reward as searching
-for policies with higher average costs is unnecessary. Algorithm~\ref{alg:full} depicts a detailed
-view on the algorithm including the extensions and with the minimisation objective.
+Our implementation includes several optimisations, that help the algorithm in better exploring the
+solution space and stabilise the learning process. These include the above discussed independent
+agents that operate on the same state, \(n\)-step learning \citep{mnih2016asynchronous},
+overestimating the average reward \(\avgrew^{\pol}\) and ensuring to constantly reduce the average
+reward as searching for policies with higher average costs is unnecessary. Algorithm~\ref{alg:full}
+depicts a detailed view on the algorithm including these extensions and with the minimisation
+objective. The idea is the same as in Algorithm~\ref{alg:near}, except that the action selection
+procedure is a loop over all independent agents and the implementation of the n-step logic.
 
 % N-Step
 N-step RL collects a set of consecutive experiences, in our case retrieved from the replay memory,
@@ -1112,39 +1117,26 @@ values of greedy actions. Thus, if the computed and actually observed average re
 overestimation equals \(0\).
 % Rho Minimum
 Preventing an increase of the average reward with \(\avgrew_{\max}^{\pol}\) reduces the search space
-and provides a methodology for constantly improving the policy
+and provides a methodology for constantly improving policy.
+
+\MS[t]{(shared rho)?, (gradient clipping)?}
+
+Furthermore, we sometimes use multiple parallel workers (parallel RL) that operate on the same
+environment to collect a broader range of experiences. The experiences are stored according to the
+first taken action in the n-step series. We uniformly sample over the actions to ensure each action
+is constantly trained. This reduces catastrophic forgetting.
+
+The algorithm initiation tactics is to first fill the replay memory buffer by skipping any learning
+(steps \(10-25\)) until the period, that corresponds to the replay memory size, is reached. Then
+for \(500\) steps the average reward is set to the last computed exponentially smoothed value to
+prevent divergence due to the untrained network weight initialisation values.
 
 
-\MS[t]{describe algorithm}
-
-\MS[t]{rhoMinimum, (shared rho)?, init-phase, (gradient clipping)?}
-
-Furthermore, we use multiple parallel worker agents that operate on the same
-environment to collect a broader range of experiences, storing experiences according to their action
-and uniformly sampling over the actions to ensure each action is constantly trained to prevent
-catastrophic forgetting.
-
-
-\MS[t]{explanation missing}
-
-
-% The algorithm depicted above is designed as a tabular version. We have adapted it to use neural
-% networks for the approximation of the different kind of state-action pair value functions. This is
-% required due to the exponential growth of the state space. The implementation collects the observed
-% information for each state-action function in a replay memory and randomly selects \(128\) data
-% points out of a collection of \(30k\) memories in each period and trains these on the neural
-% network. This technique is called experience replay memory
-% \citep{lin1993reinforcement,mnih2015human} and ought to overcome we instabilities. Nonetheless, this
-% approximation results in the fact that the algorithm can be unstable or may even diverge
-% \citep{tsitsiklis1997analysis}. Additionally we use a target and a worker network, whereas the
-% target network is overwritten every \(10k\) steps by the worker network. This has been proposed by
-% \cite{mnih2015human} and should further stabilize the algorithm.
-
-\MS[t]{Extensions: overestimate rho, rho minimum, Multiple Agents (shared state,  shared rho?),
-  init-phase (0.5 for expSmthRewRate, always adapt rho, same rho for all agents): exp smooth reward
-  as rho, replay memory actions, n-step (describe replay memory), gradient clipping }
-\MS[t]{Side info: Replay memory also stores (disallowed) filtered action indices for optimisation purposes and on
-episodic tasks needs to store a bool indicating an episode end. Uses Int8 for state features values.  }
+% \MS[t]{Extensions: overestimate rho, rho minimum, Multiple Agents (shared state,  shared rho?),
+%   init-phase (0.5 for expSmthRewRate, always adapt rho, same rho for all agents): exp smooth reward
+%   as rho, replay memory actions, n-step (describe replay memory), gradient clipping }
+% \MS[t]{Side info: Replay memory also stores (disallowed) filtered action indices for optimisation purposes and on
+% episodic tasks needs to store a bool indicating an episode end. Uses Int8 for state features values.  }
 
 
 \begin{algorithm}[t!]
@@ -1156,18 +1148,18 @@ episodic tasks needs to store a bool indicating an episode end. Uses Int8 for st
     1\)
     \While{the stopping criterion is not fulfilled}
     \State{\(\isRandAct{t} \gets \mathsf{False}\)}
-    \ForEach{independent agent \(\agent_{1},\agent_{2},\ldots,\agent_{n_{\mathsf{ag}}}\)}
+    \ForEach{independent agent \(\agent \in \agent_{1},\agent_{2},\ldots,\agent_{n_{\mathsf{ag}}}\)}
     \State{}%
     \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth-\leftmargin+2pt}
       With probability \(\frac{\pexp}{n_{\mathsf{ag}}}\) choose a random action and
       probability \(1-\frac{\pexp}{n_{\mathsf{ag}}}\) one that fulfills
-      \(\min_{a}\lexeq(\X^{\pol}_{\gamma_{1}}(s_{t},a; \netWorker{}),\X^\pol_ {\gamma_{0}}(s_{t},a;
+      \(\min_{a \in \mathcal{A}(\agent)}\lexeq(\X^{\pol}_{\gamma_{1}}(s_{t},a; \netWorker{}),\X^\pol_ {\gamma_{0}}(s_{t},a;
       \netWorker{}))\). Set \(\isRandAct{t} \gets \mathsf{True}\) if the action was chosen randomly
     \end{minipage}
     \EndFor
     \State{}%
     \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth}
-    Carry out action \(a_{t}\), observe reward \(r_{t}\) and resulting state \(s_{t+1}\).
+    Carry out combined action \(a_{t}\), observe reward \(r_{t}\) and resulting state \(s_{t+1}\).
     Store the experience \((s_{t}, a_{t}, \isRandAct{t}, r_{t}, s_{t+1})\) in the experience replay
     memory \(M\).
     \end{minipage}
