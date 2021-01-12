@@ -1221,7 +1221,7 @@ For back-propagation we use the Adam optimiser with learning rate \(0.001\), and
 \(\beta_{1}=0.9\), and \(\beta_{2}=0.999\).
 
 
-\section{Preliminary Results}
+\section{Computational Experiments}
 \label{sec:Preliminary}
 
 This section provides preliminary results for the described setup and gives an overview of the
@@ -1238,17 +1238,8 @@ instead of the last action (only). Thus they propose to keep track of the orders
 order pool until all fully traversed through the production system and reward the actions according
 to all orders in the order pool.
 
-The parameter setup is given in Table~\ref{tbl:params}. The parameters are exponentially decayed
-with rate \(0.05\) and \(350k\) steps\footnote{The decay is defined as \(0.05 ^{(t/350k)}\), where
-  \(t\) is the current period}. We implemented the deep Q-network algorithm proposed by
-\cite{mnih2015human}, which is parameterised by learning rate \(\delta\) and a discount factor of
-\(0.99\).
-
-
 \begin{table}[t]
   \centering
-        %         \def\arraystretch{1.2}          %  1 is the default, change whatever you need
-
   \begin{tabular}{|l||c|c|c|c|c|c|c|c|c|c|}
     \hline
     Parameter & $\alpha$ & $\beta$ & $\delta$ & $\gamma$ & $\epsilon$ & $p_{exp}$ & $\xi$ \\
@@ -1256,603 +1247,193 @@ with rate \(0.05\) and \(350k\) steps\footnote{The decay is defined as \(0.05 ^{
     Value & 0.5 & 0.15 & 0.15 & 0.15 & 0.5 & 1.0 & 0.15 \\
     \hline
   \end{tabular}
-
-        %         \egroup
-
   \caption{\label{tbl:params}Parameter Setup.}
-        %         \end{figure}
+\end{table}
+
+The parameter setup is given in Table~\ref{tbl:params}. The parameters are exponentially decayed
+with rate \(0.05\) and \(350k\) steps\footnote{The decay is defined as \(0.05 ^{(t/350k)}\), where
+  \(t\) is the current period}. We implemented the deep Q-network algorithm proposed by
+\cite{mnih2015human}, which is parameterised by learning rate \(\delta\) and a discount factor of
+\(0.99\).
+
+
+% \definecolor{lightgray}{rgb}{0.83, 0.83, 0.83}
+% \begin{table}[tb]
+%   \begin{center}
+%     \begin{tabular}{c|ccc|c|c||c}
+%       \hline
+%       70-\(\Exp\)-\(\Unif\) & WIPC & FGIC & BOC & FGIC+BOC & SUM & SFTT & SL(\%) \\
+%       \hline                &
+%        ESSLTA{}             &      &      &     &          &     &      &        \\
+%        ANN{}                &      &      &     &          &     &      &        \\
+%        ESSLTB{}             &      &      &     &          &     &      &        \\
+%        BILD{}               &      &      &     &          &     &      &        \\
+%       \hline                &
+% %
+%       \hline                &
+%       70-\(\Unif\)-\(\Exp\) & WIPC & FGIC & BOC & FGIC+BOC & SUM & SFTT & SL(\%) \\
+%       \hline                &
+%        ESSLTA{}             &      &      &     &          &     &      &        \\
+%        ANN{}                &      &      &     &          &     &      &        \\
+%        ESSLTB{}             &      &      &     &          &     &      &        \\
+%        BILD{}               &      &      &     &          &     &      &        \\
+%       \hline                &
+% %
+%       \hline                &
+%       70-\(\Exp\)-\(\Exp\)  & WIPC & FGIC & BOC & FGIC+BOC & SUM & SFTT & SL(\%) \\
+%       \hline                &
+%        ANN{}                &      &      &     &          &     &      &        \\
+%        ESSLTA{}             &      &      &     &          &     &      &        \\
+%        ESSLTB{}             &      &      &     &          &     &      &        \\
+%        BILD{}               &      &      &     &          &     &      &        \\
+%     \end{tabular}
+%   \end{center}
+%   \caption{\label{tbl:70} Results for a bottleneck utilisation of 70\%. }
+% \end{table}
+
+\begin{table}[tb]
+  \begin{center}
+    \begin{tabular}{c|rrr|c|c||c|c|c|c|c}
+      \hline
+      80-\(\Exp\)-\(\Unif\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
+      \hline
+       \rl{0.995}             & 55.218 & 137.006 & 52.090   &          & 244.315 & 1.506 & 2.597    & 0.915  & 34.902   & 32.791             \\
+      \rl{1.000}              & 67.265 & 102.180 & 175.686  &          & 345.132 & 1.517 & 2.627    & 0.908  & 49.305   & 30.777             \\
+      \BILOne{}               & 45.902 & 0.000   & 734.431  &          & 780.333 & 1.319 & 1.806    & 0.352  &          &                    \\
+      \BILTwo{}               & 45.734 & 80.313  & 1425.221 &          & 268.569 & 1.318 & 2.158    & 0.876  &          &                    \\
+      \BILThree{}             & 45.861 & 279.723 & 30.818   &          & 356.402 & 1.318 & 3.034    & 0.975  &          &                    \\
+      \hline
+%
+%       \hline
+%       80-\(\Unif\)-\(\Exp\) & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTP+FGI & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
+%       \hline                &
+%        ESSLTA{}             &        &         &          &          &         &       &          &        &          &                    \\
+%        ANN{}                &        &         &          &          &         &       &          &        &          &                    \\
+%        ESSLTB{}             &        &         &          &          &         &       &          &        &          &                    \\
+%        BILD{}               &        &         &          &          &         &       &          &        &          &                    \\
+%       \hline
+% %
+%       \hline
+%       80-\(\Exp\)-\(\Exp\)  & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTP+FGI & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
+%       \hline                &
+%        ANN{}                &        &         &          &          &         &       &          &        &          &                    \\
+%        ESSLTA{}             &        &         &          &          &         &       &          &        &          &                    \\
+%        ESSLTB{}             &        &         &          &          &         &       &          &        &          &                    \\
+%        BILD{}               &        &         &          &          &         &       &          &        &          &                    \\
+    \end{tabular}
+  \end{center}
+  \caption{\label{tbl:80} Results for a bottleneck utilisation of 80\%. }
 \end{table}
 
 
-Table~\ref{tbl:res} shows the results, where we evaluate the average reward and discounted
-reinforcement learning algorithm by providing either direct reward feedback, that is the reward
-accumulated in the next period, without keeping track of any orders, as \(\ActShipped\) and
-\(\ActShippedDQN\) respectively. Further both algorithms are evaluated with keeping track of the
-order pool orders, such that each action is responsible for all orders in the order pool. These are
-labelled \(\ActOrdPool\) and \(\ActOrdPoolDQN\). For comparisons reasons we provide
-\(\BILOne-\BILSix\) and immediate release (interval release).
+% \definecolor{lightgray}{rgb}{0.83, 0.83, 0.83}
+% \begin{table}[tb]
+%   \begin{center}
+%     \begin{tabular}{c|ccc|c|c||c}
+%       \hline
+%       80-\(\Exp\)-\(\Unif\)   & WIPC      & FGIC      & BOC       & FGIC+BOC  & SUM   & SL(\%) \\
+%       \hline
+%        ESSLTA{}     &           &           &           &           &       &                  \\
+%        ANN{}        &           &           &           &       &       &                      \\
+%        ESSLTB{}     &           &           &           &       &       &                      \\
+%        BILD{}       &           &           &           &       &       &                      \\
+%       \hline
+% %
+%       \hline
+%       80-\(\Unif\)-\(\Exp\)   & WIPC      & FGIC      & BOC       & FGIC+BOC  & SUM    & SL(\%) \\
+%       \hline
+%        ESSLTA{}     &           &           &           &           &       &      \\
+%        ANN{}        &           &           &           &           &       &      \\
+%        ESSLTB{}     &           &           &           &           &       &      \\
+%        BILD{}       &           &           &           &           &       &      \\
+%       \hline
+% %
+%       \hline
+%       80-\(\Exp\)-\(\Exp\) & WIPC     & FGIC      & BOC       & FGIC+BOC  & SUM   & SL(\%) \\
+%       \hline
+%        ANN{}     &          &           &           &           &       &      \\
+%        ESSLTA{}  &          &           &           &           &       &      \\
+%        ESSLTB{}  &          &           &           &           &       &      \\
+%        BILD{}    &          &           &           &           &       &      \\
+%     \end{tabular}
+%   \end{center}
+%   \caption{\label{tbl:80} Results for a bottleneck utilisation of 70\%. }
+% \end{table}
 
-The results show that at the current time we are facing issues with scaling the algorithm to the
-order release problem. Likely this is due to parameterisation issues, which we are investigating
-currently. However, it can be seen that i) the technique of keeping track of the order pool orders
-leads to better policies and ii) that despite the parameterisation issues average reward
-reinforcement learning finds better solutions than its discounted counterpart. However, the least
-costs are generated by \(\BILThree\), which shows that there is room for improvement for the
-reinforcement learning policies.
 
-Interesting is also to see, that all reinforcement learning variants are releasing rather late,
-leading to low finished goods inventory costs (FGIC), but high backorder costs (BOC). Furthermore,
-the agents based on the order-pool orders, namely \(\ActOrdPool\) and \(\ActOrdPoolDQN\), are able
-achieve lower work-in-process costs (WIPC) and also lower tardiness, than the other the agents
-rewarded directly on the shipped orders.
+% Table~\ref{tbl:res} shows the results, where we evaluate the average reward and discounted
+% reinforcement learning algorithm by providing either direct reward feedback, that is the reward
+% accumulated in the next period, without keeping track of any orders, as \(\ActShipped\) and
+% \(\ActShippedDQN\) respectively. Further both algorithms are evaluated with keeping track of the
+% order pool orders, such that each action is responsible for all orders in the order pool. These are
+% labelled \(\ActOrdPool\) and \(\ActOrdPoolDQN\). For comparisons reasons we provide
+% \(\BILOne-\BILSix\) and immediate release (interval release).
+
+% The results show that at the current time we are facing issues with scaling the algorithm to the
+% order release problem. Likely this is due to parameterisation issues, which we are investigating
+% currently. However, it can be seen that i) the technique of keeping track of the order pool orders
+% leads to better policies and ii) that despite the parameterisation issues average reward
+% reinforcement learning finds better solutions than its discounted counterpart. However, the least
+% costs are generated by \(\BILThree\), which shows that there is room for improvement for the
+% reinforcement learning policies.
+
+% Interesting is also to see, that all reinforcement learning variants are releasing rather late,
+% leading to low finished goods inventory costs (FGIC), but high backorder costs (BOC). Furthermore,
+% the agents based on the order-pool orders, namely \(\ActOrdPool\) and \(\ActOrdPoolDQN\), are able
+% achieve lower work-in-process costs (WIPC) and also lower tardiness, than the other the agents
+% rewarded directly on the shipped orders.
 
 
-\begin{table}[t!]
-  \centering
-  \def\arraystretch{1.2}          %  1 is the default, change whatever you need
-  \setlength\tabcolsep{4pt}
-  \begin{tabular}{|l||c|c|c|c|c|c|c|c|c|}
-    % BEGIN RECEIVE ORGTBL res2
-    \hline
-    Algorithm/KPI & SUM & BOC & FGIC & WIPC & % \%SL &
-                                                       TARD & \(\sigma\)TARD & SFTT\\
-    \hline
-    % Evaluation 1 & \multicolumn{11}{c|}{} \\
-    \ActShipped    & 1777.74 & 1322.04 & 94.49 & 361.20       & 2.24 & 1.52 & 3.44\\
-    \ActOrdPool    & 1593.03 & 1318.65 &14.01 &260.36         & 2.11 & 1.42 & 2.68\\
-    \ActShippedDQN & 1940.62 & 1570.40 &6.30 &363.92          & 2.35 & 1.59 & 3.95 \\
-    \ActOrdPoolDQN & 1618.88 & 1306.20 & 40.68& 272.00        & 2.08 & 1.38 & 2.58\\
-    \BILOne        & 1736.98 & 1510.42  &  0.00  & 226.56     & 2.04 & 1.26 & 2.16 \\
-    \BILTwo        & 1081.79 & 769.86 & 86.89   & 225.03      & 1.87 & 1.18 & 2.15\\
-    \BILThree      &  \textbf{922.36} & 362.59 &  334.47  & 225.30     & 1.74 & 1.07 & 2.15\\
-    \BILFour       & 1062.68 & 155.72  & 681.03   & 225.93    & 1.63 & 0.99 & 2.15\\
-    \BILFive       & 1380.04 & 65.45  & 1088.94    & 225.64   & 1.67 & 1.02 & 2.15\\
-    \BILSix        & 1777.77 & 25.04 &  1529.77  & 222.96     & 1.61 & 0.85 & 2.13\\
-    \imre          & 2209.97 & 12.08 &1974.72 & 223.16        & 1.58 & 0.63 & 2.14 \\
-    \hline
-    % END RECEIVE ORGTBL res2
-  \end{tabular}
-        %         \egroup
+% \begin{table}[t!]
+%   \centering
+%   \def\arraystretch{1.2}          %  1 is the default, change whatever you need
+%   \setlength\tabcolsep{4pt}
+%   \begin{tabular}{|l||c|c|c|c|c|c|c|c|c|}
+%     % BEGIN RECEIVE ORGTBL res2
+%     \hline
+%     Algorithm/KPI & SUM & BOC & FGIC & WIPC & % \%SL &
+%                                                        TARD & \(\sigma\)TARD & SFTT\\
+%     \hline
+%     % Evaluation 1 & \multicolumn{11}{c|}{} \\
+%     \ActShipped    & 1777.74 & 1322.04 & 94.49 & 361.20       & 2.24 & 1.52 & 3.44\\
+%     \ActOrdPool    & 1593.03 & 1318.65 &14.01 &260.36         & 2.11 & 1.42 & 2.68\\
+%     \ActShippedDQN & 1940.62 & 1570.40 &6.30 &363.92          & 2.35 & 1.59 & 3.95 \\
+%     \ActOrdPoolDQN & 1618.88 & 1306.20 & 40.68& 272.00        & 2.08 & 1.38 & 2.58\\
+%     \BILOne        & 1736.98 & 1510.42  &  0.00  & 226.56     & 2.04 & 1.26 & 2.16 \\
+%     \BILTwo        & 1081.79 & 769.86 & 86.89   & 225.03      & 1.87 & 1.18 & 2.15\\
+%     \BILThree      &  \textbf{922.36} & 362.59 &  334.47  & 225.30     & 1.74 & 1.07 & 2.15\\
+%     \BILFour       & 1062.68 & 155.72  & 681.03   & 225.93    & 1.63 & 0.99 & 2.15\\
+%     \BILFive       & 1380.04 & 65.45  & 1088.94    & 225.64   & 1.67 & 1.02 & 2.15\\
+%     \BILSix        & 1777.77 & 25.04 &  1529.77  & 222.96     & 1.61 & 0.85 & 2.13\\
+%     \imre          & 2209.97 & 12.08 &1974.72 & 223.16        & 1.58 & 0.63 & 2.14 \\
+%     \hline
+%     % END RECEIVE ORGTBL res2
+%   \end{tabular}
+%         %         \egroup
 
-  \caption{\label{tbl:res}Evaluation results where the monetary units are in \(k\)-values.}
+%   \caption{\label{tbl:res}Evaluation results where the monetary units are in \(k\)-values.}
 
-        %         \end{figure}
-\end{table}
+%         %         \end{figure}
+% \end{table}
 
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-This paper introduces deep theoretical insights in reinfocement learning and provides first evidence
-that average reward reinfocement learning is better applicable to operations research problems than
-the discounted framework.
-        %         adds to the growing body of evidence that machine learning algorithms can contribute
-        %         positively to a company's performance.
-The paper describes an % successful
-application of an order release model based on reinforcement learning. The performance is tested on
-a multi-product, two-stage hypothetical flow shop and is measured by cost, delivery and lead time
-related measures. We show that in the current version the machine learning approach is not able to
-outperform all other tested order release
-approaches. % By yielding lower \textit{UPDATE: total costs,
-        %         less mean and standard deviation of tardiness and a shorter shop floor throughput time (SFTT)}.
-        %         Despite the good performance of our proposed adaptive order release model based on \textit{UPDATE:
-        %         reinforcement learning} we are aware of its limitations. Firstly, the results are limited to the
-        %         simulated case and the validity of the results for other production systems must be assessed in
-        %         future studies. Secondly, adding further experimental factors would be beneficial like including
-        %         scenarios with machine failures and different scheduling rules. In conclusion we found that our
-        %         proposed adaptive order release approach harbours enormous potential.
-In the future we expect to be able to yield better results by investigating the parameterisation and
-resolving current issues when scaling average reinforcement learning to complex scenarios.
+% This paper introduces deep theoretical insights in reinfocement learning and provides first evidence
+% that average reward reinfocement learning is better applicable to operations research problems than
+% the discounted framework. The paper describes an application of an order release model based on
+% reinforcement learning. The performance is tested on a multi-product, two-stage hypothetical flow
+% shop and is measured by cost, delivery and lead time related measures. We show that in the current
+% version the machine learning approach is not able to outperform all other tested order release
+% approaches. In the future we expect to be able to yield better results by investigating the
+% parameterisation and resolving current issues when scaling average reinforcement learning to complex
+% scenarios.
 
+\MS[t]{todo}
 
 \bibliographystyle{plainnat}
 \bibliography{references}
-
-\vfill
-\pagebreak
-\appendix
-
-
-\section{N-Discount-Optimality}
-\label{sec:methods}
-
-This part proves (or rather ought to prove, as this is only the first version of such a proof)
-Blackwell-optimality of the average reward adjusted reinforcement learning algorithm shown in
-Algorithm~\ref{alg:near}. The idea is to prove \(n\)-discount optimality for \(n=-1\), \(n=0\), and
-finally for \(n \geqslant 1\). But first recall the definition of \(n\)-discount-optimality.
-
-
-\begin{definition*}
-  Due to \cite{Veinott69} for MDPs a policy \(\polopt\) is \emph{\(n\)-discount-optimal} for
-  \(n=-1,0,1,\ldots\) for all states \(s \in \States\) with discount factor
-  \(\gamma\) % and \(V_{\gamma}^{\pol}(s)\) being the value function as defined above
-        %
-  if and only if
-  \begin{align*}
-    \lim_{\gamma \to 1}(1-\gamma)^{-n}\ (V_{\gamma}^{\polopt}(s) - V_{\gamma}^{\pol}(s)) \geqslant 0 \tpkt
-  \end{align*}
-\end{definition*}
-
-
-\subsection{\(\mathbf{(-1)}\)-Discount-Optimality\cite{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}.}
-
-Here we provide insights in the algorithm and
-\(n\)-discount-optimality, where we concentrate on \(n=-1\). Recall that the discounted state value
-can be expanded by the Laurent series expansion:
-\(V_{\gamma}^{\pol} = \frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol} + e_{\gamma}^{\pol}(s)\), where
-\(\lim_{\gamma \to 1} e_{\gamma}^{\pol}(s) = 0\)
-
-
-\begin{align*}
-  \lim_{\gamma \to 1} (1-\gamma)^{1} \cdot (V_{\gamma}^{\polopt}(s) - V_{\gamma}^{\pol}(s)) \geqslant 0\\
-  \lim_{\gamma \to 1} (1-\gamma) \cdot (\frac{\avgrew^{\polopt}(s) - \avgrew^{\pol}(s)}{1-\gamma} + V^{\polopt}(s) - V^{\pol}(s) + e_{\gamma}^{\polopt}(s) - e_{\gamma}^{\pol}(s)) \geqslant 0\\
-  \lim_{\gamma \to 1} (\avgrew^{\polopt}(s) - \avgrew^{\pol}(s) + (1-\gamma) \cdot (V^{\polopt}(s) - V^{\pol}(s) + e_{\gamma}^{\polopt}(s) - e_{\gamma}^{\pol}(s)) \geqslant 0\\
-  \avgrew^{\polopt}(s) - \avgrew^{\pol}(s) \geqslant 0\\
-\end{align*}
-
-That is a policy \(\pol\) which ought to be (\(-1\))-discount-optimal has to maximise the average reward
-\(\rho^{\pol}(s)\) over all states \(s\).
-
-\subsection{\(\mathbf{0}\)-Discount-Optimality\cite{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}.}
-
-Note that a policy can only be \(0\)-discount-optimal if it is \(-1\)-discount-optimal, thus
-\(\avgrew^{\polopt}(s)=\avgrew^{\pol}(s)\). Furthermore, recall that
-\(\lim_{\gamma \to 1} e_{\gamma}^{\pol}(s) = 0\).
-
-
-\begin{align*}
-  \lim_{\gamma \to 1} (1-\gamma)^{0} \cdot (V_{\gamma}^{\polopt}(s) - V_{\gamma}^{\pol}(s)) \geqslant 0\\
-  \lim_{\gamma \to 1} (\frac{\avgrew^{\polopt}(s) - \avgrew^{\pol}(s)}{1-\gamma} + V^{\polopt}(s) - V^{\pol}(s) + e_{\gamma}^{\polopt}(s) - e_{\gamma}^{\pol}(s)) \geqslant 0\\
-  \lim_{\gamma \to 1} (\frac{0}{1-\gamma} + V^{\polopt}(s) - V^{\pol}(s)) \geqslant 0\\
-  V^{\polopt}(s) - V^{\pol}(s) \geqslant 0\\
-\end{align*}
-
-Therefore a \(0\)-discount-optimal policy \(\pol\) has to maximise the bias values
-\(V^{\pol}(s)\) for all states \(s\).
-
-\vfill
-\pagebreak
-
-\subsection{\(\mathbf{n}\)-Discount-Optimality for \(\mathbf{n \geqslant 1}\).}
-
-The following derivation provides an important insight to the analysis. Recall that for unichain
-MDPs the average reward \(\avgrew^{\pol}(s)\) for all states \(s\) is equal and stated as
-\(\avgrew^{\pol}\). Furthermore, as the policy is \(0\)-discount-optimal
-\(V^{\polopt}(s) = V^{\pol}(s)\).
-
-
-\begin{align*}
-  \lim_{\gamma \to 1} (1-\gamma)^{-n} \cdot (V_{\gamma}^{\polopt}(s) - V_{\gamma}^{\pol}(s)) & \geqslant 0\\
-  \lim_{\gamma \to 1} (1-\gamma)^{-n} \cdot ( \frac{\avgrew^{\polopt}(s)}{1-\gamma} + V^{\polopt}(s) + e_{\gamma}^{\polopt}(s)  %& \\
-  - \frac{\avgrew^{\pol}(s)}{1-\gamma} - V^{\pol}(s) - e_{\gamma}^{\pol}(s) ) & \geqslant 0\\
-  \lim_{\gamma \to 1} (1-\gamma)^{-n} \cdot ( e_{\gamma}^{\polopt}(s) - e_{\gamma}^{\pol}(s) ) & \geqslant 0\\
-\end{align*}
-
-As stated before \(e_{\gamma}^{\polopt}(s)\) approaches 0 as \(\gamma \to 1\). Therefore, it is
-important to note that for \(n>0\) we analyse the case when \(\gamma\) is strictly less than \(1\). This
-means that the number of actions to reach a desired goal is taken into account.
-        %         The ratio of long-term to short-term is provided by the discount factor \(\gamma\).
-Therefore, a \(\infty\)-discount-optimal policy \(\pol\) has to maximise the error term
-$e_{\gamma}^{\pol}(s)$ for all states \(s\). That is, an \(\infty\)-discount-optimal algorithm has to
-choose the action with the largest error term \(e_{\gamma}^{\pol}(s)\) once \(\gamma \to 1\).
-However, as the error term depends on infinitely many sub-terms simply estimating these and summing
-up does not work.
-
-
-\begin{figure*}[t]
-  \centering
-  \begin{tikzpicture}[scale=8]
-    \draw[->] (0,0) -- (1.0,0) node[right] {$\gamma$};
-    \draw[->] (0,0) -- (0,0.8) node[above] {$\mathbb{R}$};
-    \draw[scale=1,domain=0.001:0.85,smooth,variable=\x,blue] plot ({\x},{0.1/(1-\x)+0.2});
-    \draw[scale=1,domain=0.001:0.865,smooth,variable=\x,red] plot ({\x},{0.1/(1-\x)+0.2-0.2*(1-\x)^0.5});
-
-        %         Labels
-    \draw[blue] (0.6,0.64) node () {$\frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol}(s)$};
-    \draw[red] (0.875,0.58) node () {$V_{\gamma}^{\pol}(s)$};
-    \draw (-0.015,0.3) -- (0.015,0.3);
-    \draw (-0.2, 0.3) node[align=left] () {$\avgrew^{\pol}(s) + V^{\pol}(s)$};
-
-    \draw (-0.015,0.1) -- (0.015,0.1);
-    \draw (-0.111, 0.1) node[] () {$R^{\pol}(s)$};
-
-    \draw (0.9,-0.015) -- (0.9,0.015) node[below, yshift=-0.2cm] () {$1$};
-    \draw (0.75,-0.015) -- (0.75,0.015) node[below, yshift=-0.2cm] () {$\gamma_{1}$};
-    \draw (0.20,-0.015) -- (0.20,0.015) node[below, yshift=-0.2cm] () {$\gamma_{0}$};
-
-    \draw (0.5,0.4) -- (0.5,0.258578644) node[midway,left, yshift=-0.2cm] () {$e_{\gamma}^{\pol}(s)$};
-
-    \draw (0.2,0.146114562) -- (0.75,0.146114562) node[midway, below] () {$\gamma_{1}-\gamma_{0}$};
-    \draw (0.75,0.146114562) -- (0.75,0.5) node[midway,right] () {$V_{\gamma_{1}}^{\pol}(s)-V_{\gamma_{0}}^{\pol}(s)$};
-
-
-  \end{tikzpicture}
-  \caption{Visualisation of the monotonically increasing state values for a state $s$ and the
-    corresponding decreasing error term $e_{\gamma}^{\pol}(s)$ as $\gamma$ approaches 1. }
-  \label{fig:e}
-\end{figure*}
-
-Therefore, the idea is to use two discounted state-values with different $\gamma$'s to infer the
-slope of the error term. Figure~\ref{fig:e} illustrates the idea. Here $\gamma_{1}$ and $\gamma_{0}$
-are used to estimate the difference of \(V_{\gamma_{1}}^{\pol}(s)\) and
-\(V_{\gamma_{0}}^{\pol}(s)\). As the average reward and the bias values are equal (recall
-\(0\)-discount-optimality) the difference is a direct estimate of the slope of the error term. Thus
-the larger the increase of the difference of the discounted state values when comparing
-\(0\)-discount-optimal actions the better the action. However, for this to hold true we have to
-prove strict monotonicity of
-\(V_{\gamma}^{\pol}(s) = \frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol}(s) + e_{\gamma}^{\pol}(s)\)
-under increasing $\gamma$. In the sequel we assume \(\avgrew^{\pol}(s) \geqslant 0\). Note that this
-assumption is easily met by adding a constant reward for any action in cases where
-\(\avgrew^{\pol}(s) < 0\). This assumption eases the following analysis and makes sense as usually
-we are interested in problems which accumulate positive average reward, e.g. profit or points, over
-time.
-
-
-\begin{remark}
-  Nonetheless, it is an important insight that if \(\avgrew^{\pol}(s) < 0\) then
-  \(\frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol}(s)\) approaches negative infinity (as opposed to
-  positive infinity, cf. Figure~\ref{fig:e}). Therefore, in such cases the following optimisation
-  objectives would need to be inverted.
-\end{remark}
-
-
-\begin{lemma}
-  \label{lem:err}
-  The error term
-  \(e_{\gamma}^{\pol}(s) = \sum_{m=1}^{\infty}(\frac{1-\gamma}{\gamma})^{m} \cdot y_{m}\) strictly
-  monotonically decreases as $\gamma$ increases.
-\end{lemma}
-
-\begin{proof}
-        %         S[t]{Is the following formula (indices) correct?}
-  Note that \(e_{\gamma}^{\pol}(s) = \sum_{m=1}^{\infty}(\frac{1-\gamma}{\gamma})^{m} \cdot y_{m}\),
-  where the sign of \(y_{m}\) alternates in each step. This is due to the fact that
-  \(y_{m} = \E_{\pol} [ y_{m} ] - y_{m-1}\) for all \(m \geqslant 1\)~\cite[p.346]{Puterman94}, that
-  is \(y_{m}\) only depends on \(y_{m-1}\) and the underlying (stationary) policy. Further \(y_{0}\)
-  is the bias value \(V^{\pol}(s)\).
-        %
-  We consider three cases:
-  \begin{enumerate}
-  \item[1)]
-    \begin{minipage}[t]{0.17\textwidth}
-      \(\gamma = 0.5\):
-    \end{minipage}
-    The factor \((\frac{1-\gamma}{\gamma})^{m}\) is $1$.
-  \item[2)]
-    \begin{minipage}[t]{0.17\textwidth}
-      \(0.5 < \gamma < 1\):
-    \end{minipage}
-    The factor \((\frac{1-\gamma}{\gamma})^{m}\) is $<1$ and strictly monotonically converging towards $0$.
-  \item[3)]
-    \begin{minipage}[t]{0.17\textwidth}
-      \(0 < \gamma < 0.5\):
-    \end{minipage}
-    The factor \((\frac{1-\gamma}{\gamma})^{m}\) is $>1$ and strictly monotonically converging towards $\infty$.
-  \end{enumerate}
-
-  \paragraph{Case 1)}
-  { As \(\frac{1-\gamma}{\gamma} = 1 \) the term reduces to
-    \(e_{\gamma}^{\pol}(s) = \sum_{m=1}^{\infty} y_{m}^{\pol}\). We use the definition
-        %
-    \begin{align*}
-      y_{m}^{\pol}=(-1)^{m} H_{\pol}^{m+1} h_{\pol} \tcom
-    \end{align*}
-    %
-    where \(H_{\pol}\) is the deviation matrix defined as
-    %
-    \begin{align*}
-      H_{\pol} = \clim_{N \to \infty} \sum_{t=0}^{N-1}{P^{t}-P^{\star}} \tcom
-    \end{align*}
-    \(\clim\) the Cesaro limit\footnote{Recall that the Cesaro limit (with degree \(1\)) is only
-      required in periodic MDPs to ensure stationary matrices. For aperiodic MDPs they can be read
-      as normal limits.~\cite[p.592ff]{Puterman94}}, \(P^{\star}\) the stationary matrix defined as
-    \(P^{\star} = \clim_{N \to \infty}P^{N}\) and \(h_{\pol}\) a column vector holding the bias values
-    of the states \cite[]{Puterman94,MillerVeinott1969}. Thus, we get
-        %
-    \begin{align*}
-      e_{\gamma}^{\pol}(s) & = \sum_{m=1}^{\infty}y_{m}^{\pol}(s) = \sum_{m=1}^{\infty}{y_{2m}^{\pol}(s) + y_{2m+1}^{\pol}(s)}
-                             = \sum_{m=1}^{\infty} H^{2m+2} h - H^{2m+1} h \\
-                           & = \sum_{m=1}^{\infty} (H^{2m+2} - H^{2m+1}) h \tpkt
-    \end{align*}
-
-    % Wlog. assume all entries in \(H\) are positive. Therefore,
-    It suffices\footnote{This claim has not been proven yet!} to show that $H^{2m+2} - H^{2m+1} < 0$
-    for all $m \geqslant 1$ to prove strict monotonicity of $e_{\gamma}^{\pi}(s)$.
-    % \MS[t]{why should that prove monotonicity? Rethink!!!}
-    However, this directly follows as for MDPs with at least two states \(H-1 < 0\) in
-    %
-    \begin{align*}
-      e_{\gamma}^{\pol}(s) = \sum_{m=1}^{\infty} (H^{2m+2} - H^{2m+1}) h = \sum_{m=1}^{\infty} H^{2m+1} (H - 1) h \tpkt
-    \end{align*}
-    %
-  }
-
-
-  \paragraph{Case 2)}{ As the factor \((\frac{1-\gamma}{\gamma})^{m}\) is $<1$ and strictly
-    monotonically decreasing for an increasing $m \geqslant 1$, we use the same argument as in the
-    previous case (Case 1) with which the claim follows. }
-
-  \paragraph{Case 3)}{ This part of the proof is open!
-
-    % Recall the Laurent Series expansion only holds when \(0 <
-    % \frac{1-\gamma}{\gamma} < \norm{H_{\pi}}^{-1}\),
-    % where for a finite matrix \(C = (c_{ij})\) the norm \(\norm{C}\) is defined as
-    % \(\norm{C} \coloneqq \max_{i} \sum_{j} |c_{ij}|\).
-
-    % \begin{align*}
-    %   e_{\gamma}^{\pol}(s) & = \sum_{m=1}^{\infty}y_{m}^{\pol}(s) = \sum_{m=1}^{\infty}{y_{2m}^{\pol}(s) + y_{2m+1}^{\pol}(s)}\\
-    %   & = \sum_{m=1}^{\infty} (\frac{1-\gamma}{\gamma})^{2m+1} H^{2m+2} h -
-    %   (\frac{1-\gamma}{\gamma})^{2m}H^{2m+1} h \\
-    %   & = \sum_{m=1}^{\infty} (\frac{1-\gamma}{\gamma})^{2m} H^{2m+1}((\frac{1-\gamma}{\gamma}) H - 1) h \tpkt
-    % \end{align*}
-
-
-          %           \MS{No! This does not prove that under two different gammas $e_{\gamma_{1}}^{\pol}(s) -
-          %           e_{\gamma_{0}}^{\pol}(s)$ is decreasing}
-
-  }
-
-
-          %           We now investigate \(e^{\pol}(s) = \sum_{m=1}^{\infty}y_{m}^{\pol}(s)\) to infer properties of
-          %           \(e_{\gamma}^{\pol}(s)\). Observe that we removed the factor $(\frac{1-\gamma}{\gamma})^{m}$
-          %           depending on a concrete \(\gamma\). There are three cases to distinguish for this factor under
-          %           increasing $m$:
-
-          %           In all three cases the factor does neither change the monotonicity properties nor the sign of
-          %           $y_{m}$ in the term
-          %           \(e_{\gamma}^{\pol}(s) = \sum_{m=1}^{\infty}(\frac{1-\gamma}{\gamma})^{m} \cdot y_{m}\).
-          %           Therefore, wlog. suppose $\gamma = 0.5$ and thus \(e^{\pol}(s) = e_{\gamma}^{\pol}(s)\).
-
-          %           This factor is positive and strictly and monotonically
-          %           converging towards $0$ (resp. $\infty$) as $m$ increases and as long as \(0.5 < \gamma < 1\)
-          %           (resp. $0 < \gamma < 0.5)$. Note that we are usually interested in $\gamma$ values close to $1$,
-          %           as $\gamma \to 1$. \MS[t]{what happens when $\gamma < 0.5$?}
-          %
-\end{proof}
-
-\begin{corollary}
-  \label{cor:diff}
-  For any two \(0\)-discount-optimal stationary policies $\pol_{1}, \pol_{2}$ with stationary
-  transition matrices \(P_{1}\) and \(P_{2}\) respectively, the differences of the slopes of the
-  error terms \(e_{\gamma}^{\pol_{1}}(s)\) and \(e_{\gamma}^{\pol_{2}}(s)\) for any \(\gamma\) is
-  dependent on \(H_{\pol_{1}}\) and \(H_{\pol_{2}}\) and thus \(P_{1}\) and \(P_{2}\) solely.
-\end{corollary}
-
-\begin{proof}
-  Note that due to \(0\)-discount-optimality the bias values \(h_{1} = h_{2}\) are equal for both
-  policies. Therefore as for any given \(H\) the error term is determined by
-  \(e_{\gamma}^{\pol}(s) = \sum_{m=1}^{\infty} ((\frac{1-\gamma}{\gamma})^{2m + 1} H^{2m+2} -
-  (\frac{1-\gamma}{\gamma})^{2m} H^{2m+1}) h = \sum_{m=1}^{\infty} (\frac{1-\gamma}{\gamma})^{2m}
-  H^{2m+1}( \frac{1-\gamma}{\gamma} H - 1) h \) the claim follows directly.
-\end{proof}
-
-\begin{corollary}
-  \label{cor:cont}
-  The error term function \(e_{\gamma}^{\pol}(s)\) for \(\gamma \to 1\) and for any given policy
-  \(\pol\) is continuous.
-\end{corollary}
-
-\begin{proof}
-  The claim follows directly from Corollary~\ref{cor:diff} and due to the shape of the term
-  \(e_{\gamma}^{\pol}(s) = \sum_{m=1}^{\infty} (\frac{1-\gamma}{\gamma})^{m} H^{m+1} h\).
-\end{proof}
-
-
-\begin{theorem}
-  If \(\avgrew^{\pol}(s) > 0\) then
-  \(V_{\gamma}^{\pol}(s) = \frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol}(s) + e_{\gamma}^{\pol}(s)\) is
-  strictly monotonically increasing as $\gamma$ approaches \(1\).
-\end{theorem}
-
-\begin{proof}
-  Due to \(\avgrew^{\pol}(s) > 0\) and \(0 < \gamma < 1\) the term
-  \(\frac{\avgrew^{\pol}(s)}{1-\gamma}\) strictly monotonically approaches infinity as
-  $\gamma \to 1$. Furthermore, by Lemma~\ref{lem:err} and as
-  \(\lim_{\gamma \to 1} e_{\gamma}^{\pol}(s) = 0\) the theorem follows immediately.
-\end{proof}
-
-\begin{theorem}
-  \label{thm:minmax}
-  If \(\avgrew^{\pol}(s) \geqslant 0\) and for \(\gamma\)-values \(\gamma_{0}, \gamma_{1}\) with
-  \(0.5 \leqslant \gamma_{0} < \gamma_{1} < 1\) a Blackwell-optimal agent chooses the action \(a\)
-  with expected future state \(s'\) that maximises the expected\footnote{To ease readability and as
-    we aim for model-free RL we have dropped the expectations in the formulas. } discounted state
-  value difference
-  \(\Delta V_{\gamma}^{\pol}(s') = V_{\gamma_{0}}^{\pol}(s') - V_{\gamma_{1}}^{\pol}(s')\) of the
-  set of \(0\)-discount-optimal actions available and for which
-  \begin{itemize}
-  \item[a)] \(\frac{\avgrew}{1-\gamma_{0}} + V^{\pol}(s') < V_{\gamma_{0}}^{\pol}(s')\) holds, or if
-    no such actions exists, then for which
-  \item[b)]
-    \(\frac{\avgrew}{1-\gamma_{0}} + V^{\pol}(s') \geqslant V_{\gamma_{0}}^{\pol}(s')\) hold.
-  \end{itemize}
-
-  % the discounted state value difference \(V_{\gamma_{1}}^{\pol}(s') - V_{\gamma_{0}}^{\pol}(s')\),
-  % where the decision to maximise or minimise the difference is based on the value that minimises
-  % \(V_{\gamma_{1}}^{\pol}(s') - V_{\gamma_{0}}^{\pol}(s')\).
-  %         %
-\end{theorem}
-
-\begin{remark}
-  In Theorem~\ref{thm:minmax} we have chosen to base the decision on the values generated with
-  \(\gamma_{0}\) as the error term is greater with smaller \(\gamma\)-values.
-\end{remark}
-
-
-\begin{proof}
-  First observe that due to strict monotonicity of \(\frac{\avgrew^{\pol}(s')}{1-\gamma}\) and
-  \(e_{\gamma}^{\pol}(s')\) and as \(\lim_{\gamma \to 1} e_{\gamma}^{\pol}(s') = 0\) the discounted
-  state values \(V_{\gamma}^{\pol}(s')\) and the sum of average reward values
-  \(\frac{\avgrew^{\pol}(s')}{1-\gamma} + V^{\pol}(s')\) converge with increasing \(\gamma\).
-          %
-  Thus for any state \(s'\) either \(e_{\gamma}^{\pol}(s') > 0\) or \(e_{\gamma}^{\pol}(s') < 0\)
-  for all \(\gamma\)-values. That is \(V_{\gamma}^{\pol}(s')\) converges to
-  \(\frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol}(s')\) for \(\gamma \to 1\) from above or below.
-  Clearly just considering the slope of the error term is insufficient as for any states
-  \(s_{1}, s_{2}\) it may happen to be that \(e_{\gamma}^{\pol}(s_{1}) > 0\) while
-  \(e_{\gamma}^{\pol}(s_{2}) < 0\). Thus we split the decision in cases, where in case \(a)\) we
-  consider all states \(s_{1}\) with \(e_{\gamma}^{\pol}(s_{1}) > 0\) and in case \(b)\) we states
-  \(s_{2}\) with \(e_{\gamma}^{\pol}(s_{2}) < 0\). Note that
-  \(e_{\gamma}^{\pol}(s_{1}) > e_{\gamma}^{\pol}(s_{2})\) which explains the prioritisation of case
-  \(a)\) over case \(b)\).
-
-  Within these two sets of states we investigate the slopes of the error term.
-
-  \MS[t]{Todo: Show that two points are sufficient for a proxy of the slope.}
-  Thus the slope can be approximated by
-  \begin{align*}
-    \frac{\Delta V_{\gamma}^{\pol}(s)}{\Delta \gamma} = \frac{e_{\gamma_{1}}(s) - e_{\gamma_0}(s)}{\gamma_{1} - \gamma_{0}} \tpkt
-  \end{align*}
-
-  As \(\gamma_{1}(s)-\gamma_{0}(s)\) is constant the difference of the error terms
-  \(e_{\gamma_{1}}(s) - e_{\gamma_0}(s)\) is sufficient to compare the slopes of the error term and
-  can be computed by
-  \begin{align}
-    \label{eq:errorAvgRew}
-    e_{\gamma_{1}}(s) - e_{\gamma_0}(s) = \frac{\avgrew^{\pol}(s)}{1-\gamma_{1}} -
-    \frac{\avgrew^{\pol}(s)}{1-\gamma_{0}} - V_{\gamma_{1}}^{\pol}(s) + V_{\gamma_{0}}^{\pol}(s)\tpkt
-  \end{align}
-
-  However, as all possible future states are gain-optimal \(\avgrew^{\pol}(s)\) is equal for all
-  states \(s\) under consideration. Therefore, the difference \(V_{\gamma_{0}}^{\pol}(s) -
-  V_{\gamma_{1}}^{\pol}(s)\) suffices for comparison purposes between any two states \(s_{1}, s_{2}\):
-  \begin{align*}
-  e_{\gamma_{1}}(s_{1}) - e_{\gamma_0}(s_{1}) - e_{\gamma_{1}}(s_{2}) + e_{\gamma_0}(s_{2}) =
-    V_{\gamma_{0}}^{\pol}(s_1) - V_{\gamma_{1}}^{\pol}(s_1) - V_{\gamma_{0}}^{\pol}(s_2) + V_{\gamma_{1}}^{\pol}(s_2)\tpkt\\
-  \end{align*}
-
-
-  Then due to Corollaries~\ref{cor:diff}~and~\ref{cor:cont} we conclude that
-  \(\lim_{\gamma \to 1}(1-\gamma)^{-n}\ (V_{\gamma}^{\polopt}(s) - V_{\gamma}^{\pol}(s)) \geqslant
-  0\), where \(\gamma\) is the discount factor and \(V_{\gamma}^{\pol}(s)\) the value function.
-
-\end{proof}
-
-\begin{remark}
-  Note that this means a Blackwell-optimal agent collects the rewards as soon as possible, as it
-  maximises the error term \(e_{\gamma}^{\pol}(s)\).
-
-  % In the case of model-free reinforcement learning, in which rather state-action pairs as opposed to
-  % states are assessed, Theorem~\ref{thm:minmax} does not hold. Observe that in the model-free case
-  % the agent has to choose between MDP states, for instance \((1,l)\) or \((1,r)\) in
-  % Figure~\ref{fig:three-states2}.
-  % Thus, although the gain and
-  % bias values are equal,
-  % Thus the error terms of different actions \(a, a'\) may cause
-  % \(e_{\gamma}^{\pol}(s,a) > 0\) and \(e_{\gamma}^{\pol}(s,a') < 0\).
-
-  % This is due to the fact that by observing one state for each action multiple the error
-
-
-  % states defined
-
-  % chooses the among different states, cf. Figure~\ref{fig:three-states2}.
-
-  % chooses action based on
-  % a state \(s\) state-action pairs are assessed. Thus, multiple values could be available to decide
-  % on whether to maximise or minimise the discounted state value difference. The correct approach is
-  % to decide on behalf of the action \(a\) which minimises
-  % \(\mid V^{\pol}_{\gamma_{0}}(s,a) - \frac{\avgrew^{\pol}}{1-\gamma_{0}} - V^{\pol}(s,a) \mid\) as
-  % for all actions the error term \(e_{\gamma}^{\pol}(s)\) is converging towards \(0\) with the same
-  % rate (due to the same discount factor \(\gamma_{0}\)).
-\end{remark}
-
-Thus under the assumption of correct approximations and by strict monotonicity of $e_{\gamma}^{\pi}$
-we conclude Blackwell optimality of the algorithm. Figure~\ref{fig:e} visualises the discounted
-state values and the idea of estimating the slope of $e_{\gamma}^{\pi}(s)$ in comparison to
-$\frac{\avgrew^{\pol}(s)}{1-\gamma} + V^{\pol}(s)$.
-
-
-\subsection{Refinements}
-\label{subsec:Refinements}
-
-The main limitation of the straightforward approach of Theorem~\ref{thm:minmax} is that it requires
-accurate estimations of the bias values when splitting the actions into the two sets with increasing
-and deceasing error term value. However, to be able to estimate \(V^{\pol}(s)\) accurately enough
-one usually has to go through a tedious process of investigating many different parameterisations,
-which is a cumbersome task, especially if the correct values are not known. Furthermore, the process
-of finding the correct values is computationally very expensive in comparison to finding the
-deviations between any two values.
-
-Therefore, we have developed another approach of selecting the best possible action which does not
-depend on correct bias values. In this approach we utilise Equation~\ref{eq:errorAvgRew} which
-allows a determination of the slope simply by rectifying the additional slope imposed due to the
-term \(\frac{\avgrew^{\pol}(s)}{1-\gamma}\). As \(V_{\gamma}^{\pol}(s)\) and \(\avgrew^{\pol}(s)\)
-are computationally cheap they can be usually accurately computed.
-
-Therefore in the implementation we propose to replace Theorem~\ref{thm:minmax} by following the
-following one.
-
-\begin{theorem}\label{thm:err}
-  If \(\avgrew^{\pol}(s) \geqslant 0\) and for \(\gamma\)-values \(\gamma_{0}, \gamma_{1}\) with
-  \(0.5 \leqslant \gamma_{0} < \gamma_{1} < 1\) a Blackwell-optimal agent chooses the action \(a\)
-  with expected future state \(s'\) that maximises the expected error term difference
-  \(\Delta e_{\gamma_{1},\gamma_{0}}^{\pol}(s') = V_{\gamma_{1}}^{\pol}(s') -
-  V_{\gamma_{0}}^{\pol}(s') - \avgrew^{\pol}(s') (\frac{1}{1-\gamma_{1}} - \frac{1}{1-\gamma_{0}})\)
-  of the set of \(0\)-discount-optimal actions available and for which
-  \begin{itemize}
-  \item[a)] \(\Delta e_{\gamma_{1},\gamma_{0}}^{\pol}(s') < 0\) holds, or if
-    no such actions exists, then for which
-  \item[b)]
-    \(\Delta e_{\gamma_{1},\gamma_{0}}^{\pol}(s') \geqslant 0\) hold.
-  \end{itemize}
-\end{theorem}
-
-\begin{proof}
-  We have for any state \(s'\) either \(e_{\gamma}^{\pol}(s') > 0\) or \(e_{\gamma}^{\pol}(s') < 0\)
-  for all \(\gamma\)-values (see proof of Theorem~\ref{thm:minmax}). Therefore, by definition states
-  \(s'\) with \(e_{\gamma_{1},\gamma_{0}}^{\pol}(s') < 0\) have a decreasing error term value. As
-  \(e_{\gamma_{1},\gamma_{0}}^{\pol}(s')\) is a direct measure for the slope of the error term, and
-  by the characteristics on the term specified in Corollaries~\ref{cor:diff} and~\ref{cor:cont}, we
-  can conclude that the maximum expected error term difference for negative values of
-  \(e_{\gamma_{1},\gamma_{0}}^{\pol}(s')\) impose the greatest \(V_{\gamma}^{\pol}(s')\) when
-  \(\gamma \to 1\). The proof for \(e_{\gamma_{1},\gamma_{0}}^{\pol}(s') \geqslant 0\) follows the
-  same argument. Therefore, the Theorem provides a way to find the policy \(\polopt\) with
-  \(\lim_{\gamma \to 1} (1-\gamma)^{-n} \cdot ( e_{\gamma}^{\polopt}(s') - e_{\gamma}^{\pol}(s')) >
-  0\) for any other policy \(\pol\).\qed
-\end{proof}
-
-
-\section{Bellman Optimality Formulas and Derivations (Incomplete)}
-\label{sec:bellman_optimality}
-
-\paragraph{Bellman optimality equations for the average reward.}
-
-\begin{align*}
-  V^{\star}(s) & = \max_{a \in A(s)} R^{\polopt}(s,a) \\
-               & = \max_{a \in A(s)} \E_{\polopt} [ \sum_{t=0}^{\infty}(R_{t}(s) - \avgrew^{\polopt}(s)) \mid s=s_{t}, a_{t} = a] \\
-               & = \max_{a \in A(s)} \E_{\polopt} [ R_{0}(s) - \avgrew^{\polopt}(s) + \sum_{t=0}^{\infty}(R_{t}(s_{t+1}) - \avgrew^{\polopt}(s_{t+1}))  \mid s=s_{t}, a_{t} = a] \\
-               & = \max_{a \in A(s)} \E [ R_{0}(s) - \avgrew^{\polopt}(s) + V^{\star}(s_{t+1})  \mid s=s_{t}, a_{t} = a ] \\
-               & = \max_{a \in A(s)} (r(s,a) - \avgrew^{\polopt}(s) + \sum_{s_{t+1}} p(s_{t+1}|s,a) \cdot V^{\star}(s_{t+1}))
-\end{align*}
-
-The value of an action in a given state must equal the expected return for following an optimal
-policy from that state:
-
-\begin{align*}
-  R^{\star}(s,a) & = \E [ r(s,a) - \avgrew^{\polopt}(s) + V^{\star}(s_{t+1})  \mid s=s_{t},a=a_{t} ]\\
-                 & = r(s,a) - \avgrew^{\polopt}(s) + \E [ \max_{a_{t+1} \in A(s_{t+1})}R^{\star}(s_{t+1},a_{t+1}) \mid s=s_{t},a=a_{t}]\\
-                 & = r(s,a) - \avgrew^{\polopt}(s) + \sum_{s_{t+1}} p(s_{t+1} | s, a) (\max_{a_{t+1} \in A(s_{t+1})} R^{\star}(s_{t+1},a_{t+1}))
-\end{align*}
-
-\paragraph*{Bellman optimal equations for the bias value.}
-
-
-\begin{align*}
-  W^{\star}(s) & = \E [ R_{t}(s) + V^{\star}(s_{t+1}) | s = s_{t}, a=a_{t} ]\\
-               & = \E [ R_{t}(s) + \max_{a_{t+1} \in A(s_{t+1})} R^{\star}(s_{t+1},a_{t+1}) | s = s_{t} , a=a_{t}]\\
-\end{align*}
-
-
-\begin{align*}
-  W^{\star}(s,a) & = \E [ r(s,a) + V^{\star}(s_{t+1}) \mid s=s_{t}, a=a_{t} ] \\
-                 & = r(s,a) + \E [  \max_{a_{t+1} \in A(s_{t+1})} R^{\star}(s_{t+1},a_{t+1}) \mid s=s_{t}, a=a_{t} ]\\
-                 & = r(s,a) + \sum_{s_{t+1}} p(s_{t+1} | s, a) (\max_{a_{t+1} \in A(s_{t+1})} R^{\star}(s_{t+1},a_{t+1}))
-\end{align*}
-
-
-Difference \(R_{n+1}\) to \(W_{n+1}\)?
-
 
 \end{document}
 
