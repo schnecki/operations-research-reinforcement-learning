@@ -1205,20 +1205,49 @@ prevent divergence due to the untrained network weight initialisation values.
 
 \paragraph*{Neural Network Setup.}
 %
-\MS[t]{TODO}
-We use the same setup for the neural network as done by \cite{Schneckenreither2019}. However as they
-use a actor-critic agent, whereas we approximate state-action-values the output of the network is a
-one dimensional vector as opposed to a matrix. Therefore we use a single three layer fully-connected
-network where the number of nodes and activation functions are 41-ReLU\footnote{ReLU stands for
-  rectified linear unit.}-89-ReLU-20-ReLU-9, with the output activations being Tanh (hyperbolic
-tangent function).
-        %
-The output for both networks consist of $3^{2}=9$ nodes. This is due to the fact that all
-combinations of increase, decrease and no change of the lead time for each product type have to be
-represented.
-        %
-For back-propagation we use the Adam optimiser with learning rate \(0.001\), and beta-values
-\(\beta_{1}=0.9\), and \(\beta_{2}=0.999\).
+Due to the vast possibilities the neural network architecture was manually optimised, starting with
+less stochastic systems and aiming for a coffin shape that can be used in all setups. During this
+process we constantly adapted and reevaluated the best network on various production system
+configurations. The resulting architecture depends on the number of features \(\anninp\) and the
+number of output nodes \(\annout\), which itself depends on the number of actions
+\(\acts = \size{\States}\), the independent agent configuration, and the number of functions that
+are approximated. For the later, in case of the proposed algorithm this is \(2\),
+\(\X^\pol_{\gamma_{0}}\) and \(\X^\pol_{\gamma_{1}}\), while deep Q-Learning only approximates the
+function \(Q_{\gamma}^\pol\).
+%
+The resulting feedforward deep ANN archtiecture is given as %
+\(\anninp %
+\rightarrow 3 \anninp % \rightarrow \relu
+\rightarrow \anninp % \rightarrow \relu
+\rightarrow 2 \annout % \rightarrow \relu
+\rightarrow \annout %
+% \rightarrow   \leakyTanh%
+\), where each arrow symbolises a fully-connected layer with a rectified linear unit (\(\relu\)) as
+activation function. As output activation function we use the hyperbolic tangent function
+(\(\Tanh\)), but similar to leaky \(\relu\), leak values greater than \(0.98\) (less than \(-0.98\))
+with \(5\%\). The idea is that we do not want to restrict the approximations to values inside this
+range, but values outside of it are less important and thus can be less precise.
+
+The values \(\anninp\) and \(\annout\) depend on the feature extraction method. In case of an
+aggregation to product groups \(g\) we have \(\anninp=180\), and due to \(6\) possible actions for
+the two independent agents, \(\annout=12\).
+% SpecFullyConnected 180 540 :=> SpecRelu (540,1,1) :=> SpecFullyConnected 540 180 :=> SpecRelu
+% (180,1,1) :=> SpecFullyConnected 180 24 :=> SpecRelu (24,1,1) :=> SpecFullyConnected 24 12 :=>
+% SpecReshape (12,1,1) (6,2,1) :=> SpecLeakyTanh 0.98 (6,2,1) :=> SpecNNil2D 6x2
+In the case of the full representation using 6 independent agents the setup is \(\anninp=540\) and
+\(\annout=36\).
+% SpecFullyConnected 540 1620 :=> SpecRelu (1620,1,1) :=> SpecFullyConnected 1620 540 :=> SpecRelu
+% (540,1,1) :=> SpecFullyConnected 540 72 :=> SpecRelu (72,1,1) :=> SpecFullyConnected 72 36 :=>
+% SpecReshape (36,1,1) (18,2,1) :=> SpecLeakyTanh 0.98 (18,2,1) :=> SpecNNil2D 18x2
+For the Q-Learning algorithm, which only approximates one function, the output nodes
+\(\annout\) are halved for both setups.
+
+The ANN is trained using the Adam optimiser \citep{kingma2014adam} with learning rate \(0.0001\),
+and the default beta-values \(\beta_{1}=0.9\), and \(\beta_{2}=0.999\). As neural network
+initialisation method we use the commonly known Xavier initialisation
+\citep{glorot2010understanding}, i.e.\@ the initial value for each weight \(i\) is sampled from a
+uniform distribution \(W_{l,i} \sim \Unif(-1/\sqrt{n_l},1/\sqrt{n_l})\), where \(n_{l}\) is the
+number of nodes in layer \(l\).
 
 
 \section{Computational Experiments}
@@ -1297,11 +1326,11 @@ with rate \(0.05\) and \(350k\) steps\footnote{The decay is defined as \(0.05 ^{
       \hline
       80-\(\Exp\)-\(\Unif\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
       \hline
-       \rl{0.995}             & 55.218 & 137.006 & 52.090   &          & 244.315 & 1.506 & 2.597    & 0.915  & 34.902   & 32.791             \\
-      \rl{1.000}              & 67.265 & 102.180 & 175.686  &          & 345.132 & 1.517 & 2.627    & 0.908  & 49.305   & 30.777             \\
-      \BILOne{}               & 45.902 & 0.000   & 734.431  &          & 780.333 & 1.319 & 1.806    & 0.352  &          &                    \\
-      \BILTwo{}               & 45.734 & 80.313  & 1425.221 &          & 268.569 & 1.318 & 2.158    & 0.876  &          &                    \\
-      \BILThree{}             & 45.861 & 279.723 & 30.818   &          & 356.402 & 1.318 & 3.034    & 0.975  &          &                    \\
+      \rl{0.995}              & 55.22 & 137.00 & 52.09   &          & 244.32 & 1.51 & 2.60    & 0.915  & 34.902   & 32.791             \\
+      \rl{1.000}              & 67.27 & 102.18 & 175.69  &          & 345.13 & 1.52 & 2.63    & 0.908  & 49.305   & 30.777             \\
+      \BILOne{}               & 45.90 & 0.00   & 734.43  &          & 780.33 & 1.32 & 1.81    & 0.352  &          &                    \\
+      \BILTwo{}               & 45.73 & 80.31  & 1425.22 &          & 268.57 & 1.32 & 2.158    & 0.876  &          &                    \\
+      \BILThree{}             & 45.86 & 279.72 & 30.82   &          & 356.40 & 1.32 & 3.034    & 0.975  &          &                    \\
       \hline
 %
 %       \hline
