@@ -791,7 +791,7 @@ foundation of our algorithm.
     \State{Set \(s \gets s'\), \(t \gets t+1\) and decay parameters}
     \EndWhile{}
   \end{algorithmic}
-  \caption{\label{alg:near}Near-Blackwell-optimal deep RL for unichain MDPs}
+  \caption{\label{alg:near}Basic near-Blackwell-optimal deep RL for unichain MDPs}
 \end{algorithm}
 
 
@@ -830,18 +830,7 @@ measure for farsightedness. Lower values prefer to partially collect reward in f
 higher values are used to prefer actions for which the full bias is collected earlier.
 %
 The corresponding update values are saved to calculate the gradients based on the quadratic errors.
-Every \(C\) steps the target network exponentially adapts the parameters of the worker network.
-%
-%
-%
-%
-\MS[t]{describe network initialisation method (Uniform, HeAtAl, etc.)}
-%
-\MS[t]{Extensions: overestimate rho, rho minimum, Multiple Agents (shared state,  shared rho?),
-  init-phase (0.5 for expSmthRewRate, always adapt rho, same rho for all agents): exp smooth reward
-  as rho, replay memory actions, n-step (describe replay memory), gradient clipping }
-\MS[t]{Side info: Replay memory also stores (disallowed) filtered action indices for optimisation purposes and on
-episodic tasks needs to store a bool indicating an episode end. Uses Int8 for state features values.  }
+Every \(C\) steps the target network smoothly adapts the parameters of the worker network.
 
 
 \section{Experimental Evaluation}
@@ -1001,8 +990,10 @@ state space $\mathcal{S}$ and action space $\mathcal{A}$ are discrete.
 %
 % Recall that we gproducts routed over the bottleneck machine \(M5\) are bottleneck products.
 %
-Any state $s \in \mathcal{S}$ of the \textit{state space} is composed of the following information
-for both groups \(g\), i.e.\@ for bottleneck and non-bottleneck products:
+For the \textit{state space} we adapt the result of \citep{knollmann2013control}, which state that
+the lead times ought to control the WIP level, instead of the due date reliability as changes are
+directly seen. Thus, any state $s \in \mathcal{S}$ of the state space is composed of the following
+information for both groups \(g\), i.e.\@ for bottleneck and non-bottleneck products:
 \begin{itemize}
 
 \item The currently set lead time $LT_{g} \in \{1,2,\ldots,\DDS\}$ (Recall:
@@ -1049,9 +1040,10 @@ the agent can choose a lead time in $\{1,2,\ldots,\DDS\} \cap \{LT_{g}-1,LT_{g},
 % as it acts within the discrete action space given by the set $\{1,2,\ldots,\DDS\}$ for each product
 % group.
 A naive approach is to define one action for each combination of actions over all product groups.
-Although applicable in our setup, as we only define two groups that yield \(9\) actions, it simply
-does not scale.
-%
+Although applicable in our setup, as we aggregate the data into the groups of bottleneck and
+non-bottleneck products and thus yields \(9\) actions, it simply does not scale.
+
+
 \begin{figure*}[t!]
   \centering
   \input{figures/indep_agents}                      % Figure production system
@@ -1087,13 +1079,13 @@ ensures scalability.
 
 
 \paragraph*{Reward.}
-In each period the agents choose actions which generates a reward while traversing to the next
-period by simulating the production system. The rewards are the accumulated costs at the end of the
-period consisting of the backorders, the WIP orders and the number of orders in the FGI\@. The
-objective is to minimise the returned reward. Therefore, we adapt the algorithm by swapping all
-maximisation functions with minimisations.
+In each period the agents choose actions, which when executed generate a reward while traversing to
+the next period by simulating the production system. The rewards are the accumulated costs at the
+end of the period consisting of the backorders, the WIP orders and the number of orders in the
+FGI\@. The objective is to minimise the returned reward. Therefore, we adapt the algorithm by
+swapping all maximisation functions with minimisations.
 
-\paragraph*{Adapted Algorithm.}
+\paragraph*{Optimised Algorithm.}
 Our implementation includes several optimisations, that help the algorithm in better exploring the
 solution space and stabilise the learning process. These include the above discussed independent
 agents that operate on the same state, \(n\)-step learning \citep{mnih2016asynchronous},
@@ -1199,7 +1191,7 @@ prevent divergence due to the untrained network weight initialisation values.
     \State{Set \(s \gets s'\), \(t \gets t+1\) and decay parameters}
     \EndWhile{}
   \end{algorithmic}
-  \caption{\label{alg:full}Near-Blackwell-optimal deep RL for unichain MDPs}
+  \caption{\label{alg:full}Optimised near-Blackwell-optimal deep RL for unichain MDPs}
 \end{algorithm}
 
 
