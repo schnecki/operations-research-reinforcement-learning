@@ -1009,6 +1009,8 @@ information for both groups \(g\), i.e.\@ for bottleneck and non-bottleneck prod
   \{M_{1}, M_{2}, \ldots , M_{6}\}\) divided in
   time buckets with $d \in \{1,2,\ldots,\DDS \}$, which stands for the number of periods until the
   due date.
+  % \MS[t]{depend}If a product type is not routed over the corresponding machine, then no entry for this
+  % product type is specified.
 
 \item Counters $FGI_{g,d} \in \N$ of orders in the finished goods inventory divided in time
   buckets with $d \in \{1, 2,\ldots, \DDS \}$, which stands for the number of periods until the
@@ -1159,29 +1161,30 @@ prevent divergence due to the untrained network weight initialisation values.
     \State{Reset gradient: \(d\netWorker{} \gets 0\)}
     \State{}%
     \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth-\leftmargin+2pt}
-      Sample random mini-batch of \(\nstep\) consecutive experiences from \(M\), each with
-      \((s_{i}, \isRandAct{i}, a_{i}, r_{i}, s_{i})\) where \(i \in {1,2,\ldots,\nstep}\).
+      Sample random mini-batch of \(\nstep\) consecutive experiences
+      from \(M\) numbered by \(1 \leqslant i \leqslant \nstep\), each
+      with \((s_{i}, \isRandAct{i}, a_{i}, r_{i}, s_{i+1})\).
     \end{minipage}
     \ForEach{mini-batch}
     \ForEach{experience, starting with the latest seen experience \(\nstep\)}
     \If{experience \(\nstep\) or (\(\isRandAct{i}\) and  \(\pexp \leqslant \plearn\))}
-      \State{\(\target_{\gamma0} \gets \min_{a} \X^\pol_{\gamma_0}(s_{t+1},a; \netTarget{})\)}
-      \State{\(\target_{\gamma1} \gets \min_{a} \X^\pol_{\gamma_1}(s_{t+1},a; \netTarget{})\)}
+      \State{\(\target_{\gamma0} \gets \min_{a} \X^\pol_{\gamma_0}(s_{i+1},a; \netTarget{})\)}
+      \State{\(\target_{\gamma1} \gets \min_{a} \X^\pol_{\gamma_1}(s_{i+1},a; \netTarget{})\)}
     \EndIf
-    \If{a non-random action was chosen or \(\pexp > \plearn\)}
-    \State{\(\avgrew^{\pol} \gets (1- \alpha) \avgrew^{\pol} + \alpha [r_{t} +
-      \min_{a}\X^\pol_{\gamma_1}(s_{t+1},a; \netWorker{}) - \X^\pol_{\gamma_1}(s_{t},a_{t};
+    \If{\(\isRandAct{i}\) or \(\pexp > \plearn\)}
+    \State{\(\avgrew^{\pol} \gets (1- \alpha) \avgrew^{\pol} + \alpha [r_{i} +
+      \min_{a}\X^\pol_{\gamma_1}(s_{i+1},a; \netWorker{}) - \X^\pol_{\gamma_1}(s_{i},a_{i};
       \netWorker{})]\)}
     \State{\(\avgrew^{\pol} \gets \min(\avgrew^{\pol}, \avgrew_{\max}^{\pol})\)}
     \State{\(\avgrew_{\max}^{\pol} \gets (1- \alpha_{\max}) \avgrew_{\max}^{\pol} +
     \alpha_{\max} 1.025 \avgrew^{\pol}\)}
     \EndIf
     \State{Compute overestimate of \(\avgrew^{\pol}\) and store result in \(\avgrew_{\Overestim}^{\pol}\)}
-    \State{\(\target_{\gamma_0}  \gets r_{t} + \gamma_{0} \target_{\gamma_{0}} - \avgrew_{\Overestim}^{\pol}  \)}
-    \State{\(\target_{\gamma_{1}}  \gets r_{t} + \gamma_{1} \target_{\gamma_{1}} - \avgrew_{\Overestim}^{\pol}\)}
-    \State{\(d\netWorker{} \gets d\netWorker{} + \partial{(\target_{\gamma_{0}} - \X^\pol_{\gamma_{0}}(s_{t+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
+    \State{\(\target_{\gamma_0}  \gets r_{i} + \gamma_{0} \target_{\gamma_{0}} - \avgrew_{\Overestim}^{\pol}  \)}
+    \State{\(\target_{\gamma_{1}}  \gets r_{i} + \gamma_{1} \target_{\gamma_{1}} - \avgrew_{\Overestim}^{\pol}\)}
+    \State{\(d\netWorker{} \gets d\netWorker{} + \partial{(\target_{\gamma_{0}} - \X^\pol_{\gamma_{0}}(s_{i+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
     \State{\(d\netWorker{} \gets d\netWorker{} +
-      \partial{(\target_{\gamma_{1}} - \X^\pol_{\gamma_{1}}(s_{t+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
+      \partial{(\target_{\gamma_{1}} - \X^\pol_{\gamma_{1}}(s_{i+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
     \EndFor{}
     \EndFor{}
     \State{Perform update of \(\netWorker{}\) using \(d\netWorker{}\)}
@@ -1207,7 +1210,7 @@ are approximated. For the later, in case of the proposed algorithm this is \(2\)
 \(\X^\pol_{\gamma_{0}}\) and \(\X^\pol_{\gamma_{1}}\), while deep Q-Learning only approximates the
 function \(Q_{\gamma}^\pol\).
 %
-The resulting feedforward deep ANN archtiecture is given as %
+The resulting feedforward deep ANN architecture is given as %
 \(\anninp %
 \rightarrow 3 \anninp % \rightarrow \relu
 \rightarrow \anninp % \rightarrow \relu
