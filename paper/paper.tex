@@ -766,7 +766,7 @@ foundation of our algorithm.
     Store the experience \((s_{t}, a_{t}, \isRandAct{t}, r_{t}, s_{t+1})\) in the experience replay
     memory \(M\).
     \end{minipage}
-    \State{Sample random mini-batch of experiences from \(M\)}
+    \State{Sample random mini-batch of \(m\) experiences from \(M\)}
     \State{Reset gradients: \(d\netWorker{} \gets 0\)}
     \For{each experience \(i\) with \((s_{t}, \isRandAct{t}, a_{t}, r_{t}, s_{t+1})\)}
     \If{a non-random action was chosen or \(\pexp > \plearn\)}
@@ -784,7 +784,7 @@ foundation of our algorithm.
     \EndFor
     \State{}%
     \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth}
-      Perform update with sum of the gradients \(d\netWorker{}\) on \(\netWorker{}\)
+      Perform update with average of the gradients \(d\netWorker{}/m\)  on \(\netWorker{}\)
     \end{minipage}
     \State{Every \(C\) steps exponential smoothly set target network:
       \(\netTarget \gets (1 - \gamma) \netTarget{} + \gamma \netWorker{}\)}
@@ -1161,9 +1161,9 @@ prevent divergence due to the untrained network weight initialisation values.
     \State{Reset gradient: \(d\netWorker{} \gets 0\)}
     \State{}%
     \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth-\leftmargin+2pt}
-      Sample random mini-batch of \(\nstep\) consecutive experiences
-      from \(M\) numbered by \(1 \leqslant i \leqslant \nstep\), each
-      with \((s_{i}, \isRandAct{i}, a_{i}, r_{i}, s_{i+1})\).
+      Sample \(m\) random mini-batches of \(\nstep\) consecutive experiences from \(M\) numbered by
+      \(1 \leqslant i \leqslant \nstep\), each with
+      \((s_{i}, \isRandAct{i}, a_{i}, r_{i}, s_{i+1})\).
     \end{minipage}
     \ForEach{mini-batch}
     \ForEach{experience, starting with the latest seen experience \(\nstep\)}
@@ -1187,7 +1187,7 @@ prevent divergence due to the untrained network weight initialisation values.
       \partial{(\target_{\gamma_{1}} - \X^\pol_{\gamma_{1}}(s_{i+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
     \EndFor{}
     \EndFor{}
-    \State{Perform update of \(\netWorker{}\) using \(d\netWorker{}\)}
+    \State{Perform update of \(\netWorker{}\) using \(d\netWorker{} / (m \cdot \nstep)\)}
     \EndIf{}
     \State{Every \(C\) steps exponential smoothly set target network:
     \(\netTarget \gets (1 - \gamma) \netTarget{} + \gamma \netWorker{}\)}
