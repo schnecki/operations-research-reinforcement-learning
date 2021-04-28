@@ -12,6 +12,7 @@
 \usepackage[noend]{algpseudocode}
 \usepackage{stmaryrd}
 \usepackage{listings}
+\usepackage{booktabs}
 \usepackage{algorithm}
 \usepackage{array}
 \usepackage[colon,round,sort]{natbib}
@@ -990,10 +991,10 @@ state space $\mathcal{S}$ and action space $\mathcal{A}$ are discrete.
 %
 % Recall that we gproducts routed over the bottleneck machine \(M5\) are bottleneck products.
 %
-For the \textit{state space} we adapt the result of \citep{knollmann2013control}, which state that
+For the \textit{state space} we adapt the result of \citet{knollmann2013control}, which state that
 the lead times ought to control the WIP level, instead of the due date reliability as changes are
 directly seen. Thus, any state $s \in \mathcal{S}$ of the state space is composed of the following
-information for both groups \(g\), i.e.\@ for bottleneck and non-bottleneck products:
+information for each product type \(\pt\):
 \begin{itemize}
 
 \item The currently set lead time $LT_{g} \in \{1,2,\ldots,\DDS\}$ (Recall:
@@ -1029,21 +1030,25 @@ multiply exploring every action for each state and assessing its economic viabil
 %
 Orders are released once the due date is within the interval $[t,t+\text{lead time}]$, whereas $t$
 is the current period. Clearly, this yields bulk releases, meaning that either all or no orders with
-the same due date and of the same product group are
-released.
+the same due date and of the same product type are released.
 
 The \textit{action space} is composed of two decisions, the relative change of the lead times to the
-currently set lead times $LT_{g} \in \{1,2,\ldots,\DDS\}$ for each product group $g$.
+currently set lead times $LT_{g} \in \{1,2,\ldots,\DDS\}$ for each product type $\pt$.
 %
 We restrict the lead time update for state $s_{t+1}$ according to the lead time $LT_{g}$ from state
-$s_{t}$ by a maximum change of 1. Thus, if $LT_{g}$ is the current lead time of product group $g$
+$s_{t}$ by a maximum change of 1. Thus, if $LT_{g}$ is the current lead time of product type $\pt$
 the agent can choose a lead time in $\{1,2,\ldots,\DDS\} \cap \{LT_{g}-1,LT_{g},LT_{g}+1\}$. % Put
 % differently the algorithm can increase or decrease the lead time by 1 or leave it as it is, as long
 % as it acts within the discrete action space given by the set $\{1,2,\ldots,\DDS\}$ for each product
-% group.
-A naive approach is to define one action for each combination of actions over all product groups.
-Although applicable in our setup, as we aggregate the data into the groups of bottleneck and
-non-bottleneck products and thus yields \(9\) actions, it simply does not scale.
+% type.
+A naive approaches is to define one action for each combination of actions over all product type.
+This however, due to the exponential growth, results in only being able to solve very small
+production systems with only few product types. A common solution in production planning is to
+aggregate the products into product groups, cf.\@ hierarchical production
+planning~\citep{schneeweibeta1995hierarchical}.
+%
+Although applicable in our setup, if we group the products into bottleneck and non-bottleneck
+products as done by \citet{schneckenreither2020order}, also this approach simply does not scale.
 
 
 \begin{figure*}[t!]
@@ -1052,78 +1057,104 @@ non-bottleneck products and thus yields \(9\) actions, it simply does not scale.
   \caption{Illustration of independent agents as agent one increases the lead time}\label{fig:indep-agents}
 \end{figure*}
 %
-Therefore, we invent and implement \textit{independent agents}, each operating on the same system
-state, but choosing actions independently for the designated product group.
-Figure~\ref{fig:indep-agents} illustrates the idea, where wlog. we use two agents and for simplicity
-omit the reward and truncate the state to the lead times. Agent one chooses to increase the lead
-time from \(3\) to \(4\). Thus, the future state, seen from agent one, depends on the probability of
-agent two choosing to increase (\(\inc\)), decrease (\(\dec\)) or not change (\(\pers\)) the lead
-time. Note that the Markov property the agent, that is
-\(p(s_{t+1}, r_{t} \mid s_{t}, a_{t}) = p((4,\cdot), r_{t} \mid (3,3), \inc) \), is not touched by
-this adaption. While for agent one the reward and future state only depends on the current state and
-action taken, the corresponding probabilities for future state and reward change during the learning
-process as the other agent starts to behave differently.
+Therefore, in the seek of a broader solution we establish the idea of \textit{independent agents}.
+Each independent agent operates on the same system state, but chooses only a part of the actual
+executed action. In our case each independent agent is responsible for the lead time update of a
+specific product type. To the best of the author's knowledge this is the first work to reduce the
+action space in this way. Figure~\ref{fig:indep-agents} illustrates the idea, where wlog.\@ we use
+two agents and for simplicity omit the reward and truncate the state to the lead times. Assume that
+the first independent agent chooses to increase the lead time from \(3\) to \(4\). Thus, the future
+state, seen from this agent, depends on the probability of the other independent agent choosing to
+increase (\(\inc\)), decrease (\(\dec\)) or not change (\(\pers\)) the lead time. The Markov
+property, that is
+\(p(s_{t+1}, r_{t} \mid s_{t}, a_{t}) = p((4,\cdot), r_{t} \mid (3,3), (\inc, \cdot)) \), is not
+touched by this adaption. While for the first agent the reward and future state only depends on the
+current state and action taken, the corresponding probabilities for future state and reward change
+during the learning process as the the agent starts to behave differently.
 %
-\MS[t]{independent agents, true?}This allows us to investigate the algorithms behaviour for even
-larger solution spaces. In particular, this adaption enables us to present the algorithm the above
-defined solution space not only on the basis of product groups \(g\), but also for each product type
-\(p\). That means, the state space, as well as the action space operates on a product type basis.
-Note that without independent agents this is infeasible due to \(3^{6} = 729\) possible actions.
-Removing the dependency between the lead times of different product types reduces the possibilities,
-and thus the number of ANN output layer nodes, to \(18\). Therefore, this is a vital adaption that
-ensures scalability.
-
-
-        %         We allow the agent a higher increase
-        %         of the lead time, compared to the decrease, to give it the chance to react quickly to high
-        %         number of
-        %         incoming demand.
-
+This allows us to investigate the algorithms behaviour for even larger solution spaces. In
+particular, this adaption enables us to present the algorithm the above defined state space not only
+on the basis of product groups, but directly for each product type \(\pt\). Note that without this
+extension the problem is computationally infeasible due to \(3^{6} = 729\) possible actions.
+Removing the dependency between the lead times of different product types reduces the set of
+possible actions, and thus the number of ANN output layer nodes, to \(3 \cdot 6 = 18\). In
+preliminary experiments on small examples we only observed a very slight increase of required steps
+during training. Therefore, this is a vital adaption to ensure scalability.
 
 \paragraph*{Reward.}
 In each period the agents choose actions, which when executed generate a reward while traversing to
 the next period by simulating the production system. The rewards are the accumulated costs at the
 end of the period consisting of the backorders, the WIP orders and the number of orders in the
-FGI\@. The objective is to minimise the returned reward. Therefore, we adapt the algorithm by
-swapping all maximisation functions with minimisations.
+FGI\@. The objective is to minimise the returned reward. % Therefore, we adapt the algorithm by
+% swapping all maximisation functions with minimisations.
 
 \paragraph*{Optimised Algorithm.}
 Our implementation includes several optimisations, that help the algorithm in better exploring the
 solution space and stabilise the learning process. These include the above discussed independent
-agents that operate on the same state, \(n\)-step learning \citep{mnih2016asynchronous},
-overestimating the average reward \(\avgrew^{\pol}\) and ensuring to constantly reduce the average
-reward as searching for policies with higher average costs is unnecessary. Algorithm~\ref{alg:full}
-depicts a detailed view on the algorithm including these extensions and with the minimisation
-objective. The idea is the same as in Algorithm~\ref{alg:near}, except that the action selection
-procedure is a loop over all independent agents and the implementation of the n-step logic.
+agents that operate on the same state, \(n\)-step learning \citep{mnih2016asynchronous}
+% overestimating the average reward \(\avgrew^{\pol}\)
+and ensuring to constantly reduce the average reward as searching for policies with higher average
+costs is unnecessary. Algorithm~\ref{alg:full} depicts a detailed view on the algorithm including
+these extensions and with the objective to minimise the returned rewards. The idea is the same as in
+Algorithm~\ref{alg:near}, except that the action selection procedure is a loop over all independent
+agents and the implementation of the n-step logic.
 
-% N-Step
-N-step RL collects a set of consecutive experiences, in our case retrieved from the replay memory,
-and connects the state values starting from the latest observed experience, such that the newly
-computed state value of the corresponding experience propagates to the experience of the previous
-period. This allows a faster convergence, as values bootstrap over multiple periods in contrast to
-just one step.
+% N-Step: 5
+\textit{N-step learning} collects a set of consecutive experiences, in our case retrieved from the
+replay memory, and connects the state values starting from the latest observed experience, such that
+the newly computed state value of the corresponding experience propagates to the experience of the
+previous period. This allows a faster convergence, as values bootstrap over multiple periods in
+contrast to just one step. The experiences are stored according to the first taken action in the
+n-step series. We uniformly sample over the actions to ensure each action is constantly trained.
+This adaption reduces catastrophic forgetting of already accumulated knowledge.
+%
 % Overestimating
-The idea behind overestimating the average reward is to constantly seek for better policies than the
-currently known. We overestimate the reward by subtracting \(10\%\) of the computed average reward
-\(\avgrew^{\pol}\) and an exponentially smoothed average reward of the actually returned reward
-values of greedy actions. Thus, if the computed and actually observed average reward coincide, the
-overestimation equals \(0\).
+% The idea behind overestimating the average reward is to constantly seek for better policies than the
+% currently known. We overestimate the reward by subtracting \(10\%\) of the computed average reward
+% \(\avgrew^{\pol}\) and an exponentially smoothed average reward of the actually returned reward
+% values of greedy actions. Thus, if the computed and actually observed average reward coincide, the
+% overestimation equals \(0\).
 % Rho Minimum
-Preventing an increase of the average reward with \(\avgrew_{\max}^{\pol}\) reduces the search space
-and provides a methodology for constantly improving policy.
+% Preventing an increase of the average reward with \(\avgrew_{\max}^{\pol}\) reduces the search space
+% and provides a methodology for constantly improving policy.
+%
+% Workers Min Exploration [0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20]
+Furthermore, we use \(8\) additional \textsf{worker threads} (parallel RL) that operate on the same
+environment to collect a broader range of experiences~\citep[as e.g. in][]{mnih2016asynchronous}.
 
-\MS[t]{(shared rho)?, (gradient clipping)?}
+% Shared Rho (Yes)
+The average reward value is shared and computed as average over the main agent and all workers.
+% \MS[t]{shared rho}
+%
+%
+% \MS[t]{worker min exploration, epsilon greedy exploration}
+%
+%
+% Learning rate decay: ExponentialDecay (Just 5e-6) 0.25 100000
+% Learning rate: OptAdam 0.005 0.9 0.999 1e-8 1e-3,
 
-Furthermore, we sometimes use multiple parallel workers (parallel RL) that operate on the same
-environment to collect a broader range of experiences. The experiences are stored according to the
-first taken action in the n-step series. We uniformly sample over the actions to ensure each action
-is constantly trained. This reduces catastrophic forgetting.
 
-The algorithm initiation tactics is to first fill the replay memory buffer by skipping any learning
-(steps \(10-25\)) until the period, that corresponds to the replay memory size, is reached. Then
-for \(500\) steps the average reward is set to the last computed exponentially smoothed value to
-prevent divergence due to the untrained network weight initialisation values.
+% Algorithms tested:
+ %            AlgDQNAvgRewAdjusted 0.8 1.0 ByStateValues
+ %          , AlgDQNAvgRewAdjusted 0.8 0.99 ByStateValues
+ %          , AlgDQN 0.99 Exact
+
+
+% Alpha: 0.01, Decay: ExponentialDecay (Just 5e-5) 0.25 50000
+% AlphaRhoMin: 2e-5, Decay: ExponentialDecay (Just 2e-5) 0.25 50000
+% Gamma: 0.01, Decay: ExponentialDecay (Just 1e-3) 0.25 100000
+% Epsilon: 0.25, 0.25, Decay: No decay
+% Exploration: 1.0, Decay: ExponentialDecay (Just 0.005) 0.25 100000
+% LearnRandomAbove: 0.5
+%
+%
+% UNUSED: Delta: 0.005, Decay: ExponentialDecay (Just 5e-4) 0.25 100000
+
+
+The algorithm initiation strategy is to first fill the replay memory buffer by skipping any learning
+(steps \(10-25\)) until the period, that corresponds to the replay memory size, is reached. Then for
+\(500\) steps the average reward is set to the last computed exponentially smoothed value to prevent
+divergence due to the untrained network weight initialisation values.
 
 
 % \MS[t]{Extensions: overestimate rho, rho minimum, Multiple Agents (shared state,  shared rho?),
@@ -1206,53 +1237,64 @@ process we constantly adapted and reevaluated the best network on various produc
 configurations. The resulting architecture depends on the number of features \(\anninp\) and the
 number of output nodes \(\annout\), which itself depends on the number of actions
 \(\acts = \size{\States}\), the independent agent configuration, and the number of functions that
-are approximated. For the later, in case of the proposed algorithm this is \(2\),
-\(\X^\pol_{\gamma_{0}}\) and \(\X^\pol_{\gamma_{1}}\), while deep Q-Learning only approximates the
-function \(Q_{\gamma}^\pol\).
+are approximated. For the later, in case of \ARA{} this is \(2\), as we represent both functions
+\(\X^\pol_{\gamma_{0}}\) and \(\X^\pol_{\gamma_{1}}\) with the same neural network, while deep
+Q-Learning only approximates the function \(Q_{\gamma}^\pol\).
 %
 The resulting feedforward deep ANN architecture is given as %
 \(\anninp %
-\rightarrow 3 \anninp % \rightarrow \relu
-\rightarrow \anninp % \rightarrow \relu
-\rightarrow 2 \annout % \rightarrow \relu
+\rightarrow 1.75 \anninp % \rightarrow \relu
+\rightarrow 1.5 \anninp % \rightarrow \relu
+% \rightarrow 2 \annout % \rightarrow \relu
 \rightarrow \annout %
 % \rightarrow   \leakyTanh%
-\), where each arrow symbolises a fully-connected layer with a rectified linear unit (\(\relu\)) as
-activation function. As output activation function we use the hyperbolic tangent function
-(\(\Tanh\)), but similar to leaky \(\relu\), leak values greater than \(0.98\) (less than \(-0.98\))
-with \(5\%\). The idea is that we do not want to restrict the approximations to values inside this
-range, but values outside of it are less important and thus can be less precise.
+\), where each arrow symbolises a fully-connected layer with a leaky rectified linear unit
+(\(\relu\)) as activation function, which leaks values smaller than \(0\) with rate \(0.02\). Note
+that we explicitly do not use an output activation function. The idea is that we do not want to
+restrict the approximations to values inside this range. This is especially important for
+Q-Learning, as the range of the state values are difficult to forecast.
 
-The values \(\anninp\) and \(\annout\) depend on the feature extraction method. In case of an
-aggregation to product groups \(g\) we have \(\anninp=180\), and due to \(6\) possible actions for
-the two independent agents, \(\annout=12\).
-% SpecFullyConnected 180 540 :=> SpecRelu (540,1,1) :=> SpecFullyConnected 540 180 :=> SpecRelu
-% (180,1,1) :=> SpecFullyConnected 180 24 :=> SpecRelu (24,1,1) :=> SpecFullyConnected 24 12 :=>
-% SpecReshape (12,1,1) (6,2,1) :=> SpecLeakyTanh 0.98 (6,2,1) :=> SpecNNil2D 6x2
-In the case of the full representation using 6 independent agents the setup is \(\anninp=540\) and
-\(\annout=36\).
-% SpecFullyConnected 540 1620 :=> SpecRelu (1620,1,1) :=> SpecFullyConnected 1620 540 :=> SpecRelu
-% (540,1,1) :=> SpecFullyConnected 540 72 :=> SpecRelu (72,1,1) :=> SpecFullyConnected 72 36 :=>
-% SpecReshape (36,1,1) (18,2,1) :=> SpecLeakyTanh 0.98 (18,2,1) :=> SpecNNil2D 18x2
-For the Q-Learning algorithm, which only approximates one function, the output nodes
-\(\annout\) are halved for both setups.
+The values \(\anninp\) and \(\annout\) depend on the feature extraction method. In our case case
+using 6 independent agents we gain \MS[t]{todo: check} \(\anninp=540\) and \(\annout=36\)
+\MS[t]{check setup}. For the Q-Learning algorithm, which only approximates one function, the output
+nodes \(\annout\) are halved. \MS[t]{what is the correct size?}
 
-The ANN is trained using the Adam optimiser \citep{kingma2014adam} with learning rate \(0.0001\),
-and the default beta-values \(\beta_{1}=0.9\), and \(\beta_{2}=0.999\). As neural network
+% Min-Max Scaling of input/output. Output: ScalingNetOutParameters (-800) 800 (-300) 300 (-400) 800 (-400) 800
+\MS[t]{scaling of input layer} The features representing order counts are scaled using min-max
+scaling with minimum \(0\) and maximum \(5\), the lead times with minimum \(0\) and maximum \(7\)
+respectively.
+% Output layer scaling
+To further ensure smaller ANN parameter values the output is transformed using min-max scaling to
+the interval \((-400, 800)\), s.t.\@ an ANN output of \(1\) represents a value of \(800\).
+%
+% Training Mini-Batch Size:  4
+On each training step, i.e.\@ every n-step steps, randomly \(m\) sets of experiences the training
+mini-batch size each consisting of n-step experiences are selected, there gradients computed and the
+sum of gradients back-propagated though the worker network using Adam \citep{kingma2014adam}, where
+the weight decay with parameter \(\lambda\) is implemented as presented by
+\citet{loshchilov2017decoupled}.
+%
+% Smooth target network period: 100 with update 0.01
+Every \(C\) steps the target network is updated by exponentially smoothing the parameters with rate
+\(\gamma\).
+%
+% ANN Init
+As neural network
 initialisation method we use the commonly known Xavier initialisation
 \citep{glorot2010understanding}, i.e.\@ the initial value for each weight \(i\) is sampled from a
 uniform distribution \(W_{l,i} \sim \Unif(-1/\sqrt{n_l},1/\sqrt{n_l})\), where \(n_{l}\) is the
 number of nodes in layer \(l\).
+%
+%
 
 
 \section{Computational Experiments}
 \label{sec:Preliminary}
 
-This section provides preliminary results for the described setup and gives an overview of the
-current performance of the algorithm compared to the conventional static lead time setting
-algorithms.
+This section provides results for the described setup and gives an overview of the current
+performance of the algorithm compared to the conventional static lead time setting algorithms.
 
-Currently we evaluate two different kinds of reward reporting as they have been proposed by
+\MS[t]{todo} We evaluate two different kinds of reward reporting as they have been proposed by
 \cite{Schneckenreither2019}. They find that it is beneficial to overcome the time offset imposed by
 the production system. That is, although orders are immediately released to the production system
 and thus generate a response in terms of a reward to the agent, the full impact of the chosen action
@@ -1264,20 +1306,35 @@ to all orders in the order pool.
 
 \begin{table}[t]
   \centering
-  \begin{tabular}{|l||c|c|c|c|c|c|c|c|c|c|}
-    \hline
-    Parameter & $\alpha$ & $\beta$ & $\delta$ & $\gamma$ & $\epsilon$ & $p_{exp}$ & $\xi$ \\
-    \hline
-    Value & 0.5 & 0.15 & 0.15 & 0.15 & 0.5 & 1.0 & 0.15 \\
-    \hline
+  \footnotesize
+  \begin{tabular}{lP{1cm}P{1cm}P{1cm}P{1cm}P{1cm}P{1cm}P{1cm}P{1cm}P{1cm}}
+    \toprule
+    Parameter                      & $\alpha$   & $\alpha_{\max}$ & $\gamma_{0}$ & $\gamma_{1}$ & $\gamma$ & $\epsilon$ & $p_{exp}$ & $\plearn$ \\
+    \midrule
+    Start value                    & 0.01       & \(2^{-5}\)      & 0.8          & 0.99/1.0     & 0.01     & 0.25       & 1.0       & 0.5       \\
+    Exp. Smth. Rate                & 0.25       &                 &              &              & 0.25     &            & 0.25      &           \\
+    Exp. Smth. Steps in \(10^{3}\) & 50         &                 &              &              & 100      &            & 100       &           \\
+    Minimum value                  & \(5^{-5}\) &                 &              &              & 0.001         &            & 0.005     &           \\
+    \bottomrule
+    \toprule
+    Parameter                      & \multicolumn{8}{c}{Value} \\
+    \midrule
+    Workers Min. Exploration & \multicolumn{8}{c}{0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20}\\
+    Training Batch Size & \multicolumn{8}{c}{4}\\
+    Target Network Update & \multicolumn{8}{c}{Exp. smooth. with rate \(\gamma\) every \(C=100\) steps}\\
+    N-Step & \multicolumn{8}{c}{5}\\
+    Training Mini-Batch Size & \multicolumn{8}{c}{\(m = 4\)}\\
+    Adam Back-Propagation & \multicolumn{8}{c}{\(\alpha = 0.005, \beta_{1}=0.9,
+                       \beta_{2}=0.999, \epsilon=10^{-8}, \lambda=0.001}\\ % OptAdam 0.005 0.9 0.999 1e-8 1e-3,
+    \bottomrule
   \end{tabular}
   \caption{\label{tbl:params}Parameter Setup.}
 \end{table}
 
 The parameter setup is given in Table~\ref{tbl:params}. The parameters are exponentially decayed
 with rate \(0.05\) and \(350k\) steps\footnote{The decay is defined as \(0.05 ^{(t/350k)}\), where
-  \(t\) is the current period}. We implemented the deep Q-network algorithm proposed by
-\cite{mnih2015human}, which is parameterised by learning rate \(\delta\) and a discount factor of
+  \(t\) is the current period}. \MS[t]{TODO} We implemented the deep Q-network algorithm proposed by
+\cite{mnih2015human},  a discount factor of
 \(0.99\).
 
 
@@ -1443,6 +1500,21 @@ with rate \(0.05\) and \(350k\) steps\footnote{The decay is defined as \(0.05 ^{
 
 \section{Conclusion}
 \label{sec:conclusion}
+
+% Therefore, in a current working paper I apply an enhanced state/action-value iteration version with
+% ANN as function approximation on bigger sized problems, where preliminary promising results could be
+% achieved. In the future I want to adapt and investigate the use of an actor-critic reinforcement
+% learning version to problems from research and industry, where I plan to focus on production
+% planning. We hypothesize that due to more correct state value estimations from the critic, the
+% resulting policies from the actor are will outperform the currently known actor-critic algorithms.
+% This would be in line with the observation of overestimated state values of standard discounted
+% reinforcement learning algorithms, which lead to the development of
+% extensions~\cite[]{hessel2018rainbow}. We believe that instead of developing extensions to resolve
+% structurally fundamental problems a better approach is to aim for correct state value estimations,
+% which will consequently lead to better policies.\\
+
+
+\MS[t]{It remains to be shown that independent agents find the same (or better) policies.}
 
 % This paper introduces deep theoretical insights in reinfocement learning and provides first evidence
 % that average reward reinfocement learning is better applicable to operations research problems than
