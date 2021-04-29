@@ -984,12 +984,10 @@ and fixed lead times \(\lt_{i}\).
 \subsection{Algorithm Setup}
 \label{subsec:Algorithm_Setup}
 
-\MS[t]{Algorithm adaptions}
-
 \paragraph{Markov Decision Process.} The underlying MDP is unichain and looks as follows. Both,
 state space $\mathcal{S}$ and action space $\mathcal{A}$ are discrete.
 %
-% Recall that we gproducts routed over the bottleneck machine \(M5\) are bottleneck products.
+% Recall that we products routed over the bottleneck machine \(M5\) are bottleneck products.
 %
 For the \textit{state space} we adapt the result of \citet{knollmann2013control}, which state that
 the lead times ought to control the WIP level, instead of the due date reliability as changes are
@@ -1100,6 +1098,14 @@ Algorithm~\ref{alg:near}, except that the action selection procedure is a loop o
 agents and the implementation of the n-step logic.
 
 % N-Step: 5
+As in \citep{mnih2016asynchronous, mnih2015human} the algorithm uses a \textit{Replay Memory} to
+save experiences and then randomly selects experiences from there for learning. This ensures that
+the independent and identically distributed (i.i.d.) assumption of the samples for the ANN
+backpropagation algorithms are satisfied. We extend this idea by splitting the available size of the
+replay memory into subsets, where each subset represents one action and sample uniformly over these
+subsets first. This prevents overfitting when one action is overrepresented in the policy, e.g.\@ no
+lead time change occurs much more often than the other actions.
+
 \textit{N-step learning} collects a set of consecutive experiences, in our case retrieved from the
 replay memory, and connects the state values starting from the latest observed experience, such that
 the newly computed state value of the corresponding experience propagates to the experience of the
@@ -1249,20 +1255,26 @@ The resulting feedforward deep ANN architecture is given as %
 \rightarrow \annout %
 % \rightarrow   \leakyTanh%
 \), where each arrow symbolises a fully-connected layer with a leaky rectified linear unit
-(\(\relu\)) as activation function, which leaks values smaller than \(0\) with rate \(0.02\). Note
+(\(\relu\)) as activation function, which leaks values smaller than \(0\) with rate \(0.02\).
+%
+Note
 that we explicitly do not use an output activation function. The idea is that we do not want to
 restrict the approximations to values inside this range. This is especially important for
 Q-Learning, as the range of the state values are difficult to forecast.
+%
+The actual values \(\anninp\) and \(\annout\) depend on the used algorithm. In our case case using 6
+independent agents we gain \(\anninp=324\) and \(\annout=36\). For the Q-Learning algorithm, which
+only approximates one function, the output nodes \(\annout\) are halved.
+%
+% SpecFullyConnected 324 567 :=> SpecLeakyRelu (567,1,1) :=> SpecFullyConnected 567 486 :=>
+% SpecLeakyRelu (486,1,1) :=> SpecFullyConnected 486 36 :=> SpecReshape (36,1,1) (18,2,1) :=>
+% SpecNNil2D18x2
+%
 
-The values \(\anninp\) and \(\annout\) depend on the feature extraction method. In our case case
-using 6 independent agents we gain \MS[t]{todo: check} \(\anninp=540\) and \(\annout=36\)
-\MS[t]{check setup}. For the Q-Learning algorithm, which only approximates one function, the output
-nodes \(\annout\) are halved. \MS[t]{what is the correct size?}
 
 % Min-Max Scaling of input/output. Output: ScalingNetOutParameters (-800) 800 (-300) 300 (-400) 800 (-400) 800
-\MS[t]{scaling of input layer} The features representing order counts are scaled using min-max
-scaling with minimum \(0\) and maximum \(5\), the lead times with minimum \(0\) and maximum \(7\)
-respectively.
+The features representing order counts are scaled using min-max scaling with minimum \(0\) and
+maximum \(5\), the lead times with minimum \(0\) and maximum \(7\) respectively.
 % Output layer scaling
 To further ensure smaller ANN parameter values the output is transformed using min-max scaling to
 the interval \((-400, 800)\), s.t.\@ an ANN output of \(1\) represents a value of \(800\).
@@ -1270,7 +1282,7 @@ the interval \((-400, 800)\), s.t.\@ an ANN output of \(1\) represents a value o
 % Training Mini-Batch Size:  4
 On each training step, i.e.\@ every n-step steps, randomly \(m\) sets of experiences the training
 mini-batch size each consisting of n-step experiences are selected, there gradients computed and the
-sum of gradients back-propagated though the worker network using Adam \citep{kingma2014adam}, where
+sum of gradients backpropagated though the worker network using Adam \citep{kingma2014adam}, where
 the weight decay with parameter \(\lambda\) is implemented as presented by
 \citet{loshchilov2017decoupled}.
 %
@@ -1294,15 +1306,15 @@ number of nodes in layer \(l\).
 This section provides results for the described setup and gives an overview of the current
 performance of the algorithm compared to the conventional static lead time setting algorithms.
 
-\MS[t]{todo} We evaluate two different kinds of reward reporting as they have been proposed by
-\cite{Schneckenreither2019}. They find that it is beneficial to overcome the time offset imposed by
-the production system. That is, although orders are immediately released to the production system
-and thus generate a response in terms of a reward to the agent, the full impact of the chosen action
-takes several periods to materialise. For instance, by deciding not to release an order, which later
-becomes a backorder, it is beneficial to reward the actions actually responsible for the backorder
-instead of the last action (only). Thus they propose to keep track of the orders currently in the
-order pool until all fully traversed through the production system and reward the actions according
-to all orders in the order pool.
+% \MS[t]{todo} We evaluate two different kinds of reward reporting as they have been proposed by
+% \cite{Schneckenreither2019}. They find that it is beneficial to overcome the time offset imposed by
+% the production system. That is, although orders are immediately released to the production system
+% and thus generate a response in terms of a reward to the agent, the full impact of the chosen action
+% takes several periods to materialise. For instance, by deciding not to release an order, which later
+% becomes a backorder, it is beneficial to reward the actions actually responsible for the backorder
+% instead of the last action (only). Thus they propose to keep track of the orders currently in the
+% order pool until all fully traversed through the production system and reward the actions according
+% to all orders in the order pool.
 
 \begin{table}[t]
   \centering
@@ -1324,18 +1336,23 @@ to all orders in the order pool.
     Target Network Update & \multicolumn{8}{c}{Exp. smooth. with rate \(\gamma\) every \(C=100\) steps}\\
     N-Step & \multicolumn{8}{c}{5}\\
     Training Mini-Batch Size & \multicolumn{8}{c}{\(m = 4\)}\\
-    Adam Back-Propagation & \multicolumn{8}{c}{\(\alpha = 0.005, \beta_{1}=0.9,
-                       \beta_{2}=0.999, \epsilon=10^{-8}, \lambda=0.001}\\ % OptAdam 0.005 0.9 0.999 1e-8 1e-3,
+    Adam ANN Backpropagation & \multicolumn{8}{c}{\(\alpha = 0.005, \beta_{1}=0.9,
+                       \beta_{2}=0.999, \epsilon=10^{-8}, \lambda=0.001}\\ % OptAdam 0.005 0.9 0.999
+% 1e-8 1e-3,
+        Replay Memory Size & \multicolumn{8}{c}{\(10800\)}\\
     \bottomrule
   \end{tabular}
-  \caption{\label{tbl:params}Parameter Setup.}
+  \caption{\label{tbl:params}Overview of Parameter Setup.}
 \end{table}
 
-The parameter setup is given in Table~\ref{tbl:params}. The parameters are exponentially decayed
-with rate \(0.05\) and \(350k\) steps\footnote{The decay is defined as \(0.05 ^{(t/350k)}\), where
-  \(t\) is the current period}. \MS[t]{TODO} We implemented the deep Q-network algorithm proposed by
-\cite{mnih2015human},  a discount factor of
-\(0.99\).
+Table~\ref{tbl:params} presents an overview of the parameter setup. The parameters \(\alpha\),
+\(\gamma\) and \(p_{exp}\) are exponentially decayed as indicated.% \footnote{The decay is defined as
+  % \(0.05 ^{(t/350k)}\), where \(t\) is the current period}.
+\MS[t]{TODO} As further comparison we implement the deep Q-Learning network algorithm proposed
+by~\cite{mnih2015human}, where for comparison reasons we also integrate n-Step learning, the
+experience replay memory adaptions and independent agents. \MS[t]{Discount factor in table?}
+
+% a discount factor of \(0.99\).
 
 
 % \definecolor{lightgray}{rgb}{0.83, 0.83, 0.83}
@@ -1515,6 +1532,9 @@ with rate \(0.05\) and \(350k\) steps\footnote{The decay is defined as \(0.05 ^{
 
 
 \MS[t]{It remains to be shown that independent agents find the same (or better) policies.}
+
+\MS[t]{Multiple agents on different tasks (hierarchical PP): e.g. Order acceptance + release,
+  scheduling + release, etc.}
 
 % This paper introduces deep theoretical insights in reinfocement learning and provides first evidence
 % that average reward reinfocement learning is better applicable to operations research problems than
