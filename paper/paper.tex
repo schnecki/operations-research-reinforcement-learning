@@ -107,6 +107,7 @@ pdfkeywords={average reward adjusted reinforcement learning, production planning
 
 \begin{abstract}
   % teilw. von IJPR paper uebernommen
+  \MS[t]{proof-of-concept work}
   An essential task in manufacturing planning and control is to determine when to release orders to
   the shop floor. One key parameter is the lead time which is the planned time that elapses between
   the release of an order and its completion. Lead times are normally determined based on the actual
@@ -751,7 +752,7 @@ foundation of our algorithm.
 \begin{algorithm}[t!]
   \begin{algorithmic}[1]
     \State{}Initialise state \(s_{0}\) and network parameters \(\netTarget, \netWorker\) randomly, set
-    an exploration rate \(0 \leqslant \plearn \leqslant \pexp \leqslant 1\), exponential smoothing learning rates
+    an exploration rate \(0 \leqslant \plearn < \pexp \leqslant 1\), exponential smoothing learning rates
     \(0 < \alpha, \gamma < 1\), and discount factors
     \(0 < \gamma_{0} < \gamma_{1} \leqslant 1\), where \(\gamma_{1} = 1\) is
     usually a good choice.
@@ -892,12 +893,13 @@ prohibited. Orders completed ahead of their due date remain in the finished good
 until they are due and sent to the customer.
 
 
-\paragraph{Processing Times.} The machine processing time distributions are given under the
-corresponding node labels of the machines. To simulate high or moderate variance the processing
-times for all machines are  drawn from an exponential or an uniform distribution,
-respectively. There is one bottleneck machine ($M5$) and therefore we refer to product
-types $2$ and $5$, those routed through machine $M5$, as
-bottleneck products whereas products $1,3,4,6$ are non-bottleneck products.
+\paragraph{Processing Times.} The machine processing time distributions are specified under the
+corresponding node labels of the machines. To simulate high % or moderate
+variance the processing times for all machines are drawn from an exponential % or an uniform
+distribution% , respectively
+. There is one bottleneck machine ($M5$) and therefore we refer to product types $2$ and $5$, those
+routed through machine $M5$, as bottleneck products whereas products $1,3,4,6$ are non-bottleneck
+products.
 
 \paragraph{Demand.} The incoming orders are placed in the order pool with a due date slack of
 \dds{} periods, that is each order arriving within period $t$ will be due at the end of period
@@ -906,12 +908,12 @@ first occurrence of orders in the order pool and the latest possible release of 
 have a clear cause and effect relationship between the order release decision and the cost
 performance in the analysis.
 %
-To simulate high and moderate variability of the demand process the interarrival time between
-consecutive incoming orders is either drawn from an exponential ($\Exp$) or an uniform ($\Unif$)
-distribution, which are adjusted to yield the desired bottleneck utilisation level of either $70\%$
-with $\Exp(135)$ and $\Unif(95,175)$, or $80\%$ with $\Exp(118)$ and $\Unif(78,158)$. These values
-were chosen as they comprise the non-linear relationship between flow times and high utilisation
-levels.
+To simulate moderate, medium and high variability of the demand process the interarrival time
+between consecutive incoming orders is either drawn from an exponential ($\Exp$) or an uniform
+($\Unif$) distribution, which are adjusted to yield the desired bottleneck utilisation level of
+either $70\%$ with $\Exp(135)$ and $\Unif(95,175)$, $80\%$ with $\Exp(118)$ and $\Unif(78,158)$, or
+$90\%$ with $\Exp(105)$ and $\Unif(65,145)$. These values were chosen as they comprise the
+non-linear relationship between flow times and high utilisation levels.
 
 \paragraph{Order Release.}
 %
@@ -1089,13 +1091,21 @@ FGI\@. The objective is to minimise the returned reward. % Therefore, we adapt t
 \paragraph*{Optimised Algorithm.}
 Our implementation includes several optimisations, that help the algorithm in better exploring the
 solution space and stabilise the learning process. These include the above discussed independent
-agents that operate on the same state, \(n\)-step learning \citep{mnih2016asynchronous}
+agents that operate on the same state, \(n\)-step learning \citep{mnih2016asynchronous},
 % overestimating the average reward \(\avgrew^{\pol}\)
 and ensuring to constantly reduce the average reward as searching for policies with higher average
-costs is unnecessary. Algorithm~\ref{alg:full} depicts a detailed view on the algorithm including
-these extensions and with the objective to minimise the returned rewards. The idea is the same as in
-Algorithm~\ref{alg:near}, except that the action selection procedure is a loop over all independent
-agents and the implementation of the n-step logic.
+costs is unnecessary. Algorithm~\ref{alg:full}
+depicts a detailed view on the algorithm including these extensions and with the objective to
+minimise the returned rewards. The idea is the same as in Algorithm~\ref{alg:near}, except that the
+action selection procedure is a loop over all independent agents and the implementation of the
+n-step logic.
+%
+The algorithm is based around The agent first choose an action (steps \(4-5\)), executes the
+selected action and stores the experience in the replay memory (step \(6\)) and then samples a
+mini-batch of experiences each of length \(nstep\) to improve the policy (steps \(7-21\)). Step
+\(17\) uses an exponentially smoothed overestimation (by \(2.5\%\)) of the average reward and rate
+\(2^{-5}\). All average reward updates above this overestimation are rejected.
+
 
 % N-Step: 5
 As in \citep{mnih2016asynchronous, mnih2015human} the algorithm uses a \textit{Replay Memory} to
@@ -1127,7 +1137,7 @@ This adaption reduces catastrophic forgetting of already accumulated knowledge.
 % Workers Min Exploration [0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20]
 Furthermore, we use \(8\) additional \textsf{worker threads} (parallel RL) that operate on the same
 environment to collect a broader range of experiences~\citep[as e.g. in][]{mnih2016asynchronous}.
-
+%
 % Shared Rho (Yes)
 The average reward value is shared and computed as average over the main agent and all workers.
 % \MS[t]{shared rho}
@@ -1158,9 +1168,10 @@ The average reward value is shared and computed as average over the main agent a
 
 
 The algorithm initiation strategy is to first fill the replay memory buffer by skipping any learning
-(steps \(10-25\)) until the period, that corresponds to the replay memory size, is reached. Then for
-\(500\) steps the average reward is set to the last computed exponentially smoothed value to prevent
-divergence due to the untrained network weight initialisation values.
+(steps \(7-21\) in Algorithm~\ref{alg:full}) until the period, that corresponds to the replay
+memory size, is reached. Then for \(500\) steps the average reward is set to the last computed
+exponentially smoothed value to prevent divergence due to the untrained network weight
+initialisation values.
 
 
 % \MS[t]{Extensions: overestimate rho, rho minimum, Multiple Agents (shared state,  shared rho?),
@@ -1179,20 +1190,21 @@ divergence due to the untrained network weight initialisation values.
     1\)
     \While{the stopping criterion is not fulfilled}
     \State{\(\isRandAct{t} \gets \mathsf{False}\)}
-    \ForEach{independent agent \(\agent \in \agent_{1},\agent_{2},\ldots,\agent_{n_{\mathsf{ag}}}\)}
+    \ForEach{independent agent \(i \in \agent_{1},\agent_{2},\ldots,\agent_{n}\)}
     \State{}%
     \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth-\leftmargin+2pt}
-      With probability \(\frac{\pexp}{n_{\mathsf{ag}}}\) choose a random action and
-      probability \(1-\frac{\pexp}{n_{\mathsf{ag}}}\) one that fulfills
-      \(\min_{a \in \mathcal{A}(\agent)}\lexeq(\X^{\pol}_{\gamma_{1}}(s_{t},a; \netWorker{}),\X^\pol_ {\gamma_{0}}(s_{t},a;
-      \netWorker{}))\). Set \(\isRandAct{t} \gets \mathsf{True}\) if the action was chosen randomly
+      With probability \(\frac{\pexp}{n}\) choose action \(a_{t,i}\) randomly or otherwise one of
+      the set defined by
+      \(\min_{a \in \mathcal{A}(i)}\lexeq(\X^{\pol}_{\gamma_{1}}(s_{t},a; \netWorker{}),\X^\pol_
+      {\gamma_{0}}(s_{t},a; \netWorker{}))\). Set \(\isRandAct{t} \gets \mathsf{True}\) if the
+      action was chosen randomly.
     \end{minipage}
-    \EndFor
+    \EndFor{}
     \State{}%
     \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth}
-    Carry out combined action \(a_{t}\), observe reward \(r_{t}\) and resulting state \(s_{t+1}\).
-    Store the experience \((s_{t}, a_{t}, \isRandAct{t}, r_{t}, s_{t+1})\) in the experience replay
-    memory \(M\).
+      Carry out action \(a_{t}=(a_{t,\agent_{1}},\ldots,a_{t,\agent_{n}})\), observe reward
+      \(r_{t}\) and resulting state \(s_{t+1}\). Store experience
+      \((s_{t}, a_{t}, \isRandAct{t}, r_{t}, s_{t+1})\) in the experience replay memory \(M\).
     \end{minipage}
     \If{\(t \mod{\nstep} \equiv 0\)}
     \State{Reset gradient: \(d\netWorker{} \gets 0\)}
@@ -1204,21 +1216,23 @@ divergence due to the untrained network weight initialisation values.
     \end{minipage}
     \ForEach{mini-batch}
     \ForEach{experience, starting with the latest seen experience \(\nstep\)}
-    \If{experience \(\nstep\) or (\(\isRandAct{i}\) and  \(\pexp \leqslant \plearn\))}
+    \If{experience \(\nstep\) or \(\neg \isRandAct{i}\) or  \(\pexp > \plearn\)}
       \State{\(\target_{\gamma0} \gets \min_{a} \X^\pol_{\gamma_0}(s_{i+1},a; \netTarget{})\)}
       \State{\(\target_{\gamma1} \gets \min_{a} \X^\pol_{\gamma_1}(s_{i+1},a; \netTarget{})\)}
     \EndIf
-    \If{\(\isRandAct{i}\) or \(\pexp > \plearn\)}
-    \State{\(\avgrew^{\pol} \gets (1- \alpha) \avgrew^{\pol} + \alpha [r_{i} +
-      \min_{a}\X^\pol_{\gamma_1}(s_{i+1},a; \netWorker{}) - \X^\pol_{\gamma_1}(s_{i},a_{i};
-      \netWorker{})]\)}
-    \State{\(\avgrew^{\pol} \gets \min(\avgrew^{\pol}, \avgrew_{\max}^{\pol})\)}
-    \State{\(\avgrew_{\max}^{\pol} \gets (1- \alpha_{\max}) \avgrew_{\max}^{\pol} +
-    \alpha_{\max} 1.025 \avgrew^{\pol}\)}
+    \If{\(\neg \isRandAct{i}\) or \(\pexp > \plearn\)}
+      \State{\(\avgrew^{\pol} \gets (1- \alpha) \avgrew^{\pol} + \alpha [r_{i} +
+        \min_{a}\X^\pol_{\gamma_1}(s_{i+1},a; \netWorker{}) - \X^\pol_{\gamma_1}(s_{i},a_{i};
+        \netWorker{})]\)}
+      \State{Ensure improvement of \(\avgrew^{\pol}\), otherwise reset to old value}
+
+    % \State{\(\avgrew^{\pol} \gets \min(\avgrew^{\pol}, \avgrew_{\max}^{\pol})\)}
+    % \State{\(\avgrew_{\max}^{\pol} \gets (1- \alpha_{\max}) \avgrew_{\max}^{\pol} +
+    % \alpha_{\max} 1.025 \avgrew^{\pol}\)}
     \EndIf
-    \State{Compute overestimate of \(\avgrew^{\pol}\) and store result in \(\avgrew_{\Overestim}^{\pol}\)}
-    \State{\(\target_{\gamma_0}  \gets r_{i} + \gamma_{0} \target_{\gamma_{0}} - \avgrew_{\Overestim}^{\pol}  \)}
-    \State{\(\target_{\gamma_{1}}  \gets r_{i} + \gamma_{1} \target_{\gamma_{1}} - \avgrew_{\Overestim}^{\pol}\)}
+    % \State{Compute overestimate of \(\avgrew^{\pol}\) and store result in \(\avgrew_{\Overestim}^{\pol}\)}
+    \State{\(\target_{\gamma_0}  \gets r_{i} + \gamma_{0} \target_{\gamma_{0}} - \avgrew^{\pol}  \)}
+    \State{\(\target_{\gamma_{1}}  \gets r_{i} + \gamma_{1} \target_{\gamma_{1}} - \avgrew^{\pol}\)}
     \State{\(d\netWorker{} \gets d\netWorker{} + \partial{(\target_{\gamma_{0}} - \X^\pol_{\gamma_{0}}(s_{i+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
     \State{\(d\netWorker{} \gets d\netWorker{} +
       \partial{(\target_{\gamma_{1}} - \X^\pol_{\gamma_{1}}(s_{i+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
@@ -1297,14 +1311,17 @@ initialisation method we use the commonly known Xavier initialisation
 uniform distribution \(W_{l,i} \sim \Unif(-1/\sqrt{n_l},1/\sqrt{n_l})\), where \(n_{l}\) is the
 number of nodes in layer \(l\).
 %
-%
+
+
+\subsection{Deep Q-Learning}
+\MS[t]{explain here, alg in appendix?}
 
 
 \section{Computational Experiments}
 \label{sec:Preliminary}
 
-This section provides results for the described setup and gives an overview of the current
-performance of the algorithm compared to the conventional static lead time setting algorithms.
+This section presents the experimental results and gives an overview of the performance of the
+established algorithm compared to the conventional static lead time setting algorithms.
 
 % \MS[t]{todo} We evaluate two different kinds of reward reporting as they have been proposed by
 % \cite{Schneckenreither2019}. They find that it is beneficial to overcome the time offset imposed by
@@ -1319,36 +1336,35 @@ performance of the algorithm compared to the conventional static lead time setti
 \begin{table}[t]
   \centering
   \footnotesize
-  \begin{tabular}{lP{1cm}P{1cm}P{1cm}P{1cm}P{1cm}P{1cm}P{1cm}P{1cm}P{1cm}}
+  \begin{tabular}{lP{1cm}P{1cm}P{1cm}P{1cm}P{1cm}P{1cm}P{1cm}P{1cm}}
     \toprule
-    Parameter                      & $\alpha$   & $\alpha_{\max}$ & $\gamma_{0}$ & $\gamma_{1}$ & $\gamma$ & $\epsilon$ & $p_{exp}$ & $\plearn$ \\
+    Parameter                      & $\alpha$   & $\gamma_{0}$ & $\gamma_{1}$ & $\gamma$ & $\epsilon$ & $p_{exp}$ & $\plearn$ \\
     \midrule
-    Start value                    & 0.01       & \(2^{-5}\)      & 0.8          & 0.99/1.0     & 0.01     & 0.25       & 1.0       & 0.5       \\
-    Exp. Smth. Rate                & 0.25       &                 &              &              & 0.25     &            & 0.25      &           \\
-    Exp. Smth. Steps in \(10^{3}\) & 50         &                 &              &              & 100      &            & 100       &           \\
-    Minimum value                  & \(5^{-5}\) &                 &              &              & 0.001         &            & 0.005     &           \\
+    Start value                    & 0.01       & 0.8          & 0.99/1.0     & 0.01     & 0.25       & 1.0       & 0.5       \\
+    Exp. Smth. Rate                & 0.25       &              &              & 0.25     &            & 0.25      &           \\
+    Exp. Smth. Steps in \(10^{3}\) & 50         &              &              & 100      &            & 100       &           \\
+    Minimum value                  & \(5^{-5}\) &              &              & 0.001    &            & 0.005     &           \\
     \bottomrule
     \toprule
-    Parameter                      & \multicolumn{8}{c}{Value} \\
+    Parameter                      & \multicolumn{7}{c}{Value}                                                                                  \\
     \midrule
-    Workers Min. Exploration & \multicolumn{8}{c}{0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20}\\
-    Training Batch Size & \multicolumn{8}{c}{4}\\
-    Target Network Update & \multicolumn{8}{c}{Exp. smooth. with rate \(\gamma\) every \(C=100\) steps}\\
-    N-Step & \multicolumn{8}{c}{5}\\
-    Training Mini-Batch Size & \multicolumn{8}{c}{\(m = 4\)}\\
-    Adam ANN Backpropagation & \multicolumn{8}{c}{\(\alpha = 0.005, \beta_{1}=0.9,
-                       \beta_{2}=0.999, \epsilon=10^{-8}, \lambda=0.001}\\ % OptAdam 0.005 0.9 0.999
+    Workers Min. Exploration       & \multicolumn{7}{c}{0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20}                                         \\
+    Training Batch Size            & \multicolumn{7}{c}{4}                                                                                      \\
+    Target Network Update          & \multicolumn{7}{c}{Exp. smooth. with rate \(\gamma\) every \(C=100\) steps}                                \\
+    N-Step                         & \multicolumn{7}{c}{5}                                                                                      \\
+    Training Mini-Batch Size       & \multicolumn{7}{c}{\(m = 4\)}                                                                              \\
+    Adam ANN Backpropagation       & \multicolumn{7}{c}{\(\alpha = 0.005, \beta_{1}=0.9, \beta_{2}=0.999, \epsilon=10^{-8}, \lambda=0.001\)}      \\ % OptAdam 0.005 0.9 0.999
 % 1e-8 1e-3,
-        Replay Memory Size & \multicolumn{8}{c}{\(10800\)}\\
+        Replay Memory Size         & \multicolumn{7}{c}{\(10800\)}                                                                              \\
     \bottomrule
   \end{tabular}
   \caption{\label{tbl:params}Overview of Parameter Setup.}
 \end{table}
-
+%
 Table~\ref{tbl:params} presents an overview of the parameter setup. The parameters \(\alpha\),
 \(\gamma\) and \(p_{exp}\) are exponentially decayed as indicated.% \footnote{The decay is defined as
   % \(0.05 ^{(t/350k)}\), where \(t\) is the current period}.
-\MS[t]{TODO} As further comparison we implement the deep Q-Learning network algorithm proposed
+\MS[t]{TODO} As further comparison we implement the deep Q-Learning algorithm proposed
 by~\cite{mnih2015human}, where for comparison reasons we also integrate n-Step learning, the
 experience replay memory adaptions and independent agents. \MS[t]{Discount factor in table?}
 
@@ -1389,18 +1405,20 @@ experience replay memory adaptions and independent agents. \MS[t]{Discount facto
 %   \caption{\label{tbl:70} Results for a bottleneck utilisation of 70\%. }
 % \end{table}
 
+\MS[t]{Exp - Exp in simulation model?}
 \begin{table}[tb]
   \begin{center}
     \begin{tabular}{c|rrr|c|c||c|c|c|c|c}
-      \hline
+      \toprule
       80-\(\Exp\)-\(\Unif\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
-      \hline
-      \rl{0.995}              & 55.22 & 137.00 & 52.09   &          & 244.32 & 1.51 & 2.60    & 0.915  & 34.902   & 32.791             \\
-      \rl{1.000}              & 67.27 & 102.18 & 175.69  &          & 345.13 & 1.52 & 2.63    & 0.908  & 49.305   & 30.777             \\
-      \BILOne{}               & 45.90 & 0.00   & 734.43  &          & 780.33 & 1.32 & 1.81    & 0.352  &          &                    \\
-      \BILTwo{}               & 45.73 & 80.31  & 1425.22 &          & 268.57 & 1.32 & 2.158    & 0.876  &          &                    \\
-      \BILThree{}             & 45.86 & 279.72 & 30.82   &          & 356.40 & 1.32 & 3.034    & 0.975  &          &                    \\
-      \hline
+      \midrule
+      \rl{0.995}              &  &  &  &          &  &  &    &   &    &              \\
+      \rl{1.000}              &  &  &  &          &  &  &    &   &    &              \\
+      \ql{1.000}              &  &  &  &          &  &  &    &   &    &              \\
+      \BILOne{}               &  &  &  &          &  &  &    &   &    &              \\
+      \BILTwo{}               &  &  &  &          &  &  &    &   &    &              \\
+      \BILThree{}             &  &  &  &          &  &  &    &   &    &              \\
+      \bottomrule
 %
 %       \hline
 %       80-\(\Unif\)-\(\Exp\) & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTP+FGI & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
@@ -1550,6 +1568,64 @@ experience replay memory adaptions and independent agents. \MS[t]{Discount facto
 
 \bibliographystyle{plainnat}
 \bibliography{references}
+\vfill
+\pagebreak[4!]
+\appendix
+
+\section{Deep Q-Learning Algorithm}
+
+Algorithm~\ref{alg:ql} presents the detailed deep Q-Learning algorithm. It is very similar to the
+established \ARA{} algorithm that is given in Algorithm~\ref{alg:full}. However, it does not compute
+the average reward. Furthermore, it also operates on a single estimation of the overall future
+discounted reward.
+
+\begin{algorithm}[h!]
+  \begin{algorithmic}[1]
+    \State{}Initialise state \(s_{0}\) and network parameters \(\netTarget, \netWorker\) randomly,
+    set an exploration rate \(0 < \pexp \leqslant 1\), exponential smoothing learning rates
+    \(0 < \alpha_{\max}, \alpha, \gamma < 1\) and discount factor \(0 < < \gamma_{1} < 1\)
+    \While{the stopping criterion is not fulfilled} \ForEach{independent agent
+      \(i \in \agent_{1},\agent_{2},\ldots,\agent_{n}\)} \State{}%
+    \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth-\leftmargin+2pt}
+      With probability \(\frac{\pexp}{n}\) choose action \(a_{t,i}\) randomly or otherwise one of
+      the set defined by
+      \(\min_{a \in \mathcal{A}(i)}\X^{\pol}_{\gamma_{1}}(s_{t},a; \netWorker{})\).
+    \end{minipage}
+    \EndFor{}
+    \State{}%
+    \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth}
+      Carry out action \(a_{t}=(a_{t,\agent_{1}},\ldots,a_{t,\agent_{n}})\), observe reward
+      \(r_{t}\) and resulting state \(s_{t+1}\). Store experience
+      \((s_{t}, a_{t}, \isRandAct{t}, r_{t}, s_{t+1})\) in the experience replay memory \(M\).
+    \end{minipage}
+    \If{\(t \mod{\nstep} \equiv 0\)}
+    \State{Reset gradient: \(d\netWorker{} \gets 0\)}
+    \State{}%
+    \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth-\leftmargin+2pt}
+      Sample \(m\) random mini-batches of \(\nstep\) consecutive experiences from \(M\) numbered by
+      \(1 \leqslant i \leqslant \nstep\), each with
+      \((s_{i}, \isRandAct{i}, a_{i}, r_{i}, s_{i+1})\).
+    \end{minipage}
+    \ForEach{mini-batch}
+    \ForEach{experience, starting with the latest seen experience \(\nstep\)}
+    \If{experience \(\nstep\) or \(\neg \isRandAct{i}\) or  \(\pexp > \plearn\)}
+      \State{\(\target_{\gamma1} \gets \min_{a} \X^\pol_{\gamma_1}(s_{i+1},a; \netTarget{})\)}
+    \EndIf
+    \State{\(\target_{\gamma_{1}}  \gets r_{i} + \gamma_{1} \target_{\gamma_{1}} \)}
+    \State{\(d\netWorker{} \gets d\netWorker{} +
+      \partial{(\target_{\gamma_{1}} - \X^\pol_{\gamma_{1}}(s_{i+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
+    \EndFor{}
+    \EndFor{}
+    \State{Perform update of \(\netWorker{}\) using \(d\netWorker{} / (m \cdot \nstep)\)}
+    \EndIf{}
+    \State{Every \(C\) steps exponential smoothly set target network:
+    \(\netTarget \gets (1 - \gamma) \netTarget{} + \gamma \netWorker{}\)}
+    \State{Set \(s \gets s'\), \(t \gets t+1\) and decay parameters}
+    \EndWhile{}
+  \end{algorithmic}
+  \caption{\label{alg:ql}Deep Q-Learning}
+\end{algorithm}
+
 
 \end{document}
 
