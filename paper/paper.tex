@@ -1406,39 +1406,88 @@ experience replay memory adaptions and independent agents. \MS[t]{Discount facto
 % \end{table}
 
 \MS[t]{Exp - Exp in simulation model?}
-\begin{table}[tb]
+ \begin{table}[tb]
   \begin{center}
-    \begin{tabular}{c|rrr|c|c||c|c|c|c|c}
+    \begin{tabular}{crrrccccccc}
       \toprule
-      80-\(\Exp\)-\(\Unif\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
+      70-\(\Unif\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
       \midrule
-      \rl{0.995}              &  &  &  &          &  &  &    &   &    &              \\
-      \rl{1.000}              &  &  &  &          &  &  &    &   &    &              \\
-      \ql{1.000}              &  &  &  &          &  &  &    &   &    &              \\
+      \ql{0.99}              & 38776.300 &133872.800  &82673.600  &          &255322.700  &1.340  & 2.558   & \tard{0.095}  &    &              \\
+      \rl{0.99}              & 37111.000 &113425.600  &98654.400  &          &249191.000  &1.305  & 2.412   & \tard{0.110}  &    &              \\
+      \rl{1.00}              & 38755.000 &156444.000  &59718.400  &          &254917.400  &1.339  & 2.679   & \tard{0.068}  &    &              \\
+      \BILOne{}               &32159.900 &     0.000  &514558.400  &         &546718.300  &1.202  & 1.693   & \tard{0.552}  &    &              \\
+      \BILTwo{}               &32169.900 &83391.200   &106219.200  &         &221780.300  &1.202  & 2.143   & \tard{0.114}  &    &              \\
+      \BILThree{}             &32239.800 &247416.800  &21382.400  &          &301039.000  &1.204  & 3.029   & \tard{0.022}  &    & \\
+      \BILFour{}              &32262.600 &428865.200  &5483.200   &          &466611.000  &1.204  & 4.007   & \tard{0.006}  &    &              \\
+ \bottomrule
+      \toprule
+      80-\(\Unif\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
+      \midrule
+      \ql{0.99}              & 62787.000 & 181322.800 & 119542.400 &          & 363652.200 & 1.674 & 3.017   & \tard{0.102}  &    &              \\
+      \ql{0.99}              &  &  &  &          &  &  &    &   &    &              \\
+      \rl{1.00}              &  &  &  &          &  &  &    &   &    &              \\
       \BILOne{}               &  &  &  &          &  &  &    &   &    &              \\
       \BILTwo{}               &  &  &  &          &  &  &    &   &    &              \\
       \BILThree{}             &  &  &  &          &  &  &    &   &    &              \\
+      \BILFour{}             &  &  &  &          &  &  &    &   &    &              \\
       \bottomrule
-%
-%       \hline
-%       80-\(\Unif\)-\(\Exp\) & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTP+FGI & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
-%       \hline                &
-%        ESSLTA{}             &        &         &          &          &         &       &          &        &          &                    \\
-%        ANN{}                &        &         &          &          &         &       &          &        &          &                    \\
-%        ESSLTB{}             &        &         &          &          &         &       &          &        &          &                    \\
-%        BILD{}               &        &         &          &          &         &       &          &        &          &                    \\
-%       \hline
-% %
-%       \hline
-%       80-\(\Exp\)-\(\Exp\)  & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTP+FGI & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
-%       \hline                &
-%        ANN{}                &        &         &          &          &         &       &          &        &          &                    \\
-%        ESSLTA{}             &        &         &          &          &         &       &          &        &          &                    \\
-%        ESSLTB{}             &        &         &          &          &         &       &          &        &          &                    \\
-%        BILD{}               &        &         &          &          &         &       &          &        &          &                    \\
+      \toprule
+      90-\(\Unif\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
+      \midrule
+      \ql{0.99}              &  &  &  &          &  &  &    &   &    &              \\
+      \rl{0.99}              &  &  &  &          &  &  &    &   &    &              \\
+      \rl{1.00}              &  &  &  &          &  &  &    &   &    &              \\
+      \BILOne{}              &  &  &  &          &  &  &    &   &    &              \\
+      \BILTwo{}              &  &  &  &          &  &  &    &   &    &              \\
+      \BILThree{}            &  &  &  &          &  &  &    &   &    &              \\
+      \BILFour{}             &  &  &  &          &  &  &    &   &    &              \\
+      \bottomrule
     \end{tabular}
   \end{center}
-  \caption{\label{tbl:80} Results for a bottleneck utilisation of 80\%. }
+  \caption{\label{tbl:unif} Results with moderate variability in the system due to uniformly
+    distributed demand interarrival times. }
+\end{table}
+
+\begin{table}[tb]
+  \begin{center}
+    \begin{tabular}{crrrccccccc}
+      \toprule
+      70-\(\Exp\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
+      \midrule
+      \ql{0.99}              & 38776.300 & 133872.800 & 82673.600 &          & 255322.700 &1.340  & 2.558   & \tard{0.095}  &    &              \\
+      \rl{0.99}              & 37111.000 & 113425.600 & 98654.400 &          & 249191.000 &1.305  & 2.412   &  \tard{0.110} &    &              \\
+      \rl{1.00}              & 38755.000 & 156444.000 & 59718.400 &          & 254917.400 &1.339  & 2.679   &  \tard{0.068} &    &              \\
+      \BILOne{}              & 32159.900 & 0.000 & 514558.400 &          & 546718.300 & 1.202 & 1.693   &  \tard{0.552} &    &              \\
+      \BILTwo{}              & 32169.900 & 83391.200 & 106219.200 &          & 221780.300 & 1.202 &  2.143   &  \tard{0.114} &    &              \\
+      \BILThree{}            & 32239.800 & 247416.800 & 21382.400 &          & 301039.000 & 1.204 & 3.029   &  \tard{0.022} &    &              \\
+      \BILFour{}             & 32262.600 & 428865.200 & 5483.200 &          & 466611.000 & 1.204 & 4.007   & \tard{0.006}  &    &              \\
+      \bottomrule
+      \toprule
+      80-\(\Exp\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
+      \midrule
+      \ql{0.99}              &  &  &  &          &  &  &    &   &    &              \\
+      \rl{0.99}              &  &  &  &          &  &  &    &   &    &              \\
+      \rl{1.00}              &  &  &  &          &  &  &    &   &    &              \\
+      \BILOne{}               &  &  &  &          &  &  &    &   &    &              \\
+      \BILTwo{}               &  &  &  &          &  &  &    &   &    &              \\
+      \BILThree{}             &  &  &  &          &  &  &    &   &    &              \\
+      \BILFour{}             &  &  &  &          &  &  &    &   &    &              \\
+      \bottomrule
+      \toprule
+      90-\(\Exp\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
+      \midrule
+      \ql{0.99}              &  &  &  &          &  &  &    &   &    &              \\
+      \rl{0.99}              &  &  &  &          &  &  &    &   &    &              \\
+      \rl{1.00}              &  &  &  &          &  &  &    &   &    &              \\
+      \BILOne{}               &  &  &  &          &  &  &    &   &    &              \\
+      \BILTwo{}               &  &  &  &          &  &  &    &   &    &              \\
+      \BILThree{}             &  &  &  &          &  &  &    &   &    &              \\
+      \BILFour{}             &  &  &  &          &  &  &    &   &    &              \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+  \caption{\label{tbl:exp} Results with high variability in the system due to exponentially
+    distributed demand interarrival times. }
 \end{table}
 
 
