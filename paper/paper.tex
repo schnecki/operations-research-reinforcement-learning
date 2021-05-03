@@ -1368,49 +1368,21 @@ Table~\ref{tbl:params} presents an overview of the parameter setup. The paramete
 by~\cite{mnih2015human}, where for comparison reasons we also integrate n-Step learning, the
 experience replay memory adaptions and independent agents. \MS[t]{Discount factor in table?}
 
-% a discount factor of \(0.99\).
+  % a discount factor of \(0.99\).
+  %    demandUnif65_145            -- 90%   -- 6.
+  % -- demandUnif78_158 -- 80%   -- 3.
+  % -- demandUnif95_175  -- 70%   -- 1.
+  % -- demandExp105  -- 90%           -- 5.
+  % -- demandExp118  -- 80%          -- 4.
+  % -- demandExp135  -- 70%          -- 2.
 
-
-% \definecolor{lightgray}{rgb}{0.83, 0.83, 0.83}
-% \begin{table}[tb]
-%   \begin{center}
-%     \begin{tabular}{c|ccc|c|c||c}
-%       \hline
-%       70-\(\Exp\)-\(\Unif\) & WIPC & FGIC & BOC & FGIC+BOC & SUM & SFTT & SL(\%) \\
-%       \hline                &
-%        ESSLTA{}             &      &      &     &          &     &      &        \\
-%        ANN{}                &      &      &     &          &     &      &        \\
-%        ESSLTB{}             &      &      &     &          &     &      &        \\
-%        BILD{}               &      &      &     &          &     &      &        \\
-%       \hline                &
-% %
-%       \hline                &
-%       70-\(\Unif\)-\(\Exp\) & WIPC & FGIC & BOC & FGIC+BOC & SUM & SFTT & SL(\%) \\
-%       \hline                &
-%        ESSLTA{}             &      &      &     &          &     &      &        \\
-%        ANN{}                &      &      &     &          &     &      &        \\
-%        ESSLTB{}             &      &      &     &          &     &      &        \\
-%        BILD{}               &      &      &     &          &     &      &        \\
-%       \hline                &
-% %
-%       \hline                &
-%       70-\(\Exp\)-\(\Exp\)  & WIPC & FGIC & BOC & FGIC+BOC & SUM & SFTT & SL(\%) \\
-%       \hline                &
-%        ANN{}                &      &      &     &          &     &      &        \\
-%        ESSLTA{}             &      &      &     &          &     &      &        \\
-%        ESSLTB{}             &      &      &     &          &     &      &        \\
-%        BILD{}               &      &      &     &          &     &      &        \\
-%     \end{tabular}
-%   \end{center}
-%   \caption{\label{tbl:70} Results for a bottleneck utilisation of 70\%. }
-% \end{table}
 
 \MS[t]{Exp - Exp in simulation model?}
  \begin{table}[tb]
   \begin{center}
     \begin{tabular}{crrrccccccc}
       \toprule
-      70-\(\Unif\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
+      70-\(\Unif\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
       \midrule
       \ql{0.99}              & \cost{38776.300} & \cost{133872.800}  & \cost{82673.600 } &          & \cost{255322.700}  & \timem{1.340}  & \timem{2.558}   & \tard{0.095}  &    &              \\
       \rl{0.99}              & \cost{37111.000} & \cost{113425.600}  & \cost{98654.400 } &          & \cost{249191.000}  & \timem{1.305}  & \timem{2.412}   & \tard{0.110}  &    &              \\
@@ -1419,28 +1391,38 @@ experience replay memory adaptions and independent agents. \MS[t]{Discount facto
       \BILTwo{}              & \cost{32169.900} & \cost{ 83391.200}  & \cost{106219.200} &          & \cost{221780.300}  & \timem{1.202}  & \timem{2.143}   & \tard{0.114}  &    &              \\
       \BILThree{}            & \cost{32239.800} & \cost{247416.800}  & \cost{21382.400 } &          & \cost{301039.000}  & \timem{1.204}  & \timem{3.029}   & \tard{0.022}  &    & \\
       \BILFour{}             & \cost{32262.600} & \cost{428865.200}  & \cost{5483.200  } &          & \cost{466611.000}  & \timem{1.204}  & \timem{4.007}   & \tard{0.006}  &    &              \\
- \bottomrule
-      \toprule
-      80-\(\Unif\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
-      \midrule
-      \ql{0.99}              & \cost{62787.000} & \cost{181322.800} & \cost{119542.400} &          & \cost{363652.200} & \timem{1.674} & \timem{3.017}   & \tard{0.102}  &    &              \\
-      \ql{0.99}              &  &  &  &          &  &  &    &   &    &              \\
-      \rl{1.00}              &  &  &  &          &  &  &    &   &    &              \\
-      \BILOne{}               &  &  &  &          &  &  &    &   &    &              \\
-      \BILTwo{}               &  &  &  &          &  &  &    &   &    &              \\
-      \BILThree{}             &  &  &  &          &  &  &    &   &    &              \\
-      \BILFour{}             &  &  &  &          &  &  &    &   &    &              \\
       \bottomrule
-      \toprule
-      90-\(\Unif\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
-      \midrule
-      \ql{0.99}              &  &  &  &          &  &  &    &   &    &              \\
-      \rl{0.99}              &  &  &  &          &  &  &    &   &    &              \\
-      \rl{1.00}              &  &  &  &          &  &  &    &   &    &              \\
-      \BILOne{}              &  &  &  &          &  &  &    &   &    &              \\
-      \BILTwo{}              &  &  &  &          &  &  &    &   &    &              \\
-      \BILThree{}            &  &  &  &          &  &  &    &   &    &              \\
-      \BILFour{}             &  &  &  &          &  &  &    &   &    &              \\
+      % 70-\(\Unif\) & WIPC    & FGIC    & BOC     & FGIC+BOC & SUM     & SFTT     & FGIT & SL(\%)  & Cost.p.P & \(\avgrew^{\pol}\) \\
+      % \midrule
+      % \ql{0.99}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \rl{0.99}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \rl{1.00}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILOne{}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILTwo{}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILThree{} & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILFour{}  & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \bottomrule
+      % \toprule
+      % 80-\(\Unif\) & WIPC    & FGIC    & BOC     & FGIC+BOC & SUM     & SFTT     & FGIT & SL(\%)  & Cost.p.P & \(\avgrew^{\pol}\) \\
+      % \midrule
+      % \ql{0.99}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \rl{0.99}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \rl{1.00}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILOne{}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILTwo{}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILThree{} & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILFour{}  & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \bottomrule
+      % \toprule
+      % 90-\(\Unif\) & WIPC    & FGIC    & BOC     & FGIC+BOC & SUM     & SFTT     & FGIT & SL(\%)  & Cost.p.P & \(\avgrew^{\pol}\) \\
+      % \midrule
+      % \ql{0.99}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \rl{0.99}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \rl{1.00}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILOne{}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILTwo{}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILThree{} & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILFour{}  & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
       \bottomrule
     \end{tabular}
   \end{center}
@@ -1452,37 +1434,36 @@ experience replay memory adaptions and independent agents. \MS[t]{Discount facto
   \begin{center}
     \begin{tabular}{crrrccccccc}
       \toprule
-      70-\(\Exp\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
+      70-\(\Exp\) & WIPC    & FGIC    & BOC     & FGIC+BOC & SUM     & SFTT     & FGIT & SL(\%)  & Cost.p.P & \(\avgrew^{\pol}\) \\
       \midrule
-      \ql{0.99}              & \cost{38776.300} & \cost{133872.800} & \cost{82673.600 } &          & \cost{255322.700} & \timem{1.340} & \timem{2.558}   & \tard{0.095} &    &              \\
-      \rl{0.99}              & \cost{37111.000} & \cost{113425.600} & \cost{98654.400 } &          & \cost{249191.000} & \timem{1.305} & \timem{2.412}   & \tard{0.110} &    &              \\
-      \rl{1.00}              & \cost{38755.000} & \cost{156444.000} & \cost{59718.400 } &          & \cost{254917.400} & \timem{1.339} & \timem{2.679}   & \tard{0.068} &    &              \\
-      \BILOne{}              & \cost{32159.900} & \cost{0.000     } & \cost{514558.400} &          & \cost{546718.300} & \timem{1.202} & \timem{1.693}   & \tard{0.552} &    &              \\
-      \BILTwo{}              & \cost{32169.900} & \cost{83391.200 } & \cost{106219.200} &          & \cost{221780.300} & \timem{1.202} & \timem{2.143}   & \tard{0.114} &    &              \\
-      \BILThree{}            & \cost{32239.800} & \cost{247416.800} & \cost{21382.400 } &          & \cost{301039.000} & \timem{1.204} & \timem{3.029}   & \tard{0.022} &    &              \\
-      \BILFour{}             & \cost{32262.600} & \cost{428865.200} & \cost{5483.200  } &          & \cost{466611.000} & \timem{1.204} & \timem{4.007}   & \tard{0.006} &    &              \\
+      \ql{0.99}   & \cost{53873.500} & \cost{142398.800} & \cost{164427.200} & \fgiboc{142398.800}{164427.200}  & \cost{360699.500} & \timem{1.585} & \fgit{1.585}{2.796}  & \tard{0.162} & \costpp{360699.500} & \\
+      \rl{0.99}   & \cost{61419.850} & \cost{181702.200} & \cost{115287.200} & \fgiboc{181702.200}{115287.200}  & \cost{358409.250} & \timem{1.734} & \fgit{1.734}{3.145}  & \tard{0.107} & \costpp{358409.250} & \rnd{50.787} \\
+      \rl{1.00}   & \cost{56578.800} & \cost{199310.000} & \cost{115714.400} & \fgiboc{199310.000}{115714.400}  & \cost{371603.200} & \timem{1.639} & \fgit{1.639}{3.136}  & \tard{0.113} & \costpp{371603.200} & \rnd{50.575} \\
+      \BILOne{}   & \cost{48547.100} & \cost{     0.000} & \cost{776753.600} & \fgiboc{     0.000}{776753.600}  & \cost{825300.700} & \timem{1.479} & \fgit{1.479}{1.975}  & \tard{0.663} & \costpp{825300.700} & \\
+      \BILTwo{}   & \cost{48618.850} & \cost{ 66927.200} & \cost{248638.400} & \fgiboc{ 66927.200}{248638.400}  & \cost{364184.450} & \timem{1.480} & \fgit{1.480}{2.312}  & \tard{0.220} & \costpp{364184.450} & \\
+      \BILThree{} & \cost{48632.050} & \cost{222603.200} & \cost{ 74568.800} & \fgiboc{222603.200}{ 74568.800}  & \cost{345804.050} & \timem{1.481} & \fgit{1.481}{3.094}  & \tard{0.063} & \costpp{345804.050} & \\
+      \BILFour{}  & \cost{48514.200} & \cost{409531.200} & \cost{ 23406.400} & \fgiboc{409531.200}{ 23406.400}  & \cost{481451.800} & \timem{1.478} & \fgit{1.478}{4.029}  & \tard{0.019} & \costpp{481451.800} & \\
       \bottomrule
       \toprule
-      80-\(\Exp\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
+      80-\(\Exp\) & WIPC    & FGIC    & BOC     & FGIC+BOC & SUM     & SFTT     & FGIT & SL(\%)  & Cost.p.P & \(\avgrew^{\pol}\) \\
       \midrule
-      \ql{0.99}              &  &  &  &          &  &  &    &   &    &              \\
-      \rl{0.99}              &  &  &  &          &  &  &    &   &    &              \\
-      \rl{1.00}              &  &  &  &          &  &  &    &   &    &              \\
-      \BILOne{}               &  &  &  &          &  &  &    &   &    &              \\
-      \BILTwo{}               &  &  &  &          &  &  &    &   &    &              \\
-      \BILThree{}             &  &  &  &          &  &  &    &   &    &              \\
-      \BILFour{}             &  &  &  &          &  &  &    &   &    &              \\
-      \bottomrule
-      \toprule
-      90-\(\Exp\)   & WIPC   & FGIC    & BOC      & FGIC+BOC & SUM     & SFTT  & SFTT+FGIT & SL(\%) & Cost.p.P & \(\avgrew^{\pol}\) \\
-      \midrule
-      \ql{0.99}              &  &  &  &          &  &  &    &   &    &              \\
-      \rl{0.99}              &  &  &  &          &  &  &    &   &    &              \\
-      \rl{1.00}              &  &  &  &          &  &  &    &   &    &              \\
-      \BILOne{}               &  &  &  &          &  &  &    &   &    &              \\
-      \BILTwo{}               &  &  &  &          &  &  &    &   &    &              \\
-      \BILThree{}             &  &  &  &          &  &  &    &   &    &              \\
-      \BILFour{}             &  &  &  &          &  &  &    &   &    &              \\
+      \ql{0.99}   & \cost{87706.700} & \cost{227485.400} & \cost{225150.400} & \cost{}  & \cost{540342.500} & \timem{2.043} & \fgit{2.043}{3.541}  & \tard{0.166} & \costpp{540342.500} & \\
+      \rl{0.99}   & \cost{89838.950} & \cost{253476.000} & \cost{185687.200} & \cost{}  & \cost{529002.150} & \timem{2.078} & \fgit{2.078}{3.689}  & \tard{0.124} & \costpp{529002.150} & \rnd{70.527} \\
+      \rl{1.00}   & \cost{87171.500} & \cost{242915.600} & \cost{198456.000} & \cost{}  & \cost{528543.100} & \timem{2.034} & \fgit{2.034}{3.599} & \tard{0.134} & \costpp{528543.100} & \rnd{72.944} \\
+      \BILOne{}   & \cost{78731.850} & \cost{    0.000} & \cost{1259709.600} & \cost{}  & \cost{1338441.450} & \timem{1.884} & \fgit{1.884}{2.382}  & \tard{0.771} & \costpp{1338441.450} &                   \\
+      \BILTwo{}   & \cost{78203.150} & \cost{52303.200} & \cost{548736.000} & \cost{}  & \cost{679242.350} & \timem{1.875} & \fgit{1.875}{2.602}  & \tard{0.350} & \costpp{679242.350} &                    \\
+      \BILThree{} & \cost{79029.850} & \cost{200273.200} & \cost{242100.800} & \cost{}  & \cost{521403.850} & \timem{1.890} & \fgit{1.890}{3.265}  & \tard{0.142} & \costpp{521403.850} &                    \\
+      \BILFour{}  & \cost{79384.750} & \cost{395493.000} & \cost{116943.200} & \cost{}  & \cost{591820.950} & \timem{1.896} & \fgit{1.896}{4.128}  & \tard{0.062} & \costpp{591820.950} &                    \\
+      \bottomrule      % \toprule
+      % 90-\(\Exp\) & WIPC    & FGIC    & BOC     & FGIC+BOC & SUM     & SFTT     & FGIT & SL(\%)  & Cost.p.P & \(\avgrew^{\pol}\) \\
+      % \midrule
+      % \ql{0.99}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \rl{0.99}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \rl{1.00}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILOne{}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILTwo{}   & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILThree{} & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
+      % \BILFour{}  & \cost{} & \cost{} & \cost{} & \cost{}  & \cost{} & \timem{} & \timem{}  & \tard{} &          &                    \\
       \bottomrule
     \end{tabular}
   \end{center}

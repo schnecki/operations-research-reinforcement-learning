@@ -122,10 +122,13 @@
 
 \usepackage{xfp}
 \usepackage[autolanguage]{numprint}
-\newcommand{\fixdec}[1]{\nprounddigits{2}{\numprint{#1}}}
-\newcommand{\cost}[1]{\fixdec{\fpeval{#1 / 1000}}}
-\newcommand{\timem}[1]{\fixdec{#1}}
+\newcommand{\rnd}[1]{\nprounddigits{2}{\numprint{#1}}}
+\newcommand{\cost}[1]{\ifx#1\empty \else \rnd{\fpeval{#1 / 1000}} \fi}
+\newcommand{\timem}[1]{\rnd{#1}}
+\newcommand{\fgit}[2]{\rnd{\fpeval{#2 - #1}}}
 \newcommand{\tard}[1]{\nprounddigits{1}{\numprint{\fpeval{100 * (1 - #1)}}}}
+\newcommand{\costpp}[1]{\rnd{\fpeval{#1 / 7000}}}
+\newcommand{\fgiboc}[2]{\rnd{\fpeval{(#1 + #2) / 1000}}}
 
 
 %%% Local Variables:
