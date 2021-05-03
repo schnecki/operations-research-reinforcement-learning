@@ -121,4 +121,14 @@
 
 
 \usepackage{xfp}
-\newcommand{\tard}[1]{\fpeval{1 - #1}}
+\usepackage[autolanguage]{numprint}
+\newcommand{\fixdec}[1]{\nprounddigits{2}{\numprint{#1}}}
+\newcommand{\cost}[1]{\fixdec{\fpeval{#1 / 1000}}}
+\newcommand{\timem}[1]{\fixdec{#1}}
+\newcommand{\tard}[1]{\nprounddigits{1}{\numprint{\fpeval{100 * (1 - #1)}}}}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: paper.tex
+%%% End:
