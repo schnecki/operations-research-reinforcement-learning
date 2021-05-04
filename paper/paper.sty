@@ -34,7 +34,8 @@
 % Results
 
 \newcommand{\rl}[1]{\(\mathsf{\ARA}_{#1}\)}
-\newcommand{\ql}[1]{\(\mathsf{Q-RL}_{#1}\)}
+\newcommand{\ql}[1]{\(\mathsf{QL}_{#1}\)}
+\newcommand{\qls}[1]{\(\mathsf{QL}_{#1}\)}
 
 % Algorithmic
 \algnewcommand\algorithmicforeach{\textbf{for each}}
@@ -49,7 +50,7 @@
 \newcommand*{\Tanh}{\mathsf{Tanh}}
 \newcommand*{\leakyTanh}{\mathsf{Tanh}_{\mathsf{leaky}}}
 
-\newcommand*{\ARA}{ARA-DiRL}
+\newcommand*{\ARA}{ARAL}
 \newcommand*{\X}{X}
 \newcommand*{\movavgrew}{\overline{\avgrew}}
 \newcommand*{\pexp}{p_{\mathsf{expl}}}
@@ -123,7 +124,7 @@
 \usepackage{xfp}
 \usepackage[autolanguage]{numprint}
 \newcommand{\rnd}[1]{\nprounddigits{2}{\numprint{#1}}}
-\newcommand{\cost}[1]{\ifx#1\empty \else \rnd{\fpeval{#1 / 1000}} \fi}
+\newcommand{\cost}[1]{\rnd{\fpeval{#1 / 1000}}}
 \newcommand{\timem}[1]{\rnd{#1}}
 \newcommand{\fgit}[2]{\rnd{\fpeval{#2 - #1}}}
 \newcommand{\tard}[1]{\nprounddigits{1}{\numprint{\fpeval{100 * (1 - #1)}}}}
