@@ -1552,36 +1552,56 @@ P_20   546210	609227	572384	1485851	734806	671281	644336
 \end{comment}
 
 
-\paragraph{Medium Variability.} The results for medium variability in the system are presented in
-Table~\ref{tbl:unif}, where a uniform demand interarrival time is used. We use the tuples
-\(70-\Unif\), \(80-\Unif\), and \(90-\Unif\) to indicate the experimental setup of using uniform
-demand interarrival times with a aimed bottleneck utilisation of \(70\%\), \(80\%\), or \(90\%\)
-respectively. The results state the accumulated costs, averaged over all replications, for the work
-in process (WIPC), the finished goods inventory (FGIC), the backorder costs (BOC), as well as the
-sum of the finished good inventory and backorder costs (\fgibocName{}) and the sum over all three cost
-centers (SUM). For a better insight in the timing performance we also provide the average shopfloor
-throughput time (SFTT), i.e.\@ the average time an order spends in the system after being released
-and until reaching the finished goods inventory, the finished goods inventory time (FGIT), as well
-as the service level (SL). The later is given in percentage and states the percentage of orders that
-were produced on time. Finally, the actual measured costs per period (Cost.p.P) and the by the
-algorithm learned average reward \(\avgrew\) are stated. The tested methods are the deep Q-Learning
-algorithm with discount factor \(0.99\) (\qlt{0.99}), the \ARA{} algorithm with discount factors
-\(0.99\) (\rlt{0.99}) and \(1.00\) (\rlt{1.00}), as well as the backward infinite loading
-technique \BIL{} with fixed lead times between \(1\) and \(4\) as indicated by the number
-($\BILOne$-$\BILFour$).
+\paragraph{Medium Demand Variability.} The results for medium variability in the system are
+presented in Table~\ref{tbl:unif}, where a uniform demand interarrival time is used. We use the
+tuples 70-\(\Unif\), 80-\(\Unif\), and 90-\(\Unif\) to indicate the experimental setup of using
+uniform demand interarrival times with a aimed bottleneck utilisation of \(70\%\), \(80\%\), or
+\(90\%\) respectively. The results state the accumulated costs, averaged over all replications, for
+the work in process (WIPC), the finished goods inventory (FGIC), the backorder costs (BOC), as well
+as the sum of the finished good inventory and backorder costs (\fgibocName{}) and the sum over all
+three cost centers (SUM). To ease readability all costs are given in \(1000\)~Dollars. For a better
+insight in the timing performance we also provide the average shopfloor throughput time (SFTT),
+i.e.\@ the average time an order spends in the system after being released and until reaching the
+finished goods inventory, the finished goods inventory time (FGIT), as well as the service level
+(SL). The later is given in percentage and states the percentage of orders that were produced on
+time. Finally, the actual measured costs per period (Cost.p.P) and the by the algorithm learned
+average reward \(\avgrew\) are stated. The tested methods are the deep Q-Learning algorithm with
+discount factor \(0.99\) (\qlt{0.99}), the \ARA{} algorithm with discount factors \(0.99\)
+(\rlt{0.99}) and \(1.00\) (\rlt{1.00}), as well as the backward infinite loading technique \BIL{}
+with fixed lead times between \(1\) and \(4\) as indicated by the number ($\BILOne$-$\BILFour$).
 
 
-For the case of medium variability with a utilisation of \(70\%\) (\(70-\Unif\)) we can see that
-\(\BILTwo\) performs best in the sense of accumulated costs. The reinforcement learning algorithm
-follow, where \rlt{0.99} is significantly better then the other two variants. The other \BIL{}
-variants accumulate much more costs. For the timing one can see that \rlt{1.00} performs very good
-with a service level of \(93.2\%\). Furthermore, the learned average reward \(\avgrew\) and actual
-average reward are very similar for both \ARA{} variants. However, with \(70\%\) of utilisation the
-overhead of the reinforcement learning variants are too big to be able to compete with the simple
-rule based release mechanism of \(\BILTwo{}\) as for changing workload the utilisation changes
-rather linearly due to the low variability in the system.
+For the case of medium variability with a utilisation of \(70\%\) 70-(\(\Unif\)) we can see that
+\(\BILTwo\) performs best in the sense of accumulated costs (\(220.53\)). The reinforcement learning
+algorithm follow, where \rlt{0.99} is slightly but significantly better then the other two variants
+(\(250.70\), \(254.97\), \(255.06\)). The other \BIL{} variants accumulate much more costs. For the
+timing one can see that \rlt{1.00} performs very good with a service level of \(93.2\%\).
+Furthermore, the learned average reward \(\avgrew\) and actual average reward are very similar for
+both \ARA{} variants. However, with \(70\%\) of utilisation the overhead of the reinforcement
+learning variants are too big to be able to compete with the simple rule based release mechanism of
+\BILTwo{} as for changing workload the utilisation changes rather linearly due to the low
+variability in the system.
 
-In the case of \(80-\Unif\)
+In the case of 80-\(\Unif\) the deep Q-Learning variant \qlt{0.99} performs best in the cost related
+measures (\(365.03\) for SUM), followed by \BILThree{} (\(369.97\)) and \rlt{1.00} (\(370.99\)),
+which are not significantly different from each other. One can see the \BILTwo{} (\(377.27\))
+performs slightly worse than \rlt{1.00} and is followed by \rlt{0.99} (\(382.39\)). Again \rlt{1.00}
+achieves a very high service level of \(93.4\%\) with reasonable sum of cost, which is also
+reflected in the low Backorder costs. Furthermore, the measured and learned average reward values
+are quite close. Thus, the results already provide the insight that \ARA{} performs quite well in
+terms of timing for the completion of orders. This pays off when confronted with higher
+probabilistic systems.
+
+For instance, with \(90\%\) utilisation and medium variable demand stream, i.e.\@ 90-(\(\Unif\)), we
+can see that \rlt{0.99} performs best (\(576.48\)), followed by \qlt{0.99} (\(586.92\)) and
+\BILThree{} (\(595.35\)), as well as \rlt{1.00} (\(602.54\)), where the later two are not
+significantly different. In this case \rlt{0.99} also achieves the best service level of \(87.9\%\)
+within this group of best performing algorithms. The WIPC costs, as well as the SFTT, show that the
+reinforcement learning agents have a higher work-in-process, which is clear as they try to smooth
+the workload of demand stream. When looking at the timing cost it becomes even more apparent that
+the agents perform well in timing as \rlt{0.99} performs much better (\(471.13\)) than the other two
+agents (\(488.01\), \(494.66\)) and all the \BIL{} techniques accumulated more \fgibocName{} costs
+(\(507.10\) for the best performing \BIL{}, \BILThree{}).
 
 
 \begin{table}[tb]
@@ -1720,6 +1740,19 @@ P_20   1140217	1083654	879642	2504899	1529858	1170016	1056301
 \end{comment}
 
 
+\paragraph{High Demand Variability.} For results of the experiments using exponential demand
+interarrival times, presented in Table~\ref{tbl:exp} we can see a similar pattern as before. In this
+case we use the tuples 70-\(\Exp\), 80-\(\Exp\), and 90-\(\Exp\) to indicate the corresponding
+experimental setups.
+
+For \(70\%\) utilization of the bottleneck, i.e. 80-\(\Exp\), \BILThree{} performs best with costs
+of \(345.80\), followed by \rlt{0.99} with \(358.41\), and then by \qlt{0.99} and \BILTwo{}
+(\(360.70\), \(364.18\)). In terms of timing performance, again \ARA{} outperforms the opponents
+with \fgibocName{} costs of \(296.99\), and \BILThree{} with the second highest costs (\(297.17\)).
+However, the service level of \BILThree{} is higher with \(93.7\%\) due to the lower shop floor
+throughput time (SFTT, \(1.48\) for \BILThree{} versus \(1.73\) for \rlt{0.99}).
+
+
 % Table~\ref{tbl:res} shows the results, where we evaluate the average reward and discounted
 % reinforcement learning algorithm by providing either direct reward feedback, that is the reward
 % accumulated in the next period, without keeping track of any orders, as \(\ActShipped\) and
@@ -1796,6 +1829,8 @@ P_20   1140217	1083654	879642	2504899	1529858	1170016	1056301
 
 \MS[t]{Multiple agents on different tasks (hierarchical PP): e.g. Order acceptance + release,
   scheduling + release, etc.}
+
+\MS[t]{Job shop}
 
 % This paper introduces deep theoretical insights in reinfocement learning and provides first evidence
 % that average reward reinfocement learning is better applicable to operations research problems than
