@@ -129,10 +129,10 @@ pdfkeywords={average reward adjusted reinforcement learning, production planning
 \end{abstract}
 
 
-\MS[t]{ideas: Similar Selçuk (2013) detect that a high update frequency has a negative effect and
-  thus should be reduced. They conclude that the lead times ought to control the WIP level, instead
-  of the due date reliability as changes are directly seen (Knollmann and Windt, 2013). For a review
-  of analytical works in the context of the LTS see Bendul and Knollmann (2016).}
+% \MS[t]{ideas: Similar Selçuk (2013) detect that a high update frequency has a negative effect and
+%   thus should be reduced. They conclude that the lead times ought to control the WIP level, instead
+%   of the due date reliability as changes are directly seen (Knollmann and Windt, 2013). For a review
+%   of analytical works in the context of the LTS see Bendul and Knollmann (2016).}
 
 
 \section{Introduction}\label{sec:introduction}
@@ -1388,7 +1388,25 @@ periods of warm-up and \(7000\) periods of evaluation phase. Welch’s procedure
 approximate the length of the warm-up period (see~\cite{law:simulationc}).
 
 \paragraph{Medium Variability.} The results for medium variability in the system are presented in
-Table~\ref{tbl:unif}, where a uniform demand interarrival time is used.
+Table~\ref{tbl:unif}, where a uniform demand interarrival time is used. We use the tuples
+\(70-\Unif\), \(80-\Unif\), and \(90-\Unif\) to indicate the experimental setup of using uniform
+demand interarrival times with a aimed bottleneck utilisation of \(70\%\), \(80\%\), or \(90\%\)
+respectively. The results state the accumulated costs, averaged over all replications, for the work
+in process (WIPC), the finished goods inventory (FGIC), the backorder costs (BOC), as well as the
+sum of the finished good inventory and backorder costs (FGIC+BOC) and the sum over all three cost
+centers (SUM). For a better insight in the timing performance we also provide the average shopfloor
+throughput time (SFTT), i.e.\@ the average time an order spends in the system after being released
+and until reaching the finished goods inventory, the finished goods inventory time (FGIT), as well
+as the service level (SL). The later is given in percentage and states the percentage of orders that
+were produced on time. Finally, the actual measured costs per period (Cost.p.P) and the by the
+algorithm learned average reward \(\avgrew\) are stated. The tested methods are the deep Q-Learning
+algorithm with discount factor \(0.99\) (\(\ql{0.99}\)), the \ARA{} algorithm with discount factors
+\(0.99\) (\(\rl{0.99}\)) and \(1.00\) (\(\rl{1.00}\)), as well as the backward infinite loading
+technique \BIL{} with fixed lead times between \(1\) and \(4\) as indicated by the number
+($\BILOne$-$\BILFour$).
+
+
+For the case of medium variability with a utilisation of \(70\%\) we can see that
 
 
   % a discount factor of \(0.99\).
@@ -1398,9 +1416,6 @@ Table~\ref{tbl:unif}, where a uniform demand interarrival time is used.
   % -- demandExp105  -- 90%           -- 5.
   % -- demandExp118  -- 80%          -- 4.
   % -- demandExp135  -- 70%          -- 2.
-
-
-\MS[t]{Exp - Exp in simulation model?}
  \begin{table}[tb]
   \begin{center}
     \begin{tabular}{crrrccccccc}
@@ -1452,7 +1467,7 @@ Table~\ref{tbl:unif}, where a uniform demand interarrival time is used.
     \end{tabular}
   \end{center}
   \caption{\label{tbl:unif} Results with moderate variability in the system due to uniformly
-    distributed demand interarrival times.\newline \(^{1,2}\) Costs marked with the same number are
+    distributed demand interarrival times. \(^{1,2}\) Costs marked with the same number are
     not sign.\@ different to each other.}
 \end{table}
 
@@ -1598,7 +1613,7 @@ P_20   546210	609227	572384	1485851	734806	671281	644336
     \end{tabular}
   \end{center}
   \caption{\label{tbl:exp} Results with high variability in the system due to exponentially
-    distributed interarrival times of the demand.\newline \(^{1,2,3}\) Costs with the same number are
+    distributed interarrival times of the demand. \(^{1,2,3}\) Costs with the same number are
     not significant different to each other. }
 \end{table}
 
