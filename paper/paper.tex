@@ -908,12 +908,12 @@ first occurrence of orders in the order pool and the latest possible release of 
 have a clear cause and effect relationship between the order release decision and the cost
 performance in the analysis.
 %
-To simulate moderate, medium and high variability of the demand process the interarrival time
-between consecutive incoming orders is either drawn from an exponential ($\Exp$) or an uniform
-($\Unif$) distribution, which are adjusted to yield the desired bottleneck utilisation level of
-either $70\%$ with $\Exp(135)$ and $\Unif(95,175)$, $80\%$ with $\Exp(118)$ and $\Unif(78,158)$, or
-$90\%$ with $\Exp(105)$ and $\Unif(65,145)$. These values were chosen as they comprise the
-non-linear relationship between flow times and high utilisation levels.
+To simulate medium and high variability of the demand process the interarrival time between
+consecutive incoming orders is either drawn from an exponential ($\Exp$) or an uniform ($\Unif$)
+distribution, which are adjusted to yield the desired bottleneck utilisation level of either $70\%$
+with $\Exp(135)$ and $\Unif(95,175)$, $80\%$ with $\Exp(118)$ and $\Unif(78,158)$, or $90\%$ with
+$\Exp(105)$ and $\Unif(65,145)$. These values were chosen as they comprise the non-linear
+relationship between flow times and high utilisation levels.
 
 \paragraph{Order Release.}
 %
@@ -1259,7 +1259,7 @@ number of output nodes \(\annout\), which itself depends on the number of action
 \(\acts = \size{\States}\), the independent agent configuration, and the number of functions that
 are approximated. For the later, in case of \ARA{} this is \(2\), as we represent both functions
 \(\X^\pol_{\gamma_{0}}\) and \(\X^\pol_{\gamma_{1}}\) with the same neural network, while deep
-Q-Learning only approximates the function \(Q_{\gamma}^\pol\).
+Q-Learning \citep[cf.][]{mnih2015human} only approximates the function \(Q_{\gamma}^\pol\).
 %
 The resulting feedforward deep ANN architecture is given as %
 \(\anninp %
@@ -1276,9 +1276,8 @@ that we explicitly do not use an output activation function. The idea is that we
 restrict the approximations to values inside this range. This is especially important for
 Q-Learning, as the range of the state values are difficult to forecast.
 %
-The actual values \(\anninp\) and \(\annout\) depend on the used algorithm. In our case case using 6
-independent agents we gain \(\anninp=324\) and \(\annout=36\). For the Q-Learning algorithm, which
-only approximates one function, the output nodes \(\annout\) are halved.
+The actual values \(\anninp\) and \(\annout\) depend on the used algorithm. In our case using 6
+independent agents we gain \(\anninp=324\) and \(\annout=36\).
 %
 % SpecFullyConnected 324 567 :=> SpecLeakyRelu (567,1,1) :=> SpecFullyConnected 567 486 :=>
 % SpecLeakyRelu (486,1,1) :=> SpecFullyConnected 486 36 :=> SpecReshape (36,1,1) (18,2,1) :=>
@@ -1313,8 +1312,17 @@ number of nodes in layer \(l\).
 %
 
 
-\subsection{Deep Q-Learning}
-\MS[t]{explain here, alg in appendix?}
+\subsection{Deep Q-Learning Algorithm}
+
+Furthermore, we adapt the deep Q-Learning algorithm of \citet{mnih2015human} with integrated
+extensions as described above, i.e.\@ the adaptions to n-step learning, multiple workers,
+independent agents, scaling of the output, smoothly adapting the target network. The resulting
+Algorithm~\ref{alg:ql} is provided in the Appendix.
+
+To ensure comparability we use the same neural network setup as for \ARA{}, except that we halve the
+number of output nodes, as the Q-Learning algorithm only approximates one state-action value
+function. Therefore the output nodes \(\annout\) are \(18\), while the input nodes \(\anninp=324\)
+stay the same.
 
 
 \section{Computational Experiments}
@@ -1346,13 +1354,12 @@ established algorithm compared to the conventional static lead time setting algo
     Minimum value                  & \(5^{-5}\) &              &              & 0.001    &            & 0.005     &           \\
     \bottomrule
     \toprule
-    Parameter                      & \multicolumn{7}{c}{Value}                                                                                  \\
+    Configuration                  & \multicolumn{7}{c}{Value}                                                                                  \\
     \midrule
-    Workers Min. Exploration       & \multicolumn{7}{c}{0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20}                                         \\
-    Training Batch Size            & \multicolumn{7}{c}{4}                                                                                      \\
+    Workers Min. Exploration       & \multicolumn{7}{c}{\(0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20\)}                                         \\
     Target Network Update          & \multicolumn{7}{c}{Exp. smooth. with rate \(\gamma\) every \(C=100\) steps}                                \\
-    N-Step                         & \multicolumn{7}{c}{5}                                                                                      \\
-    Training Mini-Batch Size       & \multicolumn{7}{c}{\(m = 4\)}                                                                              \\
+    N-Step                         & \multicolumn{7}{c}{\(5\)}                                                                                      \\
+    Training Mini-Batch Size       & \multicolumn{7}{c}{\(4\)}                                                                              \\
     Adam ANN Backpropagation       & \multicolumn{7}{c}{\(\alpha = 0.005, \beta_{1}=0.9, \beta_{2}=0.999, \epsilon=10^{-8}, \lambda=0.001\)}      \\ % OptAdam 0.005 0.9 0.999
 % 1e-8 1e-3,
         Replay Memory Size         & \multicolumn{7}{c}{\(10800\)}                                                                              \\
@@ -1362,11 +1369,27 @@ established algorithm compared to the conventional static lead time setting algo
 \end{table}
 %
 Table~\ref{tbl:params} presents an overview of the parameter setup. The parameters \(\alpha\),
-\(\gamma\) and \(p_{exp}\) are exponentially decayed as indicated.% \footnote{The decay is defined as
-  % \(0.05 ^{(t/350k)}\), where \(t\) is the current period}.
-\MS[t]{TODO} As further comparison we implement the deep Q-Learning algorithm proposed
-by~\cite{mnih2015human}, where for comparison reasons we also integrate n-Step learning, the
-experience replay memory adaptions and independent agents. \MS[t]{Discount factor in table?}
+\(\gamma\) and \(p_{exp}\) are exponentially decayed as indicated. Due to the vast possibilities we
+manually optimised the values. The methodology was to investigate the values on very small
+production system with just one machine and product due to the computational complexity of bigger
+sized problems. The resulting values were copied to the problem at hand and further manually
+optimised in pre-experimental runs. The actual used discount factors \(\gamma_{1}\) differ for each
+method and thus are further specified in the result tables.
+% \footnote{The decay is defined as \(0.05 ^{(t/350k)}\), where \(t\) is the current period}.
+In a similar approach we reached the configuration values, where a further increase of the values
+was hindered by the available computational resources.
+
+
+For the experimental runs we used personal computers with Intel CPUs i7-7700 (16GB RAM) and i9-7900X
+(32GB RAM). For each method we performed \(500.000\) learning steps, which took about \(2\)-\(3\)
+days. For the same experimental setup the inputs/random variables are the same for each period.
+After learning each order release method was evaluated on \(20\) demand streams, each with \(1000\)
+periods of warm-up and \(7000\) periods of evaluation phase. Welch’s procedure was applied to
+approximate the length of the warm-up period (see~\cite{law:simulationc}).
+
+\paragraph{Medium Variability.} The results for medium variability in the system are presented in
+Table~\ref{tbl:unif}, where a uniform demand interarrival time is used.
+
 
   % a discount factor of \(0.99\).
   %    demandUnif65_145            -- 90%   -- 6.
@@ -1382,6 +1405,7 @@ experience replay memory adaptions and independent agents. \MS[t]{Discount facto
   \begin{center}
     \begin{tabular}{crrrccccccc}
       % \toprule
+      % For 10 replications
       % 70-\(\Unif\) & WIPC              & FGIC              & BOC                & FGIC+BOC                        & SUM                & SFTT          & FGIT                & SL(\%)       & Cost.p.P             & \(\avgrew^{\pol}\) \\
       % \midrule
       % \ql{0.99}    & \cost{38776.300}  & \cost{133872.800} & \cost{82673.600 }  &                                 & \cost{255322.700}  & \timem{1.340} & \timem{2.558}       & \tard{0.095} &                      &                    \\
@@ -1775,8 +1799,8 @@ discounted reward.
 \begin{algorithm}[h!]
   \begin{algorithmic}[1]
     \State{}Initialise state \(s_{0}\) and network parameters \(\netTarget, \netWorker\) randomly,
-    set an exploration rate \(0 < \pexp \leqslant 1\), exponential smoothing learning rates
-    \(0 < \alpha_{\max}, \alpha, \gamma < 1\) and discount factor \(0 < < \gamma_{1} < 1\)
+    set exploration rate \(0 < \pexp \leqslant 1\), target network adaption rate
+    \(0 < \gamma \ll 1\) and discount factor \(0 < \gamma_{1} < 1\)
     \While{the stopping criterion is not fulfilled} \ForEach{independent agent
       \(i \in \agent_{1},\agent_{2},\ldots,\agent_{n}\)} \State{}%
     \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth-\leftmargin+2pt}
