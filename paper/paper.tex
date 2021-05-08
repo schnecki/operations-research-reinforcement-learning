@@ -709,11 +709,12 @@ without solving the first set of constraints defined by the error term addends
 \citep[see][p.346]{Puterman94,Mahadevan96_SensitiveDiscountOptimalityUnifyingDiscountedAndAverageRewardReinforcementLearning}.
 % We could overcome this issue by simply requiring \(\gamma\) to be strictly less than \(1\).
 %
-Our algorithm, based on the tabular version of \citet{schneckenreither2020average}, does not require
-the exact solution for \(V^{\pol}(s)\), but a solution which is offset suffices. Clearly this
-observation reduces the required iteration steps tremendously as finding the exact solution,
-especially for large discount factors, is tedious. Therefore, we allow to set \(\gamma = 1\), which
-induces \(\X_{\gamma}^{\pol}(s) = V^{\pol}(s) + u\), where \(u\) is for unichain MDPs a scalar value
+Our average reward adjusted learning algorithm (\ARA{}), based on the tabular version of
+\citet{schneckenreither2020average}, does not require the exact solution for \(V^{\pol}(s)\), but a
+solution which is offset suffices. Clearly this observation reduces the required iteration steps
+tremendously as finding the exact solution, especially for large discount factors, is tedious.
+Therefore, we allow to set \(\gamma = 1\), which induces
+\(\X_{\gamma}^{\pol}(s) = V^{\pol}(s) + u\), where \(u\) is for unichain MDPs a scalar value
 independent of \(s\), i.e.\@ equivalent for all states of the MDP~\cite[p.346]{Puterman94}.
 %
 %% Nonetheless, we require \(\gamma < 1\) to stabilise the process.
@@ -813,8 +814,8 @@ first action selection criteria selects the actions which maximise the bias valu
 error term.
 %
 Equation~\ref{eq:constr2} of the average reward RL constraints is used to estimate the average
-reward based on the \MS[t]{reformulate avg RL constraints using s' etc.?} currently inferred state
-values of two consecutive states and the returned reward. % As the average
+reward based on the currently inferred state values of two consecutive states and the returned
+reward. % As the average
 % reward is equal among all states estimating the average reward is based on many observations.
 This infers a solid average reward prediction of the current policy in few steps only and thus
 quickly leads to better policies, as ones with higher gain are preferred.
@@ -1597,7 +1598,7 @@ can see that \rlt{0.99} performs best (\(576.48\)), followed by \qlt{0.99} (\(58
 \BILThree{} (\(595.35\)), as well as \rlt{1.00} (\(602.54\)), where the later two are not
 significantly different. In this case \rlt{0.99} also achieves the best service level of \(87.9\%\)
 within this group of best performing algorithms. The WIPC costs, as well as the SFTT, show that the
-reinforcement learning agents have a higher work-in-process, which is clear as they try to smooth
+reinforcement learning agents have a higher work in process, which is clear as they try to smooth
 the workload of demand stream. When looking at the timing cost it becomes even more apparent that
 the agents perform well in timing as \rlt{0.99} performs much better (\(471.13\)) than the other two
 agents (\(488.01\), \(494.66\)) and all the \BIL{} techniques accumulated more \fgibocName{} costs
@@ -1750,63 +1751,47 @@ of \(345.80\), followed by \rlt{0.99} with \(358.41\), and then by \qlt{0.99} an
 (\(360.70\), \(364.18\)). In terms of timing performance, again \ARA{} outperforms the opponents
 with \fgibocName{} costs of \(296.99\), and \BILThree{} with the second highest costs (\(297.17\)).
 However, the service level of \BILThree{} is higher with \(93.7\%\) due to the lower shop floor
-throughput time (SFTT, \(1.48\) for \BILThree{} versus \(1.73\) for \rlt{0.99}).
+throughput time (SFTT, \(1.48\) periods for \BILThree{} versus \(1.73\) periods for \rlt{0.99}).
 
+In case of 80-\(\Exp\) \BILThree{} performs best with costs of \(521.40\), but is not significantly
+better than \rlt{1.00} with \(528.54\). Also \rlt{0.99} performs quite well (\(529.00\)). The
+service level of all three algorithm are good, but the order is reversed: \rlt{0.99} with
+\(87.6\%\), \rlt{1.00} with \(86.6\%\) and \BILThree{} with \(85.8\%\). Again the SFTT of the RL
+agents are slightly higher, i.e. \(0.13\)-\(0.20\) periods, than the ones of the \BIL{} release
+procedures. The other three \BIL{} methods, \BILOne{}, \BILTwo{} and \BILFour{}, are performing
+rather bad (\(1,338.44\), \(679.24\) and \(591.82\) respectively). Interesting to see is that in
+this scenario \rlt{0.99} and \rlt{1.00} handle the due date performance better than \qlt{0.99}, as
+can be seen in the backorder costs (BOC). Here the former two accumulate costs of \(185.69\) and
+\(198.46\), while \qlt{0.99} faces costs of \(225.15\). This results in timing costs (\fgibocName{})
+of \(439.16\) for \rlt{0.99} and \(441.37\) for \rlt{1.00}, which also means a better timing cost
+than \BILThree{} with \(442.37\). For this scenario the actual measured average reward (average
+costs) of about \(75.5\) for both \ARA{} variants and learned average rewards of \(70.53\) for
+\rlt{0.99} and \(72.94\) for \rlt{1.00} are a little bit offset. This probably results from the
+higher variability in the system.
 
-% Table~\ref{tbl:res} shows the results, where we evaluate the average reward and discounted
-% reinforcement learning algorithm by providing either direct reward feedback, that is the reward
-% accumulated in the next period, without keeping track of any orders, as \(\ActShipped\) and
-% \(\ActShippedDQN\) respectively. Further both algorithms are evaluated with keeping track of the
-% order pool orders, such that each action is responsible for all orders in the order pool. These are
-% labelled \(\ActOrdPool\) and \(\ActOrdPoolDQN\). For comparisons reasons we provide
-% \(\BILOne-\BILSix\) and immediate release (interval release).
+Finally, for the case of 90-\(\Exp\) \rlt{1.00} performs much better than the other variants with
+cots of \(986.32\). It is followed by \rlt{0.99} with costs of \(1,072.06\) and rather far, but not
+significantly, afterwards follows \BILFour{} (\(1,104.29\)). As before the shopfloor throughput time
+(SFTT) is higher for the RL variants, and with that of course also the work in process costs (WIPC).
+The backorder costs of \rlt{1.00} (\(539.80\)) are the lowest of all tested methods. Like for the
+overall costs also in terms of timing costs (\fgibocName{}) \rlt{1.00} performs best (\(825.87\)),
+followed by \rlt{0.99} (\(914.03\)) and \BILFour{} (\(957.21\)).
+%
+\BILThree{} and \ql{0.99} perform quite similar in the sense of accumulated costs, \(1,175.88\) and
+\(1,179.46\) respectively. But the other measures show that \ql{0.99} has a better timing
+performance, thus also a slightly high service level with \(71.5\%\) as compared to \BILThree{} with
+\(70.6\%\). The best service level is achieved by \BILFour{} with \(82.5\%\), before \rlt{1.00}
+\(79.6\%\), but with a high cost as the difference of SUM is \(117.97\).
+%
+Interesting to see is that the measured average reward and the learned average reward are very
+different for both \ARA{} variants (about \(30\)-\(40\)). This is probably due to the very high
+variability in the system, but might also be an indicator that the agents need more time for
+learning. However, due to the high computational complexity we encountered we leave this to future
+work.
 
-% The results show that at the current time we are facing issues with scaling the algorithm to the
-% order release problem. Likely this is due to parameterisation issues, which we are investigating
-% currently. However, it can be seen that i) the technique of keeping track of the order pool orders
-% leads to better policies and ii) that despite the parameterisation issues average reward
-% reinforcement learning finds better solutions than its discounted counterpart. However, the least
-% costs are generated by \(\BILThree\), which shows that there is room for improvement for the
-% reinforcement learning policies.
-
-% Interesting is also to see, that all reinforcement learning variants are releasing rather late,
-% leading to low finished goods inventory costs (FGIC), but high backorder costs (BOC). Furthermore,
-% the agents based on the order-pool orders, namely \(\ActOrdPool\) and \(\ActOrdPoolDQN\), are able
-% achieve lower work-in-process costs (WIPC) and also lower tardiness, than the other the agents
-% rewarded directly on the shipped orders.
-
-
-% \begin{table}[t!]
-%   \centering
-%   \def\arraystretch{1.2}          %  1 is the default, change whatever you need
-%   \setlength\tabcolsep{4pt}
-%   \begin{tabular}{|l||c|c|c|c|c|c|c|c|c|}
-%     % BEGIN RECEIVE ORGTBL res2
-%     \hline
-%     Algorithm/KPI & SUM & BOC & FGIC & WIPC & % \%SL &
-%                                                        TARD & \(\sigma\)TARD & SFTT\\
-%     \hline
-%     % Evaluation 1 & \multicolumn{11}{c|}{} \\
-%     \ActShipped    & 1777.74 & 1322.04 & 94.49 & 361.20       & 2.24 & 1.52 & 3.44\\
-%     \ActOrdPool    & 1593.03 & 1318.65 &14.01 &260.36         & 2.11 & 1.42 & 2.68\\
-%     \ActShippedDQN & 1940.62 & 1570.40 &6.30 &363.92          & 2.35 & 1.59 & 3.95 \\
-%     \ActOrdPoolDQN & 1618.88 & 1306.20 & 40.68& 272.00        & 2.08 & 1.38 & 2.58\\
-%     \BILOne        & 1736.98 & 1510.42  &  0.00  & 226.56     & 2.04 & 1.26 & 2.16 \\
-%     \BILTwo        & 1081.79 & 769.86 & 86.89   & 225.03      & 1.87 & 1.18 & 2.15\\
-%     \BILThree      &  \textbf{922.36} & 362.59 &  334.47  & 225.30     & 1.74 & 1.07 & 2.15\\
-%     \BILFour       & 1062.68 & 155.72  & 681.03   & 225.93    & 1.63 & 0.99 & 2.15\\
-%     \BILFive       & 1380.04 & 65.45  & 1088.94    & 225.64   & 1.67 & 1.02 & 2.15\\
-%     \BILSix        & 1777.77 & 25.04 &  1529.77  & 222.96     & 1.61 & 0.85 & 2.13\\
-%     \imre          & 2209.97 & 12.08 &1974.72 & 223.16        & 1.58 & 0.63 & 2.14 \\
-%     \hline
-%     % END RECEIVE ORGTBL res2
-%   \end{tabular}
-%         %         \egroup
-
-%   \caption{\label{tbl:res}Evaluation results where the monetary units are in \(k\)-values.}
-
-%         %         \end{figure}
-% \end{table}
+Overall we can see that the RL agents, and especially the established \ARA{} algorithm performs very
+well in systems with high variability. In case of the less variable systems the results reveal that
+there is still potential for the improvement of reinforcement learning variants.
 
 
 \section{Conclusion}
@@ -1823,6 +1808,19 @@ throughput time (SFTT, \(1.48\) for \BILThree{} versus \(1.73\) for \rlt{0.99}).
 % extensions~\cite[]{hessel2018rainbow}. We believe that instead of developing extensions to resolve
 % structurally fundamental problems a better approach is to aim for correct state value estimations,
 % which will consequently lead to better policies.\\
+
+This paper is one of the first papers that use reinforcement learning for setting lead times to
+release orders into the production system. We present a novel average reward adjusted reinforcement
+learning algorithm that uses an artificial neural network to approximate the state-action value
+functions. We add several extensions to this algorithm, including n-step learning, and a special
+experience replay memory that stores its experiences according to the actions takes to prevent
+catastrophic forgetting. Additionally we invent \textit{independent agents} to reduce the action
+space by independently choosing a subset of possible actions, while operating on the same state.
+Additionally we adapt the deep Q-Learning algorithm of \citet{mnih2015human} to be able to present a
+fair comparison between the algorithms, where we also use several backward infinite loading
+techniques.
+
+The results suggest that for high variablity the RL learning agents
 
 
 \MS[t]{It remains to be shown that independent agents find the same (or better) policies.}
