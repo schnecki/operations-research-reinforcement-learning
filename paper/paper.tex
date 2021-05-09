@@ -62,7 +62,7 @@
   \and Juanjo Peiró\inst{2}
 }
 \newcommand\thetitle{Average Reward Adjusted Deep Reinforcement Learning: Near-Blackwell-Optimal
-  Policies for Order Release}
+  Policies applied to the Order Release Problem}
 
 
 % \usepackage{academicons}
@@ -107,22 +107,26 @@ pdfkeywords={average reward adjusted reinforcement learning, production planning
 
 \begin{abstract}
   % teilw. von IJPR paper uebernommen
-  \MS[t]{proof-of-concept work}
   An essential task in manufacturing planning and control is to determine when to release orders to
   the shop floor. One key parameter is the lead time which is the planned time that elapses between
-  the release of an order and its completion. Lead times are normally determined based on the actual
-  duration orders previously took to traverse through the production system (flow times).
+  the release of an order and its completion. Lead times are usually determined based on the
+  measured duration orders take to traverse the production system, i.e.\@ the flow times.
   Traditional order release models assume static lead times, although it has been shown that they
-  should be set dynamically to react the dynamic operational characteristics of the system.
-  Therefore, we present an order release model which sets lead times dynamically by using an
-  reinforcement learning approach. Therefore, we provide an in-depth analysis of reinforcement
-  learning to show that average reward reinforcement learning is a better approach for operations
-  research applications as discounted reinforcement learning. Additionally we present an average
-  reward reinforcement learning algorithm which infers near-Blackwell-optimal policies. We use a
-  simulation model of a \MS[t]{todo}two-stage flow-shop to compare the algorithm
-  to % and show that our approach outperforms
-  well-known order release mechanisms. We show that in the current version our proposed model using
-  reinforcement learning outperforms some, but not all other tested approaches.
+  should be set dynamically to be able to react to the dynamic operational characteristics of
+  production system. Therefore, we present an order release model which sets lead times dynamically
+  by using an reinforcement learning approach. This algorithm is designed especially for
+  applications with high variability and periodic feedback to the agent. Therefore, this paper aims
+  at providing a proof-of-concept for the proposed algorithm. Therefore, we compare our method on a
+  three-stage flow-shop simulation model not only to static order release techniques, but also to
+  the commonly used deep Q-Learning algorithm. The results show that the both reinforcement learning
+  agents have room for improvement for queuing systems with low variability, that our proposed
+  method usually outperforms deep Q-Learning and finally for systems with high variability that the
+  proposed reinforcement learning algorithm performs very well.
+  %
+  % We use a  to compare the algorithm
+  % to % and show that our approach outperforms
+  % well-known order release mechanisms. We show that in the current version our proposed model using
+  % reinforcement learning outperforms some, but not all other tested approaches.
   % EVTL: especially for scenarios with...
   \keywords{operations research, production planning, order release, machine learning, reinforcement
     learning}
@@ -343,12 +347,13 @@ In summary, we propose a novel average reward adjusted reinforcement learning al
 orders for their release to the shop floor. This is the first average reward adjusted reward
 learning algorithm that operates using a artificial neural network as function approximation. To
 ensure scalability we adapt a multi-agent approach, where each agent optimises the lead time
-management of a single product type. The agents do so by assessesing the expected costs for the
+management of a single product type. The agents do so by assessing the expected costs for the
 possible releases imposed by adapting the lead time. According to the learned estimates each agent
 sets a planned lead time for the corresponding product type and with that releases orders into the
 production system. The highly optimised value-iteration algorithm uses improved n-step reinforcement
 learning with small action-based replay memories and worker agents to infer order release policies
-which outerperform \MS[t]{todo}.
+which, especially in case of high variability, outperform not only the static order release
+mechanisms, but also the commonly applied deep Q-Learning algorithm~\citep[cf.][]{mnih2015human}.
 
 %
 % \MS[t]{TODO} We provide ample evidence of the viability of the approach and compare it to well-known
@@ -359,10 +364,14 @@ which outerperform \MS[t]{todo}.
 % we are confident that decision support tools based on average reward reinforcement learning increase
 % the decision quality of human planners.
 
-\paragraph{Structure.} The rest of the paper is structured as follows. The next section introduced
-average reward reinforcement learning and presents the used algorithm (see also
-\citealt{schneckenreither2020average}). Section~\ref{sec:Experimental_Evaluation} describes the
-simulation model we use to evaluate the approach. \MS[t]{todo}
+\paragraph{Structure.} The rest of the paper is structured as follows. The next section introduces
+average reward reinforcement learning and presents the used algorithm. For a more comprehensive
+discussion of the theoretical foundations we refer to \citet{schneckenreither2020average}.
+Section~\ref{sec:Experimental_Evaluation} describes the simulation model we use to evaluate the
+approach. The results of the computation experiments are presented in
+Section~\ref{sec:Computational}, and Section~\ref{sec:conclusion} concludes the paper.
+
+% \MS[t]{todo}
 % Then~\ref{sec:Preliminary} presents preliminary
 % result data, whereas Section~\ref{sec:conclusion} concludes this working paper.
 
@@ -1327,7 +1336,7 @@ stay the same.
 
 
 \section{Computational Experiments}
-\label{sec:Preliminary}
+\label{sec:Computational}
 
 This section presents the experimental results and gives an overview of the performance of the
 established algorithm compared to the conventional static lead time setting algorithms.
@@ -1830,7 +1839,7 @@ Therefore, in the future we plan to develop \ARA{} further to a actor-critic sta
 reinforcement learning algorithm. We hypothesise that due to the more correct state value
 estimations of \ARA{} as compared to deep Q-Learning, cf. \citet{schneckenreither2020average}, the
 critic will provide a better feedback of the value function update to the actor. This should lead to
-better policies than with standard actor-critic algorithms, e.g. A3C~\ref{Mnih2016asynchronous}.
+better policies than with standard actor-critic algorithms, e.g. A3C~\citep{mnih2016asynchronous}.
 %
 Furthermore, one limitation of this proof-of-concept study is that due to the computational
 complexity we restricted our scope to flow-shop production systems only. In subsequent studies we
@@ -1869,7 +1878,7 @@ agents without this adaption.
 % parameterisation and resolving current issues when scaling average reinforcement learning to complex
 % scenarios.
 
-\MS[t]{todo}
+% \MS[t]{todo}
 
 \bibliographystyle{plainnat}
 \bibliography{references}
