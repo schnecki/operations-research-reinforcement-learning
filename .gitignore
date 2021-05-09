@@ -275,3 +275,18 @@ TSWLatexianTemp*
 # Makeindex log files
 *.lpz
 /paper/_region_.tex
+
+paper/aliascnt.sty
+paper/history.txt
+paper/llncs.cls
+paper/llncs.dem
+paper/llncs.doc
+paper/llncs.dvi
+paper/llncs.ind
+paper/llncsdoc.pdf
+paper/llncsdoc.sty
+paper/readme.txt
+paper/remreset.sty
+paper/splncs03.bst
+paper/sprmindx.sty
+paper/subjidx.ind
