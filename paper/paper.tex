@@ -118,7 +118,7 @@ pdfkeywords={average reward adjusted reinforcement learning, production planning
   applications with high variability and periodic feedback to the agent. Therefore, this paper aims
   at providing a proof-of-concept for the proposed algorithm. Therefore, we compare our method on a
   three-stage flow-shop simulation model not only to static order release techniques, but also to
-  the commonly used deep Q-Learning algorithm. The results show that the both reinforcement learning
+  the commonly used deep Q-Learning algorithm. The results show that both reinforcement learning
   agents have room for improvement for queuing systems with low variability, that our proposed
   method usually outperforms deep Q-Learning and finally for systems with high variability that the
   proposed reinforcement learning algorithm performs very well.
@@ -1267,9 +1267,10 @@ process we constantly adapted and reevaluated the best network on various produc
 configurations. The resulting architecture depends on the number of features \(\anninp\) and the
 number of output nodes \(\annout\), which itself depends on the number of actions
 \(\acts = \size{\States}\), the independent agent configuration, and the number of functions that
-are approximated. For the later, in case of \ARA{} this is \(2\), as we represent both functions
-\(\X^\pol_{\gamma_{0}}\) and \(\X^\pol_{\gamma_{1}}\) with the same neural network, while deep
-Q-Learning \citep[cf.][]{mnih2015human} only approximates the function \(Q_{\gamma}^\pol\).
+are approximated. For the later, in case of \ARA{} this is \(2\), as we represent both state-action
+value functions \(\X^\pol_{\gamma_{0}}\) and \(\X^\pol_{\gamma_{1}}\) with the same neural network,
+while deep Q-Learning \citep[cf.][]{mnih2015human} only approximates the function
+\(Q_{\gamma}^\pol\).
 %
 The resulting feedforward deep ANN architecture is given as %
 \(\anninp %
