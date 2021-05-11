@@ -115,12 +115,12 @@ pdfkeywords={average reward adjusted reinforcement learning, production planning
   should be set dynamically to be able to react to the dynamic operational characteristics of
   production system. Therefore, we present an order release model which sets lead times dynamically
   by using an reinforcement learning approach. This algorithm is designed especially for
-  applications with high variability and periodic feedback to the agent. Therefore, this paper aims
+  applications with high process variability and periodic feedback to the agent. Therefore, this paper aims
   at providing a proof-of-concept for the proposed algorithm. Therefore, we compare our method on a
   three-stage flow-shop simulation model not only to static order release techniques, but also to
   the commonly used deep Q-Learning algorithm. The results show that both reinforcement learning
   agents have room for improvement for queuing systems with low variability, that our proposed
-  method usually outperforms deep Q-Learning and finally for systems with high variability that the
+  method usually outperforms deep Q-Learning and finally for systems with high utilisation that the
   proposed reinforcement learning algorithm performs very well, outperforming all other approaches.
   %
   % We use a  to compare the algorithm
@@ -239,8 +239,7 @@ approach to a predictive lead time management approach, which is able to detect 
 periods and reacts by releasing orders earlier. Nonetheless, their method is unable to foresee the
 triggering of the lead time syndrome and therefore they introduce an upper lead time bound to
 prevent the negative effects of the lead time syndrome. Their model outperforms static and reactive
-lead time management approaches, especially for scenarios with high utilisation and high variability
-in processing times.
+lead time management approaches, especially for scenarios with high utilisation.
 
 
 As reinforcement learning stems from dynamic programming the future system state is by design
@@ -352,7 +351,7 @@ possible releases imposed by adapting the lead time. According to the learned es
 sets a planned lead time for the corresponding product type and with that releases orders into the
 production system. The highly optimised value-iteration algorithm uses improved n-step reinforcement
 learning with small action-based replay memories and worker agents to infer order release policies
-which, especially in case of high variability, outperform not only the static order release
+which, especially in case of high utilisation, outperform not only the static order release
 mechanisms, but also the commonly applied deep Q-Learning algorithm~\citep[cf.][]{mnih2015human}.
 
 %
@@ -1777,7 +1776,7 @@ of \(439.16\) for \rlt{0.99} and \(441.37\) for \rlt{1.00}, which also means a b
 than \BILThree{} with \(442.37\). For this scenario the actual measured average reward (average
 costs) of about \(75.5\) for both \ARA{} variants and learned average rewards of \(70.53\) for
 \rlt{0.99} and \(72.94\) for \rlt{1.00} are a little bit offset. This probably results from the
-higher variability in the system.
+higher variability and utilisation in the system.
 
 Finally, for the case of 90-\(\Exp\) \rlt{1.00} performs much better than the other variants with
 cots of \(986.32\). It is followed by \rlt{0.99} with costs of \(1,072.06\) and rather far, but not
@@ -1794,13 +1793,13 @@ performance, thus also a slightly high service level with \(71.5\%\) as compared
 \(79.6\%\), but with a high cost as the difference of SUM is \(117.97\).
 %
 Interesting to see is that the measured average reward and the learned average reward are very
-different for both \ARA{} variants (about \(30\)-\(40\)). This is probably due to the very high
-variability in the system, but might also be an indicator that the agents need more time for
+different for both \ARA{} variants (about \(30\)-\(40\)). This is probably due to the high 
+variability and utilisation in the system, but might also be an indicator that the agents need more time for
 learning. However, due to the high computational complexity we encountered we leave this to future
 work.
 
 Overall we can see that the RL agents, and especially the established \ARA{} algorithm performs very
-well in systems with high variability. In case of the less variable systems the results reveal that
+well in systems with high utilisation. In case of the less utilised systems the results reveal that
 there is still potential for the improvement of reinforcement learning variants.
 
 
@@ -1830,9 +1829,9 @@ Additionally we adapt the deep Q-Learning algorithm of \citet{mnih2015human} to 
 fair comparison between the algorithms, where we also use several backward infinite loading
 techniques.
 
-The results suggest that for high variability the RL learning agents, and here especially the novel
-\ARA{} variant, performs very well. In case of medium variability the achieved results are as good
-as with the \BIL{} variants. And for low variability one can see that the RL agents still have room
+The results suggest that for high utilisation the RL learning agents, and here especially the novel
+\ARA{} variant, performs very well. In case of medium utilisation the achieved results are as good
+as with the \BIL{} variants. And for low utilisation one can see that the RL agents still have room
 for improvement, as \BIL{} outperforms them. When comparing deep Q-Learning to the established
 \ARA{} algorithm, we can see that for all cases, except one (80-\(\Unif\)), \ARA{} performs better.
 
