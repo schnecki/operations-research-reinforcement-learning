@@ -167,15 +167,58 @@ times, which is well known from practice and queuing theory (\citealt{Pahl2007})
 One way to address this nonlinear interaction effects is to set lead times dynamically. Intuitively
 the order release problem is solved by perfectly matching the lead times to the flow times, but the
 corresponding optimisation problem faces ``sampling issues'' meaning that the flow times depend on
-the lead times. An extreme scenario of this problem is the so called ``lead time syndrome'', which
-describes a vicious cycle where increasing flow times perpetually inflate the lead times which leads
-to worse performance (see e.g., \citealt{Mather1978, knollmann2013control, Selcuk2006}.
+the lead times. Thus, a completely reactive approach can lead to an erratic order release behaviour,
+the Lead Time Syndrome (see also \citealt{Mather1978, knollmann2013control, Selcuk2006}). We
+hypothesis that dynamic lead time management approaches require a predictive design, i.e.\@ the
+method has to incorporate a prediction of the future system state, to be able to compete with
+state-of-the-art order release methods from literature. This is necessary in order to detect issues,
+like the Lead Time Syndrome, in advance and react accordingly \citep{schneckenreither2020order}.
+However, there only exist three papers that propose a predictive lead time management algorithm in
+literature.
+
+One method for which the future system state is by design considered a main driver of decision
+making % that is designed to incorporate the future system state
+is reinforcement learning \citep[e.g.][]{sutton1998introduction}, one of the main three subcategories of
+machine learning. % It stems from dynamic programming the future
+% system state is by design considered as a main driver of decision making in the current period.
+Reinforcement learning is an optimisation technique that stems from dynamic programming, therefore
+also seeks to compute the best stationary policy for a given
+problem. % This policy is usually provided
+% by assessing current and future states (or state-action pairs) of an underlying Markov Decision
+% Process (MDP).
+The advantage of reinforcement learning over dynamic programming is that (i) the problem space is
+explored by an agent and thus only expectantly interesting parts of the problem space need to be
+assessed and (ii) the knowledge (acquisition) of transition probabilities becomes unnecessary as the
+states are evaluated by consecutively observed states solely.
+
+
+\MS{what is rl}
+
+\MS{why ARAL}
+
+\MS{summary}
+
+
+%
+%
+
+\section{Related Literature}
+
+This section presents related literature and is split into two parts. First we discuss lead time
+management literature and second the relevant literature of reinforcement learning.
+
+
+\subsection{Related Lead Time Management Literature}
+
+An extreme scenario of this problem is the so called ``lead time syndrome'', which describes a
+vicious cycle where increasing flow times perpetually inflate the lead times which leads to worse
+performance (see e.g., \citealt{Mather1978, knollmann2013control, Selcuk2006}).
 %
 Thus, setting lead times dynamically harbors optimisation potential \citep{hoyt1978dynamic}, but may
 also substantially degrade the system performance.
 %
-\citet{schneckenreither2020order} have established
-following categorisation of dynamic lead time management approaches:
+\citet{schneckenreither2020order} have established following categorisation of dynamic lead time
+management approaches:
 
 \begin{itemize}
 \item \textsf{Reactive lead time management} approaches set lead times by reacting on
@@ -242,16 +285,7 @@ prevent the negative effects of the lead time syndrome. Their model outperforms 
 lead time management approaches, especially for scenarios with high utilisation.
 
 
-As reinforcement learning stems from dynamic programming the future system state is by design
-considered as a main driver of decision making in the current period.
-% Reinforcement learning is an optimisation technique that stems from dynamic programming and
-Its goal is to find the best stationary policy for a given problem. % This policy is usually provided
-% by assessing current and future states (or state-action pairs) of an underlying Markov Decision
-% Process (MDP).
-The advantage of reinforcement learning over dynamic programming is that (i) the problem
-space is explored by an agent and thus only expectantly interesting parts of the problem space need
-to be assessed and (ii) the knowledge (acquisition) of transition probabilities becomes unnecessary
-as the states are evaluated by consecutively observed states solely.
+\subsection{Related Reinforcement Learning Literature}
 
 Over the past decades reinforcement learning has been applied to various problems, for which
 astonishing results have been reported. E.g.\@ only recently \citet{mnih2015human} have presented a
@@ -270,7 +304,7 @@ investigate a rather simple MDP, e.g.\@ by selecting heuristics instead of optim
 problem itself, or by mapping the actual objective in a reward function that is approximately \(0\)
 on average over time.
 %
-This is due to the fact that state value is largely composed of a term defined by the policys'
+This is due to the fact that state value is largely composed of a term defined by the policy's
 average reward value \citep{MillerVeinott1969,Blackwell62} which would otherwise dilute the state
 values and thus decrease the solution quality, as can for instance be observed in
 \citet{SchneckenreitherHaeussler2019} and \citet{gijsbrechts2018can}.
@@ -1793,7 +1827,7 @@ performance, thus also a slightly high service level with \(71.5\%\) as compared
 \(79.6\%\), but with a high cost as the difference of SUM is \(117.97\).
 %
 Interesting to see is that the measured average reward and the learned average reward are very
-different for both \ARA{} variants (about \(30\)-\(40\)). This is probably due to the high 
+different for both \ARA{} variants (about \(30\)-\(40\)). This is probably due to the high
 variability and utilisation in the system, but might also be an indicator that the agents need more time for
 learning. However, due to the high computational complexity we encountered we leave this to future
 work.
