@@ -178,21 +178,92 @@ literature.
 
 One method for which the future system state is by design considered a main driver of decision
 making % that is designed to incorporate the future system state
-is reinforcement learning \citep[e.g.][]{sutton1998introduction}, one of the main three subcategories of
-machine learning. % It stems from dynamic programming the future
+is reinforcement learning \citep[e.g.][]{sutton1998introduction}, one of the main three
+subcategories of machine learning. % It stems from dynamic programming the future
 % system state is by design considered as a main driver of decision making in the current period.
 Reinforcement learning is an optimisation technique that stems from dynamic programming, therefore
-also seeks to compute the best stationary policy for a given
-problem. % This policy is usually provided
-% by assessing current and future states (or state-action pairs) of an underlying Markov Decision
-% Process (MDP).
+also seeks to compute the best stationary policy for a given problem. The idea is to evaluate the
+current system state according to the direct feedback (reward), as well as the previously learned
+state value of the consecutive state. This forms a cyclic constraint problem with as many
+constraints and variables as there are system states. The solution is found through iteration and
+due to the transitivity property of the state value update.
+% as in dynamic programming is that the process and the current state and future states (or
+% state-action pairs) of an underlying Markov Decision Process (MDP).
 The advantage of reinforcement learning over dynamic programming is that (i) the problem space is
 explored by an agent and thus only expectantly interesting parts of the problem space need to be
 assessed and (ii) the knowledge (acquisition) of transition probabilities becomes unnecessary as the
 states are evaluated by consecutively observed states solely.
 
+There are two main types of reinforcement learning algorithms known in literature. The commonly
+applied discounted reinforcement learning method
+\citep[e.g.][]{sutton1998introduction,mnih2015human,mnih2016asynchronous}, in which the future
+system state is discounted by a factor \(0 < \gamma < 1\) to prevent an infinite growth of the state
+evaluations, and average reward reinforcement learning
+\citep{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults,
+  schwartz1993reinforcement,
+  Mahadevan97_SelfimprovingFactorySimulationUsingContinuoustimeAveragerewardReinforcementLearning}.
+%
+% Like discounted reinforcement learning also average reward reinforcement learning is based on an
+% oracle function, in our case the accumulated costs of a period, to assess the decisions taken by
+% the agent. By repeatedly choosing different actions the agent examines the problem space and rates
+% possible actions for any observed state. The advantage of average reward reinforcement learning
+The advantage of the later % over the widely applied discounted reinforcement learning framework
+is that the underlying optimisation technique is theoretically able to find better policies
+% This yields from the fact that in the standard framework each state is assessed independently and
+% by a single value. To be more precise, average reward reinforcement learning
+by splitting up the evaluation of each state into infinitely many parts. First, the average reward
+per step, second, a bias value that specifies expected reward that is additionally accumulated when
+traversing from the current state to the optimal path, and third, an infinite number of values of
+which each includes the occurrence of the rewards and in which magnitude along the path
+\citep{Howard64,Puterman94,
+  Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults}. % Thus,
+% while in average reward reinforcement learning these terms are learned separately
+To expectantly accumulate the most reward one has to choose the action that leads to the state with
+highest value of the parts, on ties selecting actions following the order above. That is, the
+highest evaluation of the average reward, the bias value, the third component, the fourth component,
+etc. The formulations for computing these values form nested constraints, so for instance the
+current estimate of the average reward is used to compute the bias value. Therefore, a slight
+approximation error may cause harmful damage in subsequent constraints, which makes average reward
+reinforcement computationally very intensive. Worsening the issue, \citet[p.343ff]{Puterman94} shows
+that an additional set of nested constraints have to be solved to gain the correct solution.
 
-\MS{what is rl}
+
+In contrast the standard discounted framework estimates only one single scalar value consisting of
+the addition of these subterms, where however, the average reward is scaled by \(1/(1-\gamma)\).
+%
+To collect as much reward as possible, for instance to gain the highest expected profit, the
+discount factor \(\gamma\) has to be very close to one, e.g. \(0.99\).
+%
+% As the discount factor \(\gamma\) is usually set very
+% close to \(1\), e.g. \(0.99\), which
+Such a parameterisation leads to the fact that the subterm including the average reward dominates
+the other two.
+%
+Further, in commonly applied unichain (and thus ergodic) MDPs the average reward per step is equal
+over all states. Thus, independently assessing it is not only computationally unwisely, but also
+problematic when they are iteratively approximated. For this reasons most applications of discounted
+reinforcement learning in literature evaluate their algorithms on processes that have an average
+reward of about zero \citep{schneckenreither2020average}. \citet{schneckenreither2020average} shows
+that tabular based discounted reinforcement learning agents are unable to find even basic policies
+when confronted with processes that have a small average reward per step. Unfortunately, when
+optimising for the highest profit (or the lowest cost), the most intuitive and clear way of reward
+feedback to the agent is presenting it the profit that is accumulated every period.
+
+
+\MS{todo}
+%
+Therefore, we adapt an algorithm that uses a scalar value for the estimation of the average reward
+over all states, and estimates for every state-action pair that incorporate the bias value and the
+sum, usually referred to as error term, of all other parts. The later values are adjusted by the
+average reward.
+% This, combined with the iterative evaluation and the independently assessing of the average reward
+% for each state lets standard discounted reinforcement learning struggle to find good policies.
+% Thus, this incautious combining of different kinds of state values as done in discounted
+% reinforcement learning leads to the problems that (i) the average reward, which is equal for all
+% states of usually investigated unichain MDPs, is dominating and thus diluting the bias values, and
+% (ii) the state values are deteriorated by the error term that is only imposed due to the
+% discounting technique.
+
 
 \MS{why ARAL}
 
@@ -332,38 +403,7 @@ uniformisation into equivalent discrete time instances
 \citep[see][]{Puterman94,bertsekas1995dynamic}.
 
 
-Like discounted reinforcement learning also average reward reinforcement learning is based on an
-oracle function, in our case the accumulated costs of a period, to assess the decisions taken by the
-agent. By repeatedly choosing different actions the agent examines the problem space and rates
-possible actions for any observed state. The advantage of average reward reinforcement learning over
-the widely applied discounted reinforcement learning framework is that the underlying optimisation
-technique is able to find better policies. This yields from the fact that in standard discounted
-reinforcement learning method the states are assessed independently and by a single value. To be
-more precise, average reward reinforcement learning splits up the evaluation of the average reward
-per step, a bias value that specifies the amount of collected rewards to reach the optimal path when
-starting in a suboptimal state and an error term which defines the number of steps to reach the
-optimal path \citep{Howard64,Puterman94,
-  Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults}. % Thus,
-% while in average reward reinforcement learning these terms are learned separately
-In contrast to that in the standard discounted framework one single scalar value consisting of the
-addition of these subterms is estimated, where however the average reward is scaled by
-\(1/(1-\gamma)\). The discount factor \(\gamma\) is usually set very close to \(1\), e.g. \(0.99\),
-which leads to the fact that this subterm dominates the other two.
-%
-Further, in commonly applied unichain (and thus ergodic) MDPs the average reward per step is equal
-for all states. Thus, independently assessing it is not only computationally unwisely, but also
-problematic when iteratively annealed as done in reinforcement learning. Therefore, we adapt an
-algorithm that uses a scalar value for the estimation of the average reward over all states, and
-estimates for every state-action pair that incorporate the bias and error term. The later values are
-adjusted by the average reward.
-% This, combined with the iterative evaluation and the independently assessing of the average reward
-% for each state lets standard discounted reinforcement learning struggle to find good policies.
-% Thus, this incautious combining of different kinds of state values as done in discounted
-% reinforcement learning leads to the problems that (i) the average reward, which is equal for all
-% states of usually investigated unichain MDPs, is dominating and thus diluting the bias values, and
-% (ii) the state values are deteriorated by the error term that is only imposed due to the
-% discounting technique.
-
+\MS[]{von hier}
 Thus, as opposed to the commonly applied discounted reinforcement learning algorithm we use an
 average reward adjusted reinforcement learning algorithm to adaptively release orders based on the
 assessed state values of the production system. In contrast to the aforementioned works on average
