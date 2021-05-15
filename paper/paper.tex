@@ -246,16 +246,15 @@ reinforcement learning in literature evaluate their algorithms on processes that
 reward of about zero \citep{schneckenreither2020average}. \citet{schneckenreither2020average} shows
 that tabular based discounted reinforcement learning agents are unable to find even basic policies
 when confronted with processes that have a small average reward per step. Unfortunately, when
-optimising for the highest profit (or the lowest cost), the most intuitive and clear way of reward
-feedback to the agent is presenting it the profit that is accumulated every period.
+optimising for the highest profit (or the lowest cost) in the area of operations management, the
+most intuitive and clear way of reward feedback to the agent is presenting it the profit that is
+accumulated every period.
 
 
-\MS{todo}
-%
-Therefore, we adapt an algorithm that uses a scalar value for the estimation of the average reward
-over all states, and estimates for every state-action pair that incorporate the bias value and the
-sum, usually referred to as error term, of all other parts. The later values are adjusted by the
-average reward.
+Therefore, we develop, adapt and enhance an algorithm that uses only one scalar value for the
+estimation of the average reward over all states. Further it estimates for every state-action pair
+the bias value and the sum of all other state value parts, usually referred to as error term. The
+later values are adjusted by the average reward.
 % This, combined with the iterative evaluation and the independently assessing of the average reward
 % for each state lets standard discounted reinforcement learning struggle to find good policies.
 % Thus, this incautious combining of different kinds of state values as done in discounted
@@ -263,13 +262,81 @@ average reward.
 % states of usually investigated unichain MDPs, is dominating and thus diluting the bias values, and
 % (ii) the state values are deteriorated by the error term that is only imposed due to the
 % discounting technique.
+%
+%
+Thus, as opposed to the commonly applied discounted reinforcement learning algorithm we use an
+average reward adjusted reinforcement learning algorithm to dynamically set lead time for order
+release. In contrast to the aforementioned works on average reward reinforcement learning our
+algorithm incorporates the optimisation of not only the average reward over time, but also the bias
+values, which is an important adaption in highly stochastic systems. Only the work by
+\citet{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}
+integrates this second-level refinement optimisation. However, their average reward reinforcement
+learning algorithm requires the selection of a reference state to prevent an infinite increase of
+state values. This results from the lack of feedback in the iterative process of optimising
+different sets of nested constraints. Furthermore, they asses the average reward independently for
+each state.
+
+To achieve a scalable lead time setting algorithm, we propose an extension that reduces the action
+space tremendously. In fact, it transforms the problem size function measured on the number of
+product types from one with an exponential increase to a linear one. The idea is that multiple
+action decision agents are introduced that operate on the same state, but each one is responsible
+for the lead time setting of only one product type.
+% (i) To
+% ensure scalability we adapt a multi-agent approach, where each agent optimises the lead time
+% management of a single product type. The agents do so by assessing the expected costs for the
+% possible releases imposed by adapting the lead time. According to the learned estimates each agent
+% sets a planned lead time for the corresponding product type and with that releases orders into the
+% production system.
 
 
-\MS{why ARAL}
+Finally, we provide a proof-of-concept experimental section by testing the proposed algorithm on a
+three stage flow shop with six product types, which provides ample evidence of the viability of the
+approach.
+% and are compared to static order release
+% mechanisms. Furthermore, we show that the advantage of average reward reinforcement learning for the
+% problem structures encountered in the context of production and logistics management by comparing
+% the results to the discounted reinforcement learning
+% framework.
+The highly optimised value-iteration algorithm with improved n-step learning, small action-based
+replay memories and concurrent workers infers order release policies which, especially in case of
+high utilisation, outperform not only the static order release mechanisms, but also the commonly
+applied deep Q-Learning algorithm~\citep[cf.][]{mnih2015human}.
+% With regard to practical implications we are confident that decision support
+% tools based on average reward reinforcement learning increase the decision quality of human
+% planners.
+%
+In summary our contributions are as follows:
+\begin{itemize}
+\item We propose a novel \textit{average reward adjusted deep reinforcement learning algorithm} \ARA{}.
+  This is the first average reward adjusted reward learning algorithm that operates using a
+  artificial neural network as function approximation. It includes several known extensions like
+  n-step learning \citep[e.g.][]{mnih2016asynchronous} or experience replay memory
+  \citep[e.g.][]{mnih2015human}, which we advanced to prevent catastrophic forgetting by
+  action-based selection of experiences.
+\item We establish a action reduction method, named \textit{independent agents}, as a subset of the
+  action space is treated as if there were multiple independent agents, although they share the same
+  state. It reduces the growth of the number of possible actions from a exponential growth to a
+  linear one. This is especially useful for product type based lead time management, as each agent
+  is responsible for the lead time of one product type.
+\item Using a three-stage flow shop model we show in an \textit{experimental evaluation} that the
+  proposed algorithm outperforms standard Q-Learning and well established order release methods,
+  especially for systems with high variability.
+\end{itemize}
 
-\MS{summary}
 
+%
+% \MS[t]{TODO}
 
+\paragraph{Structure.} The rest of the paper is structured as follows. The next section introduces
+average reward reinforcement learning and presents the used algorithm. For a more comprehensive
+discussion of the theoretical foundations we refer to \citet{schneckenreither2020average}.
+Section~\ref{sec:Experimental_Evaluation} describes the simulation model we use to evaluate the
+approach. The results of the computation experiments are presented in
+Section~\ref{sec:Computational}, and Section~\ref{sec:conclusion} concludes the paper.
+
+% \MS[t]{todo}
+% Then~\ref{sec:Preliminary} presents preliminary
+% result data, whereas Section~\ref{sec:conclusion} concludes this working paper.
 %
 %
 
@@ -281,37 +348,30 @@ management literature and second the relevant literature of reinforcement learni
 
 \subsection{Related Lead Time Management Literature}
 
-An extreme scenario of this problem is the so called ``lead time syndrome'', which describes a
-vicious cycle where increasing flow times perpetually inflate the lead times which leads to worse
-performance (see e.g., \citealt{Mather1978, knollmann2013control, Selcuk2006}).
+Setting of lead times dynamically is a rather difficult task. Therefore, most state-of-the-art order
+release mechanisms use static or fixed lead times to address the order release problem.
 %
-Thus, setting lead times dynamically harbors optimisation potential \citep{hoyt1978dynamic}, but may
-also substantially degrade the system performance.
+However, lead times should be set dynamically due to the non-linear relationship between utilisation
+and flow times \citealt{Pahl2007,hoyt1978dynamic}, but this may also substantially degrade the
+system performance. For instance, a solely reactive approach can result in the lead time syndrome.
+%
+The \textit{lead time syndrome} describes a vicious cycle where increasing flow times perpetually
+inflate the lead times which leads to worse performance (see e.g., \citealt{Mather1978,
+  knollmann2013control, Selcuk2006}).
+%
 %
 \citet{schneckenreither2020order} have established following categorisation of dynamic lead time
 management approaches:
 
 \begin{itemize}
-\item \textsf{Reactive lead time management} approaches set lead times by reacting on
-  earlier flow times (e.g., \citealt{enns2004work, Selcuk2006}). Note that the forecast is always
-  based on \textit{past} data as the most recent system changes cannot be reflected by flow times
-  until the corresponding orders arrive in the FGI, which might take several
-  periods.
-\item
-  \textsf{Proactive lead time management} may incorporate \textit{past} data in conjunction with
-  the \textit{current} system state to set lead times (e.g., \citealt{Bertrand1983,
-    ChungHuang2002}). Put differently, these methods aim to find a function that provides lead times
-  based on the current state of the production system and possibly information from the past.
-
-\item \textsf{Predictive lead time management} may not only incorporate \textit{past} data and the
-  \textit{current} system state to set lead times, but also utilises the anticipated \textit{future}
-  system state to detect arising issues of future periods and react accordingly (e.g.
-  \citealt{PaterninaArboleda2001,schneckenreither2020order,Schneckenreither2019}). Thus, it extends
-  proactive lead time management from a flow time forecasting or simple lead time setting technique
-  to a lead time management approach that integrates the future behaviour of the system when setting
-  lead times. This allows reasoning of the system dynamics, as for instance triggering the lead time
-  system, and thus such an algorithm can react accordingly to find a more farsighted optimal lead
-  time update.
+\item \textsf{Reactive lead time management} sets lead times by reacting on earlier flow times
+  (e.g., \citealt{enns2004work, Selcuk2006}), i.e.\@ data from the past.
+\item \textsf{Proactive lead time management} may incorporate \textit{past} data and the
+  \textit{current} system state to set lead times (e.g., \citealt{Bertrand1983, ChungHuang2002}).
+\item \textsf{Predictive lead time management} may incorporate \textit{past} data and the
+  \textit{current} system state, and uses an anticipated \textit{future} system state to prevent
+  arising issues of future periods (e.g.
+  \citealt{PaterninaArboleda2001,schneckenreither2020order,Schneckenreither2019}).
 \end{itemize}
 
 We hypothesis that dynamic lead time management approaches need to aim for a predictive design in
@@ -361,14 +421,14 @@ lead time management approaches, especially for scenarios with high utilisation.
 Over the past decades reinforcement learning has been applied to various problems, for which
 astonishing results have been reported. E.g.\@ only recently \citet{mnih2015human} have presented a
 novel value-iteration reinforcement learning agent which exceeds human-level abilities in playing
-many classic Atari 2600 games~\citep{bellemare2012investigating}. Further,
-\citet{mnih2016asynchronous} present improved results with asynchronous actor-critic reinforcement
-learning. Also games like Go~\citep{silver2016mastering} and Chess~\citep{silver2017mastering} have
-been mastered with superhuman performance by \textit{tabula rasa} reinforcement learning agents.
-Furthermore, the method has also been applied in the setting of manufacturing system, e.g.\@ to
-improve the ramp-up process~\citep{doltsinis2012reinforcement}, in locally selecting appropriate
-dispatching rules \citep{zhang1995reinforcement,wang2005application} or scheduling
-\citep{zhang1995reinforcement, waschneck2018optimization}.
+many classic Atari games~\citep{bellemare2012investigating}. Further, \citet{mnih2016asynchronous}
+present improved results with asynchronous actor-critic reinforcement learning. Also games like
+Go~\citep{silver2016mastering} and Chess~\citep{silver2017mastering} have been mastered with
+superhuman performance by \textit{tabula rasa} reinforcement learning agents. Furthermore, the
+method has also been applied in the setting of manufacturing system, e.g.\@ to improve the ramp-up
+process~\citep{doltsinis2012reinforcement}, in locally selecting appropriate dispatching rules
+\citep{zhang1995reinforcement,wang2005application} or scheduling \citep{zhang1995reinforcement,
+  waschneck2018optimization}.
 %
 However, all these applications use discounted reinforcement learning and are either designed to
 investigate a rather simple MDP, e.g.\@ by selecting heuristics instead of optimising the underlying
@@ -403,50 +463,13 @@ uniformisation into equivalent discrete time instances
 \citep[see][]{Puterman94,bertsekas1995dynamic}.
 
 
-\MS[]{von hier}
-Thus, as opposed to the commonly applied discounted reinforcement learning algorithm we use an
-average reward adjusted reinforcement learning algorithm to adaptively release orders based on the
-assessed state values of the production system. In contrast to the aforementioned works on average
-reward reinforcement learning our algorithm incorporates the optimisation of not only the average
-reward over time, but also the bias values, which is an important adaption in highly stochastic
-systems. Only the work by
-\citet{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}
-integrates this second-level refinement optimisation. However, their algorithm requires the
-selection of a reference state to prevent an infinite increase of state values. This results from
-the lack of feedback in the iterative process of optimising the different refinement optimisation
-levels. Furthermore, they asses the average reward independently for each state.
-
-In summary, we propose a novel average reward adjusted reinforcement learning algorithm to assess
-orders for their release to the shop floor. This is the first average reward adjusted reward
-learning algorithm that operates using a artificial neural network as function approximation. To
-ensure scalability we adapt a multi-agent approach, where each agent optimises the lead time
-management of a single product type. The agents do so by assessing the expected costs for the
-possible releases imposed by adapting the lead time. According to the learned estimates each agent
-sets a planned lead time for the corresponding product type and with that releases orders into the
-production system. The highly optimised value-iteration algorithm uses improved n-step reinforcement
-learning with small action-based replay memories and worker agents to infer order release policies
-which, especially in case of high utilisation, outperform not only the static order release
-mechanisms, but also the commonly applied deep Q-Learning algorithm~\citep[cf.][]{mnih2015human}.
-
-%
-% \MS[t]{TODO} We provide ample evidence of the viability of the approach and compare it to well-known
-% order release mechanisms. Furthermore, we show that the advantage of average reward reinforcement
-% learning for the problem structures encountered in the context of production and logistics by
-% comparing the results to the discounted reinforcement learning framework. The preliminary results
-% show that our approach performs better than the other methods. With regard to practical implications
-% we are confident that decision support tools based on average reward reinforcement learning increase
-% the decision quality of human planners.
-
-\paragraph{Structure.} The rest of the paper is structured as follows. The next section introduces
-average reward reinforcement learning and presents the used algorithm. For a more comprehensive
-discussion of the theoretical foundations we refer to \citet{schneckenreither2020average}.
-Section~\ref{sec:Experimental_Evaluation} describes the simulation model we use to evaluate the
-approach. The results of the computation experiments are presented in
-Section~\ref{sec:Computational}, and Section~\ref{sec:conclusion} concludes the paper.
-
-% \MS[t]{todo}
-% Then~\ref{sec:Preliminary} presents preliminary
-% result data, whereas Section~\ref{sec:conclusion} concludes this working paper.
+% Only the work by
+% \citet{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}
+% integrates this second-level refinement optimisation. However, their average reward reinforcement
+% learning algorithm requires the selection of a reference state to prevent an infinite increase of
+% state values. This results from the lack of feedback in the iterative process of optimising the
+% different refinement optimisation levels. Furthermore, they asses the average reward independently
+% for each state.
 
 
 \section{Average Reward Adjusted Reinforcement Learning}
