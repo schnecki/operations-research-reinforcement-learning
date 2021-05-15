@@ -327,12 +327,12 @@ In summary our contributions are as follows:
 %
 % \MS[t]{TODO}
 
-\paragraph{Structure.} The rest of the paper is structured as follows. The next section introduces
-average reward reinforcement learning and presents the used algorithm. For a more comprehensive
-discussion of the theoretical foundations we refer to \citet{schneckenreither2020average}.
-Section~\ref{sec:Experimental_Evaluation} describes the simulation model we use to evaluate the
-approach. The results of the computation experiments are presented in
-Section~\ref{sec:Computational}, and Section~\ref{sec:conclusion} concludes the paper.
+\paragraph{Structure.} The rest of the paper is structured as follows. \MS[t]{TODO} The next section
+introduces average reward reinforcement learning and presents the used algorithm. For a more
+comprehensive discussion of the theoretical foundations we refer to
+\citet{schneckenreither2020average}. Section~\ref{sec:Experimental_Evaluation} describes the
+simulation model we use to evaluate the approach. The results of the computation experiments are
+presented in Section~\ref{sec:Computational}, and Section~\ref{sec:conclusion} concludes the paper.
 
 % \MS[t]{todo}
 % Then~\ref{sec:Preliminary} presents preliminary
@@ -374,10 +374,15 @@ management approaches:
   \citealt{PaterninaArboleda2001,schneckenreither2020order,Schneckenreither2019}).
 \end{itemize}
 
-We hypothesis that dynamic lead time management approaches need to aim for a predictive design in
+\MS[]{todo: Reactive}
+
+\MS[]{todo: proactive}
+
+We hypothesise that dynamic lead time management approaches need to aim for a predictive design in
 order to be able to compete with state-of-the-art order release methods from literature. However,
 there only exist three papers that propose a predictive lead time management algorithm in
 literature.
+
 
 The first approach by \citet{PaterninaArboleda2001} introduces a predictive order release model by
 using reinforcement learning in a single product, four-station serial flow line and compare its
@@ -412,11 +417,11 @@ implementing a rolling horizon order release simulation of the proceeding period
 approach to a predictive lead time management approach, which is able to detect backorders of future
 periods and reacts by releasing orders earlier. Nonetheless, their method is unable to foresee the
 triggering of the lead time syndrome and therefore they introduce an upper lead time bound to
-prevent the negative effects of the lead time syndrome. Their model outperforms static and reactive
-lead time management approaches, especially for scenarios with high utilisation.
+prevent the negative effects of the syndrome. Their model outperforms static and reactive lead time
+management approaches, especially for scenarios with high utilisation.
 
 
-\subsection{Related Reinforcement Learning Literature}
+\subsection{Related Reinforcement Learning Applications}
 
 Over the past decades reinforcement learning has been applied to various problems, for which
 astonishing results have been reported. E.g.\@ only recently \citet{mnih2015human} have presented a
@@ -472,14 +477,14 @@ uniformisation into equivalent discrete time instances
 % for each state.
 
 
-\section{Average Reward Adjusted Reinforcement Learning}
+\subsection{Reinforcement Learning Preliminaries}
 
-This section briefly reintroduces the most important concepts of average reward adjusted
+The rest of this section briefly reintroduces the important concepts of average reward adjusted
 reinforcement learning, elaborates on optimality criteria and provides insights of the underlying
 algorithm. For a more extensive introduction to average reward reinforcement learning we refer to
 \citet{schneckenreither2020average}.
 
-Like \cite{MillerVeinott1969} we are considering problems that are observed in a sequence of points
+Like \citet{MillerVeinott1969} we are considering problems that are observed in a sequence of points
 in time labeled \(1,2,\ldots\) and can be modelled using a finite set of states \(\States\),
 labelled \(1,2,\ldots,\size{\States}\), where the size \(\size{\States}\) is the number of elements
 in \(\States\). At each point $t$ in time the system is in a state \(s_{t} \in \States\). Further,
@@ -903,7 +908,8 @@ foundation of our algorithm.
 \end{algorithm}
 
 
-\paragraph{Average Reward Adjusted Deep RL Algorithm.} %
+\section{Average Reward Adjusted Deep RL Algorithm }
+
 The model-free average reward adjusted RL algorithm is based on the tabular version of
 \citet{schneckenreither2020average} and depicted in Algorithm~\ref{alg:near}. The algorithm operates
 on a target network \(\netTarget{}\) and a worker network \(\netWorker{}\) as in
@@ -949,8 +955,8 @@ This section introduces the simulation model and the parameterisation of the alg
 proof-of-concept for the proposed algorithm we adapt the flow shop presented in
 \citet{schneckenreither2020order}. However, our algorithms operates on discrete lead times on a
 product type basis and thus is not directly comparable to their order based lead time management
-approach. Nonetheless, this section is largely based on the corresponding section of
-\citet{schneckenreither2020order}.
+approach. % Nonetheless, this section is largely based on the corresponding section of
+% \citet{schneckenreither2020order}.
 
 \subsection{Simulation Model}
 \label{subsec:Simulation_Model}
@@ -1020,6 +1026,14 @@ distribution, which are adjusted to yield the desired bottleneck utilisation lev
 with $\Exp(135)$ and $\Unif(95,175)$, $80\%$ with $\Exp(118)$ and $\Unif(78,158)$, or $90\%$ with
 $\Exp(105)$ and $\Unif(65,145)$. These values were chosen as they comprise the non-linear
 relationship between flow times and high utilisation levels.
+%%%%%%
+% Calculation
+% (285 / (3 * u)) = interarrival time
+%
+% 285... Proc time bottleneck
+% 3  ... every third product routes of this machine
+% u  ... utilisation, e.g. 0.90
+
 
 \paragraph{Order Release.}
 %
@@ -1071,6 +1085,9 @@ very high ($16$~Dollar per order and period) due to the MTO environment. All cos
 based on the production system state at the end of each period.
 
 
+\section{Lead Time Setting}
+
+
 \subsection{Conventional Order Release Rule}
 
 As external benchmark for comparison we use different parameterized backward infinite loading
@@ -1089,7 +1106,7 @@ and fixed lead times \(\lt_{i}\).
 % \cite{Ackerman1963}.
 
 
-\subsection{Algorithm Setup}
+\subsection{Average Reward Adjusted Deep RL Algorithm}
 \label{subsec:Algorithm_Setup}
 
 \paragraph{Markov Decision Process.} The underlying MDP is unichain and looks as follows. Both,
@@ -1206,11 +1223,11 @@ minimise the returned rewards. The idea is the same as in Algorithm~\ref{alg:nea
 action selection procedure is a loop over all independent agents and the implementation of the
 n-step logic.
 %
-The algorithm is based around The agent first choose an action (steps \(4-5\)), executes the
-selected action and stores the experience in the replay memory (step \(6\)) and then samples a
-mini-batch of experiences each of length \(nstep\) to improve the policy (steps \(7-21\)). Step
-\(17\) uses an exponentially smoothed overestimation (by \(2.5\%\)) of the average reward and rate
-\(2^{-5}\). All average reward updates above this overestimation are rejected.
+The agent first choose an action (steps \(4-5\)), executes the selected action and stores the
+experience in the replay memory (step \(6\)) and then samples a mini-batch of experiences each of
+length \(nstep\) to improve the policy (steps \(7-21\)). Step \(17\) uses an exponentially smoothed
+overestimation (by \(2.5\%\)) of the average reward and rate \(2^{-5}\). All average reward updates
+above this overestimation are rejected.
 
 
 % N-Step: 5
