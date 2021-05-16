@@ -115,13 +115,14 @@ pdfkeywords={average reward adjusted reinforcement learning, production planning
   should be set dynamically to be able to react to the dynamic operational characteristics of
   production system. Therefore, we present an order release model which sets lead times dynamically
   by using an reinforcement learning approach. This algorithm is designed especially for
-  applications with high process variability and periodic feedback to the agent. Therefore, this paper aims
-  at providing a proof-of-concept for the proposed algorithm. Therefore, we compare our method on a
-  three-stage flow-shop simulation model not only to static order release techniques, but also to
-  the commonly used deep Q-Learning algorithm. The results show that both reinforcement learning
-  agents have room for improvement for queuing systems with low variability, that our proposed
-  method usually outperforms deep Q-Learning and finally for systems with high utilisation that the
-  proposed reinforcement learning algorithm performs very well, outperforming all other approaches.
+  applications with high process variability and periodic feedback to the agent. Therefore, this
+  paper aims at providing a proof-of-concept for the proposed algorithm. Therefore, we compare our
+  method on a three-stage flow-shop simulation model not only to static order release techniques,
+  but also to the commonly used deep Q-Learning algorithm. The results show that both reinforcement
+  learning agents have room for improvement for queuing systems with low variability, that our
+  proposed method usually outperforms deep Q-Learning and finally for systems with high utilisation
+  that the proposed reinforcement learning algorithm performs very well, outperforming all other
+  approaches.
   %
   % We use a  to compare the algorithm
   % to % and show that our approach outperforms
@@ -327,12 +328,13 @@ In summary our contributions are as follows:
 %
 % \MS[t]{TODO}
 
-\paragraph{Structure.} The rest of the paper is structured as follows. \MS[t]{TODO} The next section
-introduces average reward reinforcement learning and presents the used algorithm. For a more
-comprehensive discussion of the theoretical foundations we refer to
-\citet{schneckenreither2020average}. Section~\ref{sec:Experimental_Evaluation} describes the
-simulation model we use to evaluate the approach. The results of the computation experiments are
-presented in Section~\ref{sec:Computational}, and Section~\ref{sec:conclusion} concludes the paper.
+\paragraph{Structure.} The rest of the paper is structured as follows. The next section introduces
+related literature. Section~\ref{sec:avg} establishes the average reward adjusted deep reinforcement
+learning algorithm and the extension to independent agents.
+Section~\ref{sec:Experimental_Evaluation} describes the simulation model we use to evaluate the
+approach. In Section~\ref{sec:lead} we briefly discuss lead time setting in this paper, while the
+results of the computation experiments are presented in Section~\ref{sec:Computational}. Finally
+Section~\ref{sec:conclusion} concludes the paper.
 
 % \MS[t]{todo}
 % Then~\ref{sec:Preliminary} presents preliminary
@@ -342,8 +344,12 @@ presented in Section~\ref{sec:Computational}, and Section~\ref{sec:conclusion} c
 
 \section{Related Literature}
 
-This section presents related literature and is split into two parts. First we discuss lead time
-management literature and second the relevant literature of reinforcement learning.
+This section is split into several parts. First we discuss lead time management literature, then
+reinforcement learning applications to lead time management, third we briefly review the relevant
+notation to reinforcement learning and finally we present the relevant literature of reinforcement
+learning in the rest of the section. The later includes a discussion of discounted reinforcement
+learning, average reward reinforcement learning, the Laurent series expansion of the state values,
+and finally average reward adjusted reinforcement learning.
 
 
 \subsection{Related Lead Time Management Literature}
@@ -860,6 +866,17 @@ s_{t} = s]\). The corresponding Bellman optimality equation then is given by
 \avgrew^{\pol} \mid s_{t} = s]\). By turning this formula into an update rule it builds the
 foundation of our algorithm.
 
+
+\section{Average Reward Adjusted Deep RL Algorithm }\label{sec:avg}
+
+
+This section presents the average reward adjusted deep reinforcement learning algorithm \ARA{}.
+First, we present a basic version, which suffices for small problem sizes and introduce the idea of
+independent agents, before presenting an scalable optimised version.
+
+\subsection{Basic Average Reward Adjusted Deep RL Algorithm}
+
+
 \begin{algorithm}[t!]
   \begin{algorithmic}[1]
     \State{}Initialise state \(s_{0}\) and network parameters \(\netTarget, \netWorker\) randomly, set
@@ -908,8 +925,6 @@ foundation of our algorithm.
 \end{algorithm}
 
 
-\section{Average Reward Adjusted Deep RL Algorithm }
-
 The model-free average reward adjusted RL algorithm is based on the tabular version of
 \citet{schneckenreither2020average} and depicted in Algorithm~\ref{alg:near}. The algorithm operates
 on a target network \(\netTarget{}\) and a worker network \(\netWorker{}\) as in
@@ -945,6 +960,219 @@ higher values are used to prefer actions for which the full bias is collected ea
 %
 The corresponding update values are saved to calculate the gradients based on the quadratic errors.
 Every \(C\) steps the target network smoothly adapts the parameters of the worker network.
+
+
+\subsection{Independent Agents}
+
+In our application the agent can update the lead time for each product type by a maximum magnitude
+of \(1\) in regard to the lead time of the current period. A naive approaches is to define one
+action for each combination of possible lead time updates over all product types, e.g.\@ one action
+for a system with six product types could be the vector \(+1, +1, 0, 0, +1, 0\). This however, due
+to the exponential growth, results in only being able to solve very small production systems with
+only few product types. A common solution in production planning is to aggregate the products into
+product groups, cf.\@ hierarchical production planning~\citep{schneeweibeta1995hierarchical}.
+%
+Although applicable in our setup if we group the products into bottleneck and non-bottleneck
+products as done by \citet{schneckenreither2020order}, we refrain from this adaption as it does not
+scale to larger sized production systems.
+
+
+\begin{figure*}[t!]
+  \centering
+  \input{figures/indep_agents}                      % Figure production system
+  \caption{Illustration of independent agents as agent one increases the lead time}\label{fig:indep-agents}
+\end{figure*}
+%
+Therefore, in the seek of a broader solution we establish the idea of \textit{independent agents}.
+Each independent agent operates on the same system state, but chooses only a part of the actual
+executed action. In our case each independent agent is responsible for the lead time update of a
+specific product type. To the best of the author's knowledge this is the first work to reduce the
+action space in this way. Figure~\ref{fig:indep-agents} illustrates the idea, where wlog.\@ we use
+two agents and for simplicity omit the reward and truncate the state to the lead times. Assume that
+the first independent agent chooses to increase the lead time from \(3\) to \(4\). Thus, the future
+state, seen from this agent, depends on the probability of the other independent agent choosing to
+increase (\(\inc\)), decrease (\(\dec\)) or not change (\(\pers\)) the lead time. The Markov
+property, that is
+\(p(s_{t+1}, r_{t} \mid s_{t}, a_{t}) = p((4,\cdot), r_{t} \mid (3,3), (\inc, \cdot)) \), is not
+touched by this adaption. While for the first agent the reward and future state only depends on the
+current state and action taken, the corresponding probabilities for future state and reward change
+during the learning process as the agent starts to behave differently.
+%
+This allows us to investigate the algorithms behaviour for even larger solution spaces. In
+particular, this adaption enables us to present the algorithm the above defined state space not only
+on the basis of product groups, but directly for each product type \(\pt\). Note that without this
+extension the problem is computationally infeasible due to \(3^{6} = 729\) possible actions.
+Removing the dependency between the lead times of different product types reduces the set of
+possible actions, and thus the number of ANN output layer nodes, to \(3 \cdot 6 = 18\). In
+preliminary experiments on small examples we only observed a very slight increase of required steps
+during training. Therefore, this is a vital adaption to ensure scalability.
+
+
+\subsection{Scalable Average Reward Adjusted Deep RL Algorithm}
+
+The basic algorithm above suffices only for problem sets of rather small size due to the
+computational complexity and the growth of the action space. In our case, that would either require
+a production system with at most \(3\) product types, or an aggregation of product types into
+product groups. In the sense of this foundational research paper, we rather aim for an enhanced
+version of the algorithm that is scalable.
+
+
+\begin{algorithm}[t!]
+  \begin{algorithmic}[1]
+    \State{}Initialise state \(s_{0}\) and network parameters \(\netTarget, \netWorker\) randomly,
+    set an exploration rate \(0 \leqslant \plearn \leqslant \pexp \leqslant 1\), exponential
+    smoothing learning rates \(0 < \alpha_{\max}, \alpha, \gamma < 1\), a sufficiently large default
+    value for \(\avgrew_{\max}^{\pol}\) and discount factors \(0 < \gamma_{0} < \gamma_{1} \leqslant
+    1\)
+    \While{the stopping criterion is not fulfilled}
+    \State{\(\isRandAct{t} \gets \mathsf{False}\)}
+    \ForEach{independent agent \(i \in \agent_{1},\agent_{2},\ldots,\agent_{n}\)}
+    \State{}%
+    \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth-\leftmargin+2pt}
+      With probability \(\frac{\pexp}{n}\) choose action \(a_{t,i}\) randomly or otherwise one of
+      the set defined by
+      \(\min_{a \in \mathcal{A}(i)}\lexeq(\X^{\pol}_{\gamma_{1}}(s_{t},a; \netWorker{}),\X^\pol_
+      {\gamma_{0}}(s_{t},a; \netWorker{}))\). Set \(\isRandAct{t} \gets \mathsf{True}\) if the
+      action was chosen randomly.
+    \end{minipage}
+    \EndFor{}
+    \State{}%
+    \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth}
+      Carry out action \(a_{t}=(a_{t,\agent_{1}},\ldots,a_{t,\agent_{n}})\), observe reward
+      \(r_{t}\) and resulting state \(s_{t+1}\). Store experience
+      \((s_{t}, a_{t}, \isRandAct{t}, r_{t}, s_{t+1})\) in the experience replay memory \(M\).
+    \end{minipage}
+    \If{\(t \mod{\nstep} \equiv 0\)}
+    \State{Reset gradient: \(d\netWorker{} \gets 0\)}
+    \State{}%
+    \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth-\leftmargin+2pt}
+      Sample \(m\) random mini-batches of \(\nstep\) consecutive experiences from \(M\) numbered by
+      \(1 \leqslant i \leqslant \nstep\), each with
+      \((s_{i}, \isRandAct{i}, a_{i}, r_{i}, s_{i+1})\).
+    \end{minipage}
+    \ForEach{mini-batch}
+    \ForEach{experience, starting with the latest seen experience \(\nstep\)}
+    \If{experience \(\nstep\) or \(\neg \isRandAct{i}\) or  \(\pexp > \plearn\)}
+      \State{\(\target_{\gamma0} \gets \min_{a} \X^\pol_{\gamma_0}(s_{i+1},a; \netTarget{})\)}
+      \State{\(\target_{\gamma1} \gets \min_{a} \X^\pol_{\gamma_1}(s_{i+1},a; \netTarget{})\)}
+    \EndIf
+    \If{\(\neg \isRandAct{i}\) or \(\pexp > \plearn\)}
+      \State{\(\avgrew^{\pol} \gets (1- \alpha) \avgrew^{\pol} + \alpha [r_{i} +
+        \min_{a}\X^\pol_{\gamma_1}(s_{i+1},a; \netWorker{}) - \X^\pol_{\gamma_1}(s_{i},a_{i};
+        \netWorker{})]\)}
+      \State{Ensure improvement of \(\avgrew^{\pol}\), otherwise reset to old value}
+
+    % \State{\(\avgrew^{\pol} \gets \min(\avgrew^{\pol}, \avgrew_{\max}^{\pol})\)}
+    % \State{\(\avgrew_{\max}^{\pol} \gets (1- \alpha_{\max}) \avgrew_{\max}^{\pol} +
+    % \alpha_{\max} 1.025 \avgrew^{\pol}\)}
+    \EndIf
+    % \State{Compute overestimate of \(\avgrew^{\pol}\) and store result in \(\avgrew_{\Overestim}^{\pol}\)}
+    \State{\(\target_{\gamma_0}  \gets r_{i} + \gamma_{0} \target_{\gamma_{0}} - \avgrew^{\pol}  \)}
+    \State{\(\target_{\gamma_{1}}  \gets r_{i} + \gamma_{1} \target_{\gamma_{1}} - \avgrew^{\pol}\)}
+    \State{\(d\netWorker{} \gets d\netWorker{} + \partial{(\target_{\gamma_{0}} - \X^\pol_{\gamma_{0}}(s_{i+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
+    \State{\(d\netWorker{} \gets d\netWorker{} +
+      \partial{(\target_{\gamma_{1}} - \X^\pol_{\gamma_{1}}(s_{i+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
+    \EndFor{}
+    \EndFor{}
+    \State{Perform update of \(\netWorker{}\) using \(d\netWorker{} / (m \cdot \nstep)\)}
+    \EndIf{}
+    \State{Every \(C\) steps exponential smoothly set target network:
+    \(\netTarget \gets (1 - \gamma) \netTarget{} + \gamma \netWorker{}\)}
+    \State{Set \(s \gets s'\), \(t \gets t+1\) and decay parameters}
+    \EndWhile{}
+  \end{algorithmic}
+  \caption{\label{alg:full}Optimised near-Blackwell-optimal deep RL for unichain MDPs}
+\end{algorithm}
+
+
+Therefore, our implementation includes several optimisations, that help the algorithm in better
+exploring the solution space and stabilise the learning process. These include the above discussed
+independent agents that operate on the same state, \(n\)-step learning \citep{mnih2016asynchronous},
+and ensuring to constantly reduce the average reward as searching for policies with higher average
+costs is unnecessary. Algorithm~\ref{alg:full} depicts a detailed view on the algorithm including
+these extensions and with the objective to minimise the returned rewards. The idea is the same as in
+Algorithm~\ref{alg:near}, except that the action selection procedure is a loop over all independent
+agents and the implementation of the n-step logic.
+%
+The agent first chooses an action (steps \(4-5\)), executes the selected action and stores the
+experience in the replay memory (step \(6\)) and then samples a mini-batch of experiences each of
+length \(nstep\) to improve the policy (steps \(7-21\)). Step \(17\) uses an exponentially smoothed
+overestimation (by \(2.5\%\)) of the average reward and rate \(2^{-5}\). All average reward updates
+above this overestimation are rejected.
+
+
+% N-Step: 5
+As in \citep{mnih2016asynchronous, mnih2015human} the algorithm uses a \textit{Replay Memory} to
+save experiences and then randomly selects experiences from there for learning. This ensures that
+the independent and identically distributed (i.i.d.) assumption of the samples for the ANN
+backpropagation algorithms are satisfied. We extend this idea by splitting the available size of the
+replay memory into subsets, where each subset represents one action and sample uniformly over these
+subsets first. This prevents overfitting when one action is overrepresented in the policy, e.g.\@ no
+lead time change occurs much more often than the other actions.
+
+\textit{N-step learning} collects a set of consecutive experiences, in our case retrieved from the
+replay memory, and connects the state values starting from the latest observed experience, such that
+the newly computed state value of the corresponding experience propagates to the experience of the
+previous period. This allows a faster convergence, as values bootstrap over multiple periods in
+contrast to just one step. The experiences are stored according to the first taken action in the
+n-step series. We uniformly sample over the actions to ensure each action is constantly trained.
+This adaption reduces catastrophic forgetting of already accumulated knowledge.
+%
+% Overestimating
+% The idea behind overestimating the average reward is to constantly seek for better policies than the
+% currently known. We overestimate the reward by subtracting \(10\%\) of the computed average reward
+% \(\avgrew^{\pol}\) and an exponentially smoothed average reward of the actually returned reward
+% values of greedy actions. Thus, if the computed and actually observed average reward coincide, the
+% overestimation equals \(0\).
+% Rho Minimum
+% Preventing an increase of the average reward with \(\avgrew_{\max}^{\pol}\) reduces the search space
+% and provides a methodology for constantly improving policy.
+%
+% Workers Min Exploration [0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20]
+Furthermore, we use \(8\) additional \textsf{worker threads} (parallel RL) that operate on the same
+environment to collect a broader range of experiences~\citep[as e.g. in][]{mnih2016asynchronous}.
+%
+% Shared Rho (Yes)
+The average reward value is shared and computed as average over the main agent and all workers.
+% \MS[t]{shared rho}
+%
+%
+% \MS[t]{worker min exploration, epsilon greedy exploration}
+%
+%
+% Learning rate decay: ExponentialDecay (Just 5e-6) 0.25 100000
+% Learning rate: OptAdam 0.005 0.9 0.999 1e-8 1e-3,
+
+
+% Algorithms tested:
+ %            AlgDQNAvgRewAdjusted 0.8 1.0 ByStateValues
+ %          , AlgDQNAvgRewAdjusted 0.8 0.99 ByStateValues
+ %          , AlgDQN 0.99 Exact
+
+
+% Alpha: 0.01, Decay: ExponentialDecay (Just 5e-5) 0.25 50000
+% AlphaRhoMin: 2e-5, Decay: ExponentialDecay (Just 2e-5) 0.25 50000
+% Gamma: 0.01, Decay: ExponentialDecay (Just 1e-3) 0.25 100000
+% Epsilon: 0.25, 0.25, Decay: No decay
+% Exploration: 1.0, Decay: ExponentialDecay (Just 0.005) 0.25 100000
+% LearnRandomAbove: 0.5
+%
+%
+% UNUSED: Delta: 0.005, Decay: ExponentialDecay (Just 5e-4) 0.25 100000
+
+
+The algorithm initiation strategy is to first fill the replay memory buffer by skipping any learning
+(steps \(7-21\) in Algorithm~\ref{alg:full}) until the period, that corresponds to the replay
+memory size, is reached. Then for \(500\) steps the average reward is set to the last computed
+exponentially smoothed value to prevent divergence due to the untrained network weight
+initialisation values.
+
+
+% \MS[t]{Extensions: overestimate rho, rho minimum, Multiple Agents (shared state,  shared rho?),
+%   init-phase (0.5 for expSmthRewRate, always adapt rho, same rho for all agents): exp smooth reward
+%   as rho, replay memory actions, n-step (describe replay memory), gradient clipping }
+% \MS[t]{Side info: Replay memory also stores (disallowed) filtered action indices for optimisation purposes and on
+% episodic tasks needs to store a bool indicating an episode end. Uses Int8 for state features values.  }
 
 
 \section{Experimental Evaluation}
@@ -1085,7 +1313,7 @@ very high ($16$~Dollar per order and period) due to the MTO environment. All cos
 based on the production system state at the end of each period.
 
 
-\section{Lead Time Setting}
+\section{Lead Time Setting}\label{sec:lead}
 
 
 \subsection{Conventional Order Release Rule}
@@ -1164,45 +1392,6 @@ the agent can choose a lead time in $\{1,2,\ldots,\DDS\} \cap \{LT_{g}-1,LT_{g},
 % differently the algorithm can increase or decrease the lead time by 1 or leave it as it is, as long
 % as it acts within the discrete action space given by the set $\{1,2,\ldots,\DDS\}$ for each product
 % type.
-A naive approaches is to define one action for each combination of actions over all product type.
-This however, due to the exponential growth, results in only being able to solve very small
-production systems with only few product types. A common solution in production planning is to
-aggregate the products into product groups, cf.\@ hierarchical production
-planning~\citep{schneeweibeta1995hierarchical}.
-%
-Although applicable in our setup, if we group the products into bottleneck and non-bottleneck
-products as done by \citet{schneckenreither2020order}, also this approach simply does not scale.
-
-
-\begin{figure*}[t!]
-  \centering
-  \input{figures/indep_agents}                      % Figure production system
-  \caption{Illustration of independent agents as agent one increases the lead time}\label{fig:indep-agents}
-\end{figure*}
-%
-Therefore, in the seek of a broader solution we establish the idea of \textit{independent agents}.
-Each independent agent operates on the same system state, but chooses only a part of the actual
-executed action. In our case each independent agent is responsible for the lead time update of a
-specific product type. To the best of the author's knowledge this is the first work to reduce the
-action space in this way. Figure~\ref{fig:indep-agents} illustrates the idea, where wlog.\@ we use
-two agents and for simplicity omit the reward and truncate the state to the lead times. Assume that
-the first independent agent chooses to increase the lead time from \(3\) to \(4\). Thus, the future
-state, seen from this agent, depends on the probability of the other independent agent choosing to
-increase (\(\inc\)), decrease (\(\dec\)) or not change (\(\pers\)) the lead time. The Markov
-property, that is
-\(p(s_{t+1}, r_{t} \mid s_{t}, a_{t}) = p((4,\cdot), r_{t} \mid (3,3), (\inc, \cdot)) \), is not
-touched by this adaption. While for the first agent the reward and future state only depends on the
-current state and action taken, the corresponding probabilities for future state and reward change
-during the learning process as the the agent starts to behave differently.
-%
-This allows us to investigate the algorithms behaviour for even larger solution spaces. In
-particular, this adaption enables us to present the algorithm the above defined state space not only
-on the basis of product groups, but directly for each product type \(\pt\). Note that without this
-extension the problem is computationally infeasible due to \(3^{6} = 729\) possible actions.
-Removing the dependency between the lead times of different product types reduces the set of
-possible actions, and thus the number of ANN output layer nodes, to \(3 \cdot 6 = 18\). In
-preliminary experiments on small examples we only observed a very slight increase of required steps
-during training. Therefore, this is a vital adaption to ensure scalability.
 
 \paragraph*{Reward.}
 In each period the agents choose actions, which when executed generate a reward while traversing to
@@ -1210,166 +1399,6 @@ the next period by simulating the production system. The rewards are the accumul
 end of the period consisting of the backorders, the WIP orders and the number of orders in the
 FGI\@. The objective is to minimise the returned reward. % Therefore, we adapt the algorithm by
 % swapping all maximisation functions with minimisations.
-
-\paragraph*{Optimised Algorithm.}
-Our implementation includes several optimisations, that help the algorithm in better exploring the
-solution space and stabilise the learning process. These include the above discussed independent
-agents that operate on the same state, \(n\)-step learning \citep{mnih2016asynchronous},
-% overestimating the average reward \(\avgrew^{\pol}\)
-and ensuring to constantly reduce the average reward as searching for policies with higher average
-costs is unnecessary. Algorithm~\ref{alg:full}
-depicts a detailed view on the algorithm including these extensions and with the objective to
-minimise the returned rewards. The idea is the same as in Algorithm~\ref{alg:near}, except that the
-action selection procedure is a loop over all independent agents and the implementation of the
-n-step logic.
-%
-The agent first choose an action (steps \(4-5\)), executes the selected action and stores the
-experience in the replay memory (step \(6\)) and then samples a mini-batch of experiences each of
-length \(nstep\) to improve the policy (steps \(7-21\)). Step \(17\) uses an exponentially smoothed
-overestimation (by \(2.5\%\)) of the average reward and rate \(2^{-5}\). All average reward updates
-above this overestimation are rejected.
-
-
-% N-Step: 5
-As in \citep{mnih2016asynchronous, mnih2015human} the algorithm uses a \textit{Replay Memory} to
-save experiences and then randomly selects experiences from there for learning. This ensures that
-the independent and identically distributed (i.i.d.) assumption of the samples for the ANN
-backpropagation algorithms are satisfied. We extend this idea by splitting the available size of the
-replay memory into subsets, where each subset represents one action and sample uniformly over these
-subsets first. This prevents overfitting when one action is overrepresented in the policy, e.g.\@ no
-lead time change occurs much more often than the other actions.
-
-\textit{N-step learning} collects a set of consecutive experiences, in our case retrieved from the
-replay memory, and connects the state values starting from the latest observed experience, such that
-the newly computed state value of the corresponding experience propagates to the experience of the
-previous period. This allows a faster convergence, as values bootstrap over multiple periods in
-contrast to just one step. The experiences are stored according to the first taken action in the
-n-step series. We uniformly sample over the actions to ensure each action is constantly trained.
-This adaption reduces catastrophic forgetting of already accumulated knowledge.
-%
-% Overestimating
-% The idea behind overestimating the average reward is to constantly seek for better policies than the
-% currently known. We overestimate the reward by subtracting \(10\%\) of the computed average reward
-% \(\avgrew^{\pol}\) and an exponentially smoothed average reward of the actually returned reward
-% values of greedy actions. Thus, if the computed and actually observed average reward coincide, the
-% overestimation equals \(0\).
-% Rho Minimum
-% Preventing an increase of the average reward with \(\avgrew_{\max}^{\pol}\) reduces the search space
-% and provides a methodology for constantly improving policy.
-%
-% Workers Min Exploration [0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20]
-Furthermore, we use \(8\) additional \textsf{worker threads} (parallel RL) that operate on the same
-environment to collect a broader range of experiences~\citep[as e.g. in][]{mnih2016asynchronous}.
-%
-% Shared Rho (Yes)
-The average reward value is shared and computed as average over the main agent and all workers.
-% \MS[t]{shared rho}
-%
-%
-% \MS[t]{worker min exploration, epsilon greedy exploration}
-%
-%
-% Learning rate decay: ExponentialDecay (Just 5e-6) 0.25 100000
-% Learning rate: OptAdam 0.005 0.9 0.999 1e-8 1e-3,
-
-
-% Algorithms tested:
- %            AlgDQNAvgRewAdjusted 0.8 1.0 ByStateValues
- %          , AlgDQNAvgRewAdjusted 0.8 0.99 ByStateValues
- %          , AlgDQN 0.99 Exact
-
-
-% Alpha: 0.01, Decay: ExponentialDecay (Just 5e-5) 0.25 50000
-% AlphaRhoMin: 2e-5, Decay: ExponentialDecay (Just 2e-5) 0.25 50000
-% Gamma: 0.01, Decay: ExponentialDecay (Just 1e-3) 0.25 100000
-% Epsilon: 0.25, 0.25, Decay: No decay
-% Exploration: 1.0, Decay: ExponentialDecay (Just 0.005) 0.25 100000
-% LearnRandomAbove: 0.5
-%
-%
-% UNUSED: Delta: 0.005, Decay: ExponentialDecay (Just 5e-4) 0.25 100000
-
-
-The algorithm initiation strategy is to first fill the replay memory buffer by skipping any learning
-(steps \(7-21\) in Algorithm~\ref{alg:full}) until the period, that corresponds to the replay
-memory size, is reached. Then for \(500\) steps the average reward is set to the last computed
-exponentially smoothed value to prevent divergence due to the untrained network weight
-initialisation values.
-
-
-% \MS[t]{Extensions: overestimate rho, rho minimum, Multiple Agents (shared state,  shared rho?),
-%   init-phase (0.5 for expSmthRewRate, always adapt rho, same rho for all agents): exp smooth reward
-%   as rho, replay memory actions, n-step (describe replay memory), gradient clipping }
-% \MS[t]{Side info: Replay memory also stores (disallowed) filtered action indices for optimisation purposes and on
-% episodic tasks needs to store a bool indicating an episode end. Uses Int8 for state features values.  }
-
-
-\begin{algorithm}[t!]
-  \begin{algorithmic}[1]
-    \State{}Initialise state \(s_{0}\) and network parameters \(\netTarget, \netWorker\) randomly,
-    set an exploration rate \(0 \leqslant \plearn \leqslant \pexp \leqslant 1\), exponential
-    smoothing learning rates \(0 < \alpha_{\max}, \alpha, \gamma < 1\), a sufficiently large default
-    value for \(\avgrew_{\max}^{\pol}\) and discount factors \(0 < \gamma_{0} < \gamma_{1} \leqslant
-    1\)
-    \While{the stopping criterion is not fulfilled}
-    \State{\(\isRandAct{t} \gets \mathsf{False}\)}
-    \ForEach{independent agent \(i \in \agent_{1},\agent_{2},\ldots,\agent_{n}\)}
-    \State{}%
-    \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth-\leftmargin+2pt}
-      With probability \(\frac{\pexp}{n}\) choose action \(a_{t,i}\) randomly or otherwise one of
-      the set defined by
-      \(\min_{a \in \mathcal{A}(i)}\lexeq(\X^{\pol}_{\gamma_{1}}(s_{t},a; \netWorker{}),\X^\pol_
-      {\gamma_{0}}(s_{t},a; \netWorker{}))\). Set \(\isRandAct{t} \gets \mathsf{True}\) if the
-      action was chosen randomly.
-    \end{minipage}
-    \EndFor{}
-    \State{}%
-    \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth}
-      Carry out action \(a_{t}=(a_{t,\agent_{1}},\ldots,a_{t,\agent_{n}})\), observe reward
-      \(r_{t}\) and resulting state \(s_{t+1}\). Store experience
-      \((s_{t}, a_{t}, \isRandAct{t}, r_{t}, s_{t+1})\) in the experience replay memory \(M\).
-    \end{minipage}
-    \If{\(t \mod{\nstep} \equiv 0\)}
-    \State{Reset gradient: \(d\netWorker{} \gets 0\)}
-    \State{}%
-    \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth-\leftmargin+2pt}
-      Sample \(m\) random mini-batches of \(\nstep\) consecutive experiences from \(M\) numbered by
-      \(1 \leqslant i \leqslant \nstep\), each with
-      \((s_{i}, \isRandAct{i}, a_{i}, r_{i}, s_{i+1})\).
-    \end{minipage}
-    \ForEach{mini-batch}
-    \ForEach{experience, starting with the latest seen experience \(\nstep\)}
-    \If{experience \(\nstep\) or \(\neg \isRandAct{i}\) or  \(\pexp > \plearn\)}
-      \State{\(\target_{\gamma0} \gets \min_{a} \X^\pol_{\gamma_0}(s_{i+1},a; \netTarget{})\)}
-      \State{\(\target_{\gamma1} \gets \min_{a} \X^\pol_{\gamma_1}(s_{i+1},a; \netTarget{})\)}
-    \EndIf
-    \If{\(\neg \isRandAct{i}\) or \(\pexp > \plearn\)}
-      \State{\(\avgrew^{\pol} \gets (1- \alpha) \avgrew^{\pol} + \alpha [r_{i} +
-        \min_{a}\X^\pol_{\gamma_1}(s_{i+1},a; \netWorker{}) - \X^\pol_{\gamma_1}(s_{i},a_{i};
-        \netWorker{})]\)}
-      \State{Ensure improvement of \(\avgrew^{\pol}\), otherwise reset to old value}
-
-    % \State{\(\avgrew^{\pol} \gets \min(\avgrew^{\pol}, \avgrew_{\max}^{\pol})\)}
-    % \State{\(\avgrew_{\max}^{\pol} \gets (1- \alpha_{\max}) \avgrew_{\max}^{\pol} +
-    % \alpha_{\max} 1.025 \avgrew^{\pol}\)}
-    \EndIf
-    % \State{Compute overestimate of \(\avgrew^{\pol}\) and store result in \(\avgrew_{\Overestim}^{\pol}\)}
-    \State{\(\target_{\gamma_0}  \gets r_{i} + \gamma_{0} \target_{\gamma_{0}} - \avgrew^{\pol}  \)}
-    \State{\(\target_{\gamma_{1}}  \gets r_{i} + \gamma_{1} \target_{\gamma_{1}} - \avgrew^{\pol}\)}
-    \State{\(d\netWorker{} \gets d\netWorker{} + \partial{(\target_{\gamma_{0}} - \X^\pol_{\gamma_{0}}(s_{i+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
-    \State{\(d\netWorker{} \gets d\netWorker{} +
-      \partial{(\target_{\gamma_{1}} - \X^\pol_{\gamma_{1}}(s_{i+1},a; \netWorker{}))}^{2} / \partial\netWorker{}\)}
-    \EndFor{}
-    \EndFor{}
-    \State{Perform update of \(\netWorker{}\) using \(d\netWorker{} / (m \cdot \nstep)\)}
-    \EndIf{}
-    \State{Every \(C\) steps exponential smoothly set target network:
-    \(\netTarget \gets (1 - \gamma) \netTarget{} + \gamma \netWorker{}\)}
-    \State{Set \(s \gets s'\), \(t \gets t+1\) and decay parameters}
-    \EndWhile{}
-  \end{algorithmic}
-  \caption{\label{alg:full}Optimised near-Blackwell-optimal deep RL for unichain MDPs}
-\end{algorithm}
 
 
 \paragraph*{Neural Network Setup.}
