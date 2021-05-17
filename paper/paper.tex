@@ -107,22 +107,21 @@ pdfkeywords={average reward adjusted reinforcement learning, production planning
 
 \begin{abstract}
   % teilw. von IJPR paper uebernommen
-  An essential task in manufacturing planning and control is to determine when to release orders to
-  the shop floor. One key parameter is the lead time which is the planned time that elapses between
-  the release of an order and its completion. Lead times are usually determined based on the
-  measured duration orders take to traverse the production system, i.e.\@ the flow times.
-  Traditional order release models assume static lead times, although it has been shown that they
-  should be set dynamically to be able to react to the dynamic operational characteristics of
-  production system. Therefore, we present an order release model which sets lead times dynamically
-  by using an reinforcement learning approach. This algorithm is designed especially for
-  applications with high process variability and periodic feedback to the agent. Therefore, this
-  paper aims at providing a proof-of-concept for the proposed algorithm. Therefore, we compare our
-  method on a three-stage flow-shop simulation model not only to static order release techniques,
-  but also to the commonly used deep Q-Learning algorithm. The results show that both reinforcement
-  learning agents have room for improvement for queuing systems with low variability, that our
-  proposed method usually outperforms deep Q-Learning and finally for systems with high utilisation
-  that the proposed reinforcement learning algorithm performs very well, outperforming all other
-  approaches.
+  A major task in hierarchical structured manufacturing planning and control is to determine when to
+  release orders to the shop floor. One key parameter is the lead time which is the planned time
+  that elapses between the release of an order and its completion. Lead times are usually determined
+  based on the flow times, i.e.\@ the measured duration orders take to traverse the production
+  system. Traditional order release models assume static lead times, although it has been shown that
+  they should be set dynamically to be able to react to the dynamic operational characteristics of
+  production system. Therefore, we present a reinforcement learning order release model which sets
+  lead times dynamically. The applied reinforcement learning agent is designed especially for
+  processes with periodic feedback and high variability. This paper aims at providing a
+  proof-of-concept for the proposed algorithm. We compare our method on a three-stage flow-shop
+  simulation model not only to static order release techniques, but also to the commonly used deep
+  Q-Learning agent. The results show that both reinforcement learning agents have room for
+  improvement for queuing systems with low variability, that our proposed method usually outperforms
+  deep Q-Learning and finally for systems with high utilisation that the proposed reinforcement
+  learning algorithm performs very well, outperforming all other approaches.
   %
   % We use a  to compare the algorithm
   % to % and show that our approach outperforms
@@ -354,7 +353,7 @@ and finally average reward adjusted reinforcement learning.
 
 \subsection{Related Lead Time Management Literature}
 
-Setting of lead times dynamically is a rather difficult task. Therefore, most state-of-the-art order
+Setting lead times dynamically is a rather difficult task. Therefore, most state-of-the-art order
 release mechanisms use static or fixed lead times to address the order release problem.
 %
 However, lead times should be set dynamically due to the non-linear relationship between utilisation
@@ -380,35 +379,94 @@ management approaches:
   \citealt{PaterninaArboleda2001,schneckenreither2020order,Schneckenreither2019}).
 \end{itemize}
 
-\MS[]{todo: Reactive}
+% \MS[]{todo: Reactive}
 
-\MS[]{todo: proactive}
+In the sequel we review the lead time management (LTM) literature for due date assignment, order
+release and scheduling, with the focus on order release literature.
 
-We hypothesise that dynamic lead time management approaches need to aim for a predictive design in
-order to be able to compete with state-of-the-art order release methods from literature. However,
-there only exist three papers that propose a predictive lead time management algorithm in
-literature.
-
-
-The first approach by \citet{PaterninaArboleda2001} introduces a predictive order release model by
-using reinforcement learning in a single product, four-station serial flow line and compare its
-performance (WIP costs) with conventional order release policies (e.g., Kanban and CONWIP).
+\paragraph{Reactive LTM.}
 %
-% Reinforcement learning is an optimisation technique that stems from dynamic programming and its goal
-% is to find the best stationary policy for a given problem. This policy is usually provided by
-% assessing current and future states (or state-action pairs) of an underlying Markov Decision Process
-% (MDP).
-% The advantage of reinforcement learning over dynamic programming is that (i) the problem
-% space is explored by an agent and thus only expectantly interesting parts of the problem space need
-% to be assessed and (ii) the knowledge (acquisition) of transition probabilities becomes unnecessary
-% as the states are evaluated by consecutively observed states solely.
+%% Reactive Due Date Ass
+Early due date assignment approaches \citep[e.g.][]{conway1967} set the due dates according to the
+processing time (Total Work Content rule, TWK rule) or the number of operations.
 %
-The algorithm of \citet{PaterninaArboleda2001} decides on whether or not to release an order after
-each system change, the completion of an operation of any order at any stage or a new order arrival,
-and assumes that any unsatisfied demand is lost. Thus, they use a continuous order release method
-although in practice order release decisions often need to be made on a periodical basis, e.g.\@
-daily (see \citealt{enns2004work,GeldersvanW1982}). They outperform existing control policies with their tabular
-based reinforcement learning agent.
+%% Reactive Order Release
+For order release \citet{enns2004work} investigate the use of a reactive approach with exponential
+smoothing of flow times to set lead times for two-stage distribution requirements planning. Although
+it can be considered an exploratory research paper the main conclusions are that dynamically setting
+planned lead times using exponential smoothing works well, but that the reactions are delayed. The
+later is due to the nature of the flow time measurement only being possible for finished orders.
+%
+Another reactive approach uses exponential smoothing to forecast flow times to set lead times for a
+capacitated multi-stage make-to-stock system \citep{Selcuk2006}. Their approach performs better than
+fixed lead time techniques for most experiments. However, they also exhibit the LTS\@.
+
+\paragraph{Proactive LTM.}
+%
+%% Proactive Due Date Assignment
+The TWK due date assignment rules have been extended by several researchers to proactive methods
+\citep{eilon1976, kanet1986, Enns1995}. As flow times depend on the workload and machine capacity in
+the shop workload dependent \citep{Bertrand1983} due date assignment rules have been developed. The
+basic idea is to estimate the flow time of an order on its arrival by measuring the number of orders
+queued on the corresponding routing, which can be analytically \citep[e.g.][]{ChungHuang2002}, by
+the use of a simulation model \citep[e.g.][]{vig1991}, statistical methods \citep[e.g.][]{Tai2012}
+or using hybrid approaches \citep[e.g.][]{Kaplan1993}. Furthermore several proactive due date
+assignment methods that incorporate neural networks exist \citet{Philipoom1994, Philipoom1997,
+  HsuSha2004,Patil2008,ChangetalFuzzyDDset2008}.
+%
+%% Proactive Order Release
+In the case of order release the analytical papers by \citet{Selcuk2009} and \citet{Selcuk2013} use
+the WIP level to quote lead times. In the former they show that the less frequently updating the
+lead time decreases the nervousness and improves the performance, while in the latter that
+dynamically updating lead times performs much better than static lead times.
+%
+% MIL (Modified infinite loading)
+MIL extends the static BIL procedure to integrate shopfloor congestion by subtracting number of
+queued jobs on the corresponding routing from the due date
+\citep{RagatzMabert1988,wisner1995review}. For non-due-date oriented dispatching rules, their
+approach has a positive effect on total cost performance, while for due-date oriented dispatching
+this holds only if the due dates are loose. For all other cases the release algorithm has no
+negative effect on performance. Variants of this rule-based method exist
+\citep[e.g.][]{park1989job,kim1995evaluating}.
+% Bertrand 2002
+% \citet{bertrand2002investigation} investigate different ways of releasing orders, assigning lead
+% times and operation due dates to assembly orders. In their work a due date is set once the order
+% arrives and then a release time calculated by subtracting the lead time from it. In one approach the
+% lead time calculation is the sum of the operation times plus a factor consisting of the waiting time
+% allowance per operation times the number of operations. They use the average operation waiting time
+% as waiting time allowance factor. In the other approaches the orders are released using the
+% \ac{imre} policy. In terms of order release they find that all work orders of an assembly order
+% should be released at the same time.
+%
+A machine learning approach is presented by \citet{Lee1997}. They combine a genetic algorithm with a
+decision tree to generate sequencing rules in the order pool for release. In the tested job shops
+the CONWIP rule determines the release of the orders and a decision tree to find the order release
+sequence. Their method leads to significant improvements over conventional single release and
+dispatching approaches.
+
+
+%% Predictive
+\paragraph{Predictive LTM.}
+%
+Due to the complex problem structure we hypothesise that dynamic lead time management approaches
+should aim for a predictive design in order to be able to compete with state-of-the-art order
+release methods from literature. However, there only exist four papers that propose a predictive
+lead time management method.
+
+For scheduling \citet{wang2007reinforcement} present a predictive lead time management approach
+using reinforcement learning. Their algorithm uses multiple agents to forecast the processing time
+of each job for routing decisions. They show on a 10 machine job shop that the RL algorithm performs
+equally or better than tested heuristics.
+%
+In case of order release, \citet{PaterninaArboleda2001} introduce a predictive order release model
+using reinforcement learning in a single product, four-station serial flow line. They compare its
+performance (WIP costs) with conventional order release policies (e.g., Kanban and CONWIP). The
+algorithm decides on whether or not to release an order after each system change, the completion of
+an operation of any order at any stage or a new order arrival, and assumes that any unsatisfied
+demand is lost. Thus, they use a continuous order release method although in practice order release
+decisions often need to be made on a periodical basis, e.g.\@ daily (see
+\citealt{enns2004work,GeldersvanW1982}). They outperform existing control policies with their
+tabular based reinforcement learning agent.
 %
 Then, \citet{Schneckenreither2019} use several different reinforcement learning algorithms to make
 periodic order release decisions for a flow shop production system. The algorithm directly sets lead
@@ -1536,7 +1594,7 @@ was hindered by the available computational resources.
 For the experimental runs we used personal computers with Intel CPUs i7-7700 (16GB RAM) and i9-7900X
 (32GB RAM). For each method we performed \(500.000\) learning steps, which took about \(2\)-\(3\)
 days. For the same experimental setup the inputs/random variables are the same for each period.
-After learning each order release method was evaluated on \(20\) demand streams, each with \(1000\)
+After learning, each order release method was evaluated on \(20\) demand streams, each with \(1000\)
 periods of warm-up and \(7000\) periods of evaluation phase. Welch’s procedure was applied to
 approximate the length of the warm-up period (see~\cite{law:simulationc}).
 
@@ -2044,8 +2102,8 @@ discounted reward.
     \While{the stopping criterion is not fulfilled} \ForEach{independent agent
       \(i \in \agent_{1},\agent_{2},\ldots,\agent_{n}\)} \State{}%
     \begin{minipage}[t]{\dimexpr\textwidth-\leftmargin-\labelsep-\labelwidth-\leftmargin+2pt}
-      With probability \(\frac{\pexp}{n}\) choose action \(a_{t,i}\) randomly or otherwise one of
-      the set defined by
+      With probability \(\frac{\pexp}{n}\) choose action \(a_{t,i}\) randomly or otherwise the one
+      fulfilling
       \(\min_{a \in \mathcal{A}(i)}\X^{\pol}_{\gamma_{1}}(s_{t},a; \netWorker{})\).
     \end{minipage}
     \EndFor{}
