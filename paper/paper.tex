@@ -107,8 +107,8 @@ pdfkeywords={average reward adjusted reinforcement learning, production planning
 
 \begin{abstract}
   % teilw. von IJPR paper uebernommen
-  A major task in hierarchical structured manufacturing planning and control is to determine when to
-  release orders to the shop floor. One key parameter is the lead time which is the planned time
+  A major task in hierarchically structured manufacturing planning and control is to determine when
+  to release orders to the shop floor. One key parameter is the lead time which is the planned time
   that elapses between the release of an order and its completion. Lead times are usually determined
   based on the flow times, i.e.\@ the measured duration orders take to traverse the production
   system. Traditional order release models assume static lead times, although it has been shown that
@@ -181,24 +181,24 @@ making % that is designed to incorporate the future system state
 is reinforcement learning \citep[e.g.][]{sutton1998introduction}, one of the main three
 subcategories of machine learning. % It stems from dynamic programming the future
 % system state is by design considered as a main driver of decision making in the current period.
-Reinforcement learning is an optimisation technique that stems from dynamic programming, therefore
-also seeks to compute the best stationary policy for a given problem. The idea is to evaluate the
-current system state according to the direct feedback (reward), as well as the previously learned
-state value of the consecutive state. This forms a cyclic constraint problem with as many
-constraints and variables as there are system states. The solution is found through iteration and
-due to the transitivity property of the state value update.
+Reinforcement learning (RL) is an optimisation technique that stems from dynamic programming,
+therefore also seeks to compute the best stationary policy for a given problem. The idea is to
+evaluate the current system state according to the direct feedback (reward), as well as the
+previously learned state value of the consecutive state. This forms a cyclic constraint problem with
+as many constraints and variables as there are system states. The solution is found through
+iteration and due to the transitivity property of the state value update.
 % as in dynamic programming is that the process and the current state and future states (or
 % state-action pairs) of an underlying Markov Decision Process (MDP).
-The advantage of reinforcement learning over dynamic programming is that (i) the problem space is
+The advantage of RL over dynamic programming is that (i) the problem space is
 explored by an agent and thus only expectantly interesting parts of the problem space need to be
 assessed and (ii) the knowledge (acquisition) of transition probabilities becomes unnecessary as the
 states are evaluated by consecutively observed states solely.
 
-There are two main types of reinforcement learning algorithms known in literature. The commonly
-applied discounted reinforcement learning method
+There exist two main types of deep RL algorithms in literature. The commonly
+applied discounted RL method
 \citep[e.g.][]{sutton1998introduction,mnih2015human,mnih2016asynchronous}, in which the future
 system state is discounted by a factor \(0 < \gamma < 1\) to prevent an infinite growth of the state
-evaluations, and average reward reinforcement learning
+evaluations, and average reward RL
 \citep{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults,
   schwartz1993reinforcement,
   Mahadevan97_SelfimprovingFactorySimulationUsingContinuoustimeAveragerewardReinforcementLearning}.
@@ -211,28 +211,30 @@ The advantage of the later % over the widely applied discounted reinforcement le
 is that the underlying optimisation technique is theoretically able to find better policies
 % This yields from the fact that in the standard framework each state is assessed independently and
 % by a single value. To be more precise, average reward reinforcement learning
-by splitting up the evaluation of each state into infinitely many parts. First, the average reward
-per step, second, a bias value that specifies expected reward that is additionally accumulated when
-traversing from the current state to the optimal path, and third, an infinite number of values of
-which each includes the occurrence of the rewards and in which magnitude along the path
-\citep{Howard64,Puterman94,
+by splitting up the evaluation of each state into infinitely many components. First, the average
+reward per step, second, a bias value that specifies expected reward that is additionally
+accumulated when traversing from the current state to the optimal path, and third, an infinite
+number of values of which each includes the occurrence of the rewards and in which magnitude along
+the path \citep{Howard64,Puterman94,
   Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults}. % Thus,
 % while in average reward reinforcement learning these terms are learned separately
 To expectantly accumulate the most reward one has to choose the action that leads to the state with
-highest value of the parts, on ties selecting actions following the order above. That is, the
-highest evaluation of the average reward, the bias value, the third component, the fourth component,
-etc. The formulations for computing these values form nested constraints, so for instance the
-current estimate of the average reward is used to compute the bias value. Therefore, a slight
-approximation error may cause harmful damage in subsequent constraints, which makes average reward
-reinforcement computationally very intensive. Worsening the issue, \citet[p.343ff]{Puterman94} shows
-that an additional set of nested constraints have to be solved to gain the correct solution.
+highest value of the components following the order above, on ties
+selecting % within the best actions
+according to the next component. That is, the highest evaluation of the average reward, the bias
+value, the third component, the fourth component, etc. The formulations for computing these values
+form nested constraints, so for instance the current estimate of the average reward is used to
+compute the bias value. Therefore, a slight approximation error may cause harmful damage in
+subsequent constraints, which makes average reward reinforcement computationally very intensive.
+Worsening the issue, \citet[p.343ff]{Puterman94} shows that the constraint problem has to be
+specified to solve one more component as originally intended to gain correct solution.
 
 
 In contrast the standard discounted framework estimates only one single scalar value consisting of
-the addition of these subterms, where however, the average reward is scaled by \(1/(1-\gamma)\).
+the addition of these components, where however, the average reward is scaled by \(1/(1-\gamma)\).
 %
-To collect as much reward as possible, for instance to gain the highest expected profit, the
-discount factor \(\gamma\) has to be very close to one, e.g. \(0.99\).
+But in order to collect as much reward as possible the discount factor \(\gamma\) has to be very
+close to one, for instance \(0.99\).
 %
 % As the discount factor \(\gamma\) is usually set very
 % close to \(1\), e.g. \(0.99\), which
@@ -241,20 +243,20 @@ the other two.
 %
 Further, in commonly applied unichain (and thus ergodic) MDPs the average reward per step is equal
 over all states. Thus, independently assessing it is not only computationally unwisely, but also
-problematic when they are iteratively approximated. For this reasons most applications of discounted
-reinforcement learning in literature evaluate their algorithms on processes that have an average
+problematic as they are iteratively approximated. For this reasons most applications of discounted
+RL in literature evaluate their algorithms on processes that have an average
 reward of about zero \citep{schneckenreither2020average}. \citet{schneckenreither2020average} shows
-that tabular based discounted reinforcement learning agents are unable to find even basic policies
+that tabular based discounted RL agents are unable to find even basic policies
 when confronted with processes that have a small average reward per step. Unfortunately, when
 optimising for the highest profit (or the lowest cost) in the area of operations management, the
 most intuitive and clear way of reward feedback to the agent is presenting it the profit that is
 accumulated every period.
 
 
-Therefore, we develop, adapt and enhance an algorithm that uses only one scalar value for the
-estimation of the average reward over all states. Further it estimates for every state-action pair
-the bias value and the sum of all other state value parts, usually referred to as error term. The
-later values are adjusted by the average reward.
+Therefore, we develop an algorithm that uses only one scalar value for the estimation of the average
+reward over all states. Further it estimates for every state-action pair the bias value and the sum
+of all other state value components, usually referred to as error term. The later values are
+adjusted by the average reward.
 % This, combined with the iterative evaluation and the independently assessing of the average reward
 % for each state lets standard discounted reinforcement learning struggle to find good policies.
 % Thus, this incautious combining of different kinds of state values as done in discounted
@@ -264,9 +266,9 @@ later values are adjusted by the average reward.
 % discounting technique.
 %
 %
-Thus, as opposed to the commonly applied discounted reinforcement learning algorithm we use an
-average reward adjusted reinforcement learning algorithm to dynamically set lead time for order
-release. In contrast to the aforementioned works on average reward reinforcement learning our
+Thus, as opposed to the commonly applied discounted RL algorithm we use an
+average reward adjusted RL algorithm to dynamically set lead time for order
+release. In contrast to the aforementioned works on average reward RL our
 algorithm incorporates the optimisation of not only the average reward over time, but also the bias
 values, which is an important adaption in highly stochastic systems. Only the work by
 \citet{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies}
@@ -307,11 +309,11 @@ applied deep Q-Learning algorithm~\citep[cf.][]{mnih2015human}.
 %
 In summary our contributions are as follows:
 \begin{itemize}
-\item We propose a novel \textit{average reward adjusted deep reinforcement learning algorithm} \ARA{}.
-  This is the first average reward adjusted reward learning algorithm that operates using a
+\item We propose a novel \textit{average reward adjusted deep reinforcement learning algorithm}
+  \ARA{}. This is the first average reward adjusted reward learning algorithm that operates using a
   artificial neural network as function approximation. It includes several known extensions like
   n-step learning \citep[e.g.][]{mnih2016asynchronous} or experience replay memory
-  \citep[e.g.][]{mnih2015human}, which we advanced to prevent catastrophic forgetting by
+  \citep[e.g.][]{mnih2015human}, which we aditionally advanced to prevent catastrophic forgetting by
   action-based selection of experiences.
 \item We establish a action reduction method, named \textit{independent agents}, as a subset of the
   action space is treated as if there were multiple independent agents, although they share the same
@@ -344,11 +346,11 @@ Section~\ref{sec:conclusion} concludes the paper.
 \section{Related Literature}
 
 This section is split into several parts. First we discuss lead time management literature, then
-reinforcement learning applications to lead time management, third we briefly review the relevant
-notation to reinforcement learning and finally we present the relevant literature of reinforcement
+RL applications to lead time management, third we briefly review the relevant
+notation to RL and finally we present the relevant literature of reinforcement
 learning in the rest of the section. The later includes a discussion of discounted reinforcement
-learning, average reward reinforcement learning, the Laurent series expansion of the state values,
-and finally average reward adjusted reinforcement learning.
+learning, average reward RL, the Laurent series expansion of the state values,
+and finally average reward adjusted RL.
 
 
 \subsection{Related Lead Time Management Literature}
@@ -357,7 +359,7 @@ Setting lead times dynamically is a rather difficult task. Therefore, most state
 release mechanisms use static or fixed lead times to address the order release problem.
 %
 However, lead times should be set dynamically due to the non-linear relationship between utilisation
-and flow times \citealt{Pahl2007,hoyt1978dynamic}, but this may also substantially degrade the
+and flow times \citep{Pahl2007,hoyt1978dynamic}, but this may also substantially degrade the
 system performance. For instance, a solely reactive approach can result in the lead time syndrome.
 %
 The \textit{lead time syndrome} describes a vicious cycle where increasing flow times perpetually
@@ -370,7 +372,7 @@ management approaches:
 
 \begin{itemize}
 \item \textsf{Reactive lead time management} sets lead times by reacting on earlier flow times
-  (e.g., \citealt{enns2004work, Selcuk2006}), i.e.\@ data from the past.
+  (e.g., \citealt{enns2004work, Selcuk2006}), i.e.\@ data from the \textit{past}.
 \item \textsf{Proactive lead time management} may incorporate \textit{past} data and the
   \textit{current} system state to set lead times (e.g., \citealt{Bertrand1983, ChungHuang2002}).
 \item \textsf{Predictive lead time management} may incorporate \textit{past} data and the
@@ -393,7 +395,7 @@ processing time (Total Work Content rule, TWK rule) or the number of operations.
 %% Reactive Order Release
 For order release \citet{enns2004work} investigate the use of a reactive approach with exponential
 smoothing of flow times to set lead times for two-stage distribution requirements planning. Although
-it can be considered an exploratory research paper the main conclusions are that dynamically setting
+it is considered an exploratory research paper the main conclusions are that dynamically setting
 planned lead times using exponential smoothing works well, but that the reactions are delayed. The
 later is due to the nature of the flow time measurement only being possible for finished orders.
 %
@@ -406,12 +408,12 @@ fixed lead time techniques for most experiments. However, they also exhibit the 
 %% Proactive Due Date Assignment
 The TWK due date assignment rules have been extended by several researchers to proactive methods
 \citep{eilon1976, kanet1986, Enns1995}. As flow times depend on the workload and machine capacity in
-the shop workload dependent \citep{Bertrand1983} due date assignment rules have been developed. The
+the shop \citep{Bertrand1983} workload dependent due date assignment rules have been developed. The
 basic idea is to estimate the flow time of an order on its arrival by measuring the number of orders
 queued on the corresponding routing, which can be analytically \citep[e.g.][]{ChungHuang2002}, by
 the use of a simulation model \citep[e.g.][]{vig1991}, statistical methods \citep[e.g.][]{Tai2012}
 or using hybrid approaches \citep[e.g.][]{Kaplan1993}. Furthermore several proactive due date
-assignment methods that incorporate neural networks exist \citet{Philipoom1994, Philipoom1997,
+assignment methods that incorporate neural networks exist \citep{Philipoom1994, Philipoom1997,
   HsuSha2004,Patil2008,ChangetalFuzzyDDset2008}.
 %
 %% Proactive Order Release
@@ -421,9 +423,9 @@ lead time decreases the nervousness and improves the performance, while in the l
 dynamically updating lead times performs much better than static lead times.
 %
 % MIL (Modified infinite loading)
-MIL extends the static BIL procedure to integrate shopfloor congestion by subtracting number of
-queued jobs on the corresponding routing from the due date
-\citep{RagatzMabert1988,wisner1995review}. For non-due-date oriented dispatching rules, their
+Modified infinite loading extends the static Backward Infinte Loading (BIL) procedure to integrate
+shopfloor congestion by subtracting number of queued jobs on the corresponding routing from the due
+date \citep{RagatzMabert1988,wisner1995review}. For non-due-date oriented dispatching rules, their
 approach has a positive effect on total cost performance, while for due-date oriented dispatching
 this holds only if the due dates are loose. For all other cases the release algorithm has no
 negative effect on performance. Variants of this rule-based method exist
@@ -454,21 +456,21 @@ release methods from literature. However, there only exist four papers that prop
 lead time management method.
 
 For scheduling \citet{wang2007reinforcement} present a predictive lead time management approach
-using reinforcement learning. Their algorithm uses multiple agents to forecast the processing time
+using RL. Their algorithm uses multiple agents to forecast the processing time
 of each job for routing decisions. They show on a 10 machine job shop that the RL algorithm performs
 equally or better than tested heuristics.
 %
 In case of order release, \citet{PaterninaArboleda2001} introduce a predictive order release model
-using reinforcement learning in a single product, four-station serial flow line. They compare its
+using RL in a single product, four-station serial flow line. They compare its
 performance (WIP costs) with conventional order release policies (e.g., Kanban and CONWIP). The
 algorithm decides on whether or not to release an order after each system change, the completion of
 an operation of any order at any stage or a new order arrival, and assumes that any unsatisfied
 demand is lost. Thus, they use a continuous order release method although in practice order release
 decisions often need to be made on a periodical basis, e.g.\@ daily (see
 \citealt{enns2004work,GeldersvanW1982}). They outperform existing control policies with their
-tabular based reinforcement learning agent.
+tabular based RL agent.
 %
-Then, \citet{Schneckenreither2019} use several different reinforcement learning algorithms to make
+Then, \citet{Schneckenreither2019} use several different RL algorithms to make
 periodic order release decisions for a flow shop production system. The algorithm directly sets lead
 times for each product type, which are then used to release the orders in the order pool. They show
 that their approach outperforms static order release mechanisms by yielding lower costs, lateness
@@ -487,37 +489,37 @@ management approaches, especially for scenarios with high utilisation.
 
 \subsection{Related Reinforcement Learning Applications}
 
-Over the past decades reinforcement learning has been applied to various problems, for which
+Over the past decades RL has been applied to various problems, for which
 astonishing results have been reported. E.g.\@ only recently \citet{mnih2015human} have presented a
-novel value-iteration reinforcement learning agent which exceeds human-level abilities in playing
+novel value-iteration RL agent which exceeds human-level abilities in playing
 many classic Atari games~\citep{bellemare2012investigating}. Further, \citet{mnih2016asynchronous}
-present improved results with asynchronous actor-critic reinforcement learning. Also games like
+present improved results with asynchronous actor-critic RL. Also games like
 Go~\citep{silver2016mastering} and Chess~\citep{silver2017mastering} have been mastered with
-superhuman performance by \textit{tabula rasa} reinforcement learning agents. Furthermore, the
+superhuman performance by \textit{tabula rasa} RL agents. Furthermore, the
 method has also been applied in the setting of manufacturing system, e.g.\@ to improve the ramp-up
 process~\citep{doltsinis2012reinforcement}, in locally selecting appropriate dispatching rules
 \citep{zhang1995reinforcement,wang2005application} or scheduling \citep{zhang1995reinforcement,
   waschneck2018optimization}.
 %
-However, all these applications use discounted reinforcement learning and are either designed to
-investigate a rather simple MDP, e.g.\@ by selecting heuristics instead of optimising the underlying
-problem itself, or by mapping the actual objective in a reward function that is approximately \(0\)
-on average over time.
+However, all these applications use discounted RL and are either designed to investigate a rather
+simple MDP, e.g.\@ by selecting heuristics instead of optimising the underlying problem itself, or
+by mapping the actual objective in a reward function that is approximately zero on average over
+time.
 %
-This is due to the fact that state value is largely composed of a term defined by the policy's
-average reward value \citep{MillerVeinott1969,Blackwell62} which would otherwise dilute the state
-values and thus decrease the solution quality, as can for instance be observed in
+This is due to the fact that state value is largely composed of a term defined by the current
+policys' average reward value \citep{MillerVeinott1969,Blackwell62} which would otherwise dilute the
+state values and thus decrease the solution quality, as can for instance be observed in
 \citet{SchneckenreitherHaeussler2019} and \citet{gijsbrechts2018can}.
 %
 
 
 Therefore, most applications that incorporate and directly reflect costs or profit in the reward
-function use average reward reinforcement learning. \citet{aydin2000dynamic} use it in the setting
+function use average reward RL. \citet{aydin2000dynamic} use it in the setting
 of scheduling, while in a series of papers Mahadevan et al.\@ investigated several problem domains
 starting with simple MDPs
 \citep{Mahadevan96_AverageRewardReinforcementLearningFoundationsAlgorithmsAndEmpiricalResults,Mahadevan96_OptimalityCriteriaInReinforcementLearning}.
-After these foundational works for average reward reinforcement learning they introduced a
-continuous time average reward reinforcement learning algorithm named SMART
+After these foundational works for average reward RL they introduced a
+continuous time average reward RL algorithm named SMART
 \citep{Mahadevan97_SelfimprovingFactorySimulationUsingContinuoustimeAveragerewardReinforcementLearning}.
 Applications of SMART reach from the optimisation of queuing systems
 \citep{Mahadevan96_AnAveragerewardReinforcementLearningAlgorithmForComputingBiasoptimalPolicies,Mahadevan96_SensitiveDiscountOptimalityUnifyingDiscountedAndAverageRewardReinforcementLearning},
@@ -544,8 +546,8 @@ uniformisation into equivalent discrete time instances
 \subsection{Reinforcement Learning Preliminaries}
 
 The rest of this section briefly reintroduces the important concepts of average reward adjusted
-reinforcement learning, elaborates on optimality criteria and provides insights of the underlying
-algorithm. For a more extensive introduction to average reward reinforcement learning we refer to
+RL, elaborates on optimality criteria and provides insights of the underlying
+algorithm. For a more extensive introduction to average reward RL we refer to
 \citet{schneckenreither2020average}.
 
 Like \citet{MillerVeinott1969} we are considering problems that are observed in a sequence of points
@@ -557,7 +559,7 @@ reward $r_{t} = r(s_{t}, a_{t})$ and transitions to another state \(s_{t+1} \in 
 \(t+1\) with conditional probability \(p(s_{t+1}, r_{t} \mid s_{t}, a_{t})\). That is we assume that
 reaching state \(s_{t+1}\) from state \(s_{t}\) with reward \(r_{t}\) depends solely on the previous
 state \(s_{t}\) and chosen action \(a_{t}\). In other words, we expect the system to possess the
-Markov property \citep[p.63]{sutton1998introduction}. Reinforcement learning processes that possess
+Markov property \citep[p.63]{sutton1998introduction}. RL processes that possess
 the Markov property are referred to as Markov decision processes (MDPs)
 \citep[p.66]{sutton1998introduction}.
 
@@ -577,10 +579,11 @@ In the widely applied discounted framework the value of a state \(V_{\gamma}^{\p
 defined as the expected discounted sum of rewards under the stationary policy \(\pol_{\gamma}\) when
 starting in state \(s\). Note that the policy \(\pol_{\gamma}\) depends on the selected discount
 factor. That is
+%
 \begin{align*}
   V_{\gamma}^{\pol_{\gamma}}(s)=\lim_{N \to \infty} \E[\sum_{t=0}^{N-1} \gamma^{t} R_{t}^{\pol_{\gamma}}(s)]\tcom
 \end{align*}
-
+%
 where \(0 \leqslant \gamma < 1\) is the discount factor and
 \(R_{t}^{\pol}(s) = \E_{\pol}[ r(s_{t},a_{t}) \mid s_{t} = s, a_{t} = a]\) the reward received at
 time \(t\) upon starting in state \(s\) by following policy \(\pol\)
@@ -592,12 +595,12 @@ followed, maximises the state value for all states \(s\) as compared to any othe
 criteria is usually referred to as \(\gamma\)-optimality as the discount factor \(\gamma\) is fixed.
 However, this also means that the actual value set for \(\gamma\) determines the best achievable
 policy. For instance, as can be seen in Figure~\ref{fig:printer} setting \(\gamma <0.8027\) the
-printer-loop is preferred over the mail-loop, although the mail-loop accumulates more
-reward over time, i.e.\@ selecting the mail-loop is a sub-optimal choice. Observe that the average
-reward received per step equals \(1\) for the printer-loop and \(2\) for the mail-loop. Thus, the
+printer-loop is preferred over the mail-loop, although the mail-loop accumulates more reward over
+time, i.e.\@ selecting the mail-loop is a sub-optimal choice. Observe that the average reward
+received per step equals \(1\) for the printer-loop and \(2\) for the mail-loop. Thus, the
 (Blackwell-)optimal policy is to choose the mail-loop. However, if
-\(\gamma < 3^{-\frac{1}{5}} \approx 0.8027\) an agent using discounted reinforcement learning
-chooses the printer loop as going the printer loop has a higher evaluation.
+\(\gamma < 3^{-\frac{1}{5}} \approx 0.8027\) an agent using discounted RL
+chooses the printer loop as doing the printer loop has a higher evaluation.
 %
 \begin{figure}[t!]
   \centering
@@ -670,7 +673,7 @@ generally does not infer bias-optimal policies. Only by chance the resulting pol
 bias-optimal.
 %
 % In the sequel we present the Laurent series expansion which not only links discounted reinforcement
-% learning with average reward reinforcement learning, but also connects to \(n\)-discount-optimality.
+% learning with average reward RL, but also connects to \(n\)-discount-optimality.
 %
 % Furthermore, for the rest of the paper we occasionally write drop the \(V(s)\) and $V_{\gamma}$ instead of
 % \(V^{\pol}(s)\) and \(V^{\pol}_{\gamma}\) when the policy is clear from the context.
@@ -730,7 +733,7 @@ research domain. This mainly results from the fact that a continuous assessing o
 using costs or profit is often required, which leads to intractable long learning phases with high
 exploration rate even for small sized problems. But as high exploration rates produce errors in the
 state value estimations \citep{MillerVeinott1969} finding a well working parameterisation is
-difficult. Average reward reinforcement learning overcomes these issues by separately assessing the
+difficult. Average reward RL overcomes these issues by separately assessing the
 subterms of the state values directly.
 
 
@@ -851,8 +854,8 @@ Blackwell optimal policy according to the occurrence on the paths, where shorter
 which collect the rewards sooner are preferred.
 
 % Note how the Laurent series expansion dissipates these values in single terms and therefore defines
-% a divide and conquer methodological approach to reinforcement learning. Thus in average reward
-% reinforcement learning these terms are learned separately, while in the discounted framework a
+% a divide and conquer methodological approach to RL. Thus in average reward
+% RL these terms are learned separately, while in the discounted framework a
 % single scalar value for each state with a fixed \(\gamma\)-value is estimated.
 
 These addends, where \(n=-1,0,\ldots\) denote the coefficients of the Laurent series expansion and
@@ -869,11 +872,11 @@ The error term \(e_{\gamma}^{\pol}(s)\) is given by
 \(e_{\gamma}^{\pol}(s) = \sum_{n=1}^{\infty}W^{\pol}_{n}(s)\) and the expected reward
 \(R^{\pol}(s) = \E_{\pol}[ r(s, a) ]\). % = \sum_{a \in \mathcal{A}(s)}p(a | s) r(s, a)\)
 %
-\citet[p.343ff]{Puterman94} shows that due to the given degree of freedom if \(n=-1,0,\ldots,M\)
+\citet[p.343ff]{Puterman94} shows that due to the given degree of freedom, if \(n=-1,0,\ldots,M\)
 constraints are satisfying the above conditions for all states \(s\), then only
 \(\avgrew^{\pol}(s), V^{\pol}(s), W^{\pol}_{1}, \ldots, W^{\pol}_{M-1}\) are unique, whereas
-\(W^{\pol}_{M}\) is offset by the vector \(u\) where for the transition probability matrix \(P\) the
-vector \(u\) is characterised by \((I-P)u = 0\). Note that \(u\) is determined by the number of
+\(W^{\pol}_{M}\) is offset by the vector \(u\), where for the transition probability matrix \(P\)
+the vector \(u\) is characterised by \((I-P)u = 0\). Note that \(u\) is determined by the number of
 closed irreducible classes of \(P\), that is for ergodic MDPs \(u\) is determined by a single
 constant. Average reward learning is based on the above formulation.
 
@@ -919,23 +922,23 @@ With the Laurent Series expansion this reformulates to
 \(X_{\gamma}^{\pol}(s)\) describes the discounted state value adjusted by the average reward term.
 The Bellman Equation is given by
 \(\X_{\gamma}^{\pol}(s) = \E_{\pol}[r_{t} + \gamma \X_{\gamma}^{\pol}(s_{t+1}) - \avgrew^{\pol} \mid
-s_{t} = s]\). The corresponding Bellman optimality equation then is given by
+s_{t} = s]\). The corresponding Bellman optimality equation then is
 \(\X_{\gamma}^{\polopt}(s) = \max_{a} \E_{\polopt}[r_{t} + \gamma \X_{\gamma}^{\polopt}(s_{t+1}) -
-\avgrew^{\pol} \mid s_{t} = s]\). By turning this formula into an update rule it builds the
-foundation of our algorithm.
+\avgrew^{\pol} \mid s_{t} = s]\). Turning this formula into an update rule it builds the foundation
+of our algorithm.
 
 
 \section{Average Reward Adjusted Deep RL Algorithm }\label{sec:avg}
 
 
-This section presents the average reward adjusted deep reinforcement learning algorithm \ARA{}.
+This section presents the average reward adjusted deep RL algorithm (\ARA{}).
 First, we present a basic version, which suffices for small problem sizes and introduce the idea of
 independent agents, before presenting an scalable optimised version.
 
 \subsection{Basic Average Reward Adjusted Deep RL Algorithm}
 
 
-\begin{algorithm}[t!]
+\begin{algorithm}[b!]
   \begin{algorithmic}[1]
     \State{}Initialise state \(s_{0}\) and network parameters \(\netTarget, \netWorker\) randomly, set
     an exploration rate \(0 \leqslant \plearn < \pexp \leqslant 1\), exponential smoothing learning rates
@@ -985,8 +988,8 @@ independent agents, before presenting an scalable optimised version.
 
 The model-free average reward adjusted RL algorithm is based on the tabular version of
 \citet{schneckenreither2020average} and depicted in Algorithm~\ref{alg:near}. The algorithm operates
-on a target network \(\netTarget{}\) and a worker network \(\netWorker{}\) as in
-\citet{mnih2015human}. % The target network reduces fluctuations in the state value estimates and
+on a target network \(\netTarget{}\) and a worker network \(\netWorker{}\) as in deep Q-Learning
+\citep{mnih2015human}. % The target network reduces fluctuations in the state value estimates and
 % therefore reduces the
 %
 In the action selection process a \(\epsilon\)-sensitive lexicographic order
@@ -1006,7 +1009,7 @@ quickly leads to better policies, as ones with higher gain are preferred.
 \citet{schneckenreither2020average} and
 \citet{Tadepalli98_ModelbasedAverageRewardReinforcementLearning} find that updating the average
 reward by Equation~\ref{eq:constr2} is superior as compared to exponentially smoothing the actual
-observed rewards. This makes sense as the later rather evaluates past policies.
+observed rewards. This makes sense as the later rather describes policies from the past.
 
 The average reward adjusted state value, which is approximated based on the Bellman optimality
 equation, is estimated twice. Once to infer the bias values with a very high discount factor
@@ -1023,12 +1026,14 @@ Every \(C\) steps the target network smoothly adapts the parameters of the worke
 \subsection{Independent Agents}
 
 In our application the agent can update the lead time for each product type by a maximum magnitude
-of \(1\) in regard to the lead time of the current period. A naive approaches is to define one
-action for each combination of possible lead time updates over all product types, e.g.\@ one action
-for a system with six product types could be the vector \(+1, +1, 0, 0, +1, 0\). This however, due
-to the exponential growth, results in only being able to solve very small production systems with
-only few product types. A common solution in production planning is to aggregate the products into
-product groups, cf.\@ hierarchical production planning~\citep{schneeweibeta1995hierarchical}.
+of \(1\) in regard to the lead time of the current period. A naive approach is to define one action
+for each combination of possible lead time updates over all product types, e.g.\@ one action for a
+system with six product types could be the vector \((+1, +1, +0, +0, +1, +0)\) for which each
+component defines the update of the corresponding product type lead time from the current lead time.
+This however, due to the exponential growth, results in only being able to solve very small
+production systems with only few product types. A common solution in production planning is to
+aggregate the products into product groups, cf.\@ hierarchical production
+planning~\citep{schneeweibeta1995hierarchical}.
 %
 Although applicable in our setup if we group the products into bottleneck and non-bottleneck
 products as done by \citet{schneckenreither2020order}, we refrain from this adaption as it does not
@@ -1056,14 +1061,6 @@ touched by this adaption. While for the first agent the reward and future state 
 current state and action taken, the corresponding probabilities for future state and reward change
 during the learning process as the agent starts to behave differently.
 %
-This allows us to investigate the algorithms behaviour for even larger solution spaces. In
-particular, this adaption enables us to present the algorithm the above defined state space not only
-on the basis of product groups, but directly for each product type \(\pt\). Note that without this
-extension the problem is computationally infeasible due to \(3^{6} = 729\) possible actions.
-Removing the dependency between the lead times of different product types reduces the set of
-possible actions, and thus the number of ANN output layer nodes, to \(3 \cdot 6 = 18\). In
-preliminary experiments on small examples we only observed a very slight increase of required steps
-during training. Therefore, this is a vital adaption to ensure scalability.
 
 
 \subsection{Scalable Average Reward Adjusted Deep RL Algorithm}
@@ -1071,7 +1068,7 @@ during training. Therefore, this is a vital adaption to ensure scalability.
 The basic algorithm above suffices only for problem sets of rather small size due to the
 computational complexity and the growth of the action space. In our case, that would either require
 a production system with at most \(3\) product types, or an aggregation of product types into
-product groups. In the sense of this foundational research paper, we rather aim for an enhanced
+product groups. In the sense of this foundational research paper, we aim for an enhanced
 version of the algorithm that is scalable.
 
 
@@ -1148,9 +1145,10 @@ exploring the solution space and stabilise the learning process. These include t
 independent agents that operate on the same state, \(n\)-step learning \citep{mnih2016asynchronous},
 and ensuring to constantly reduce the average reward as searching for policies with higher average
 costs is unnecessary. Algorithm~\ref{alg:full} depicts a detailed view on the algorithm including
-these extensions and with the objective to minimise the returned rewards. The idea is the same as in
-Algorithm~\ref{alg:near}, except that the action selection procedure is a loop over all independent
-agents and the implementation of the n-step logic.
+these extensions and with the objective to minimise the returned rewards, as we aim for minimal
+costs in our experiments. The idea is the same as in Algorithm~\ref{alg:near}, except that the
+action selection procedure is a loop over all independent agents and the implementation of the
+n-step logic.
 %
 The agent first chooses an action (steps \(4-5\)), executes the selected action and stores the
 experience in the replay memory (step \(6\)) and then samples a mini-batch of experiences each of
@@ -1373,6 +1371,9 @@ based on the production system state at the end of each period.
 
 \section{Lead Time Setting}\label{sec:lead}
 
+In this section we define the tested lead time setting algorithms. This includes a description of
+the MDP used for the reinforcement learning agents.
+
 
 \subsection{Conventional Order Release Rule}
 
@@ -1386,7 +1387,7 @@ and fixed lead times \(\lt_{i}\).
 % \end{equation*}
 %
 % where the release date \(RD_{j}\) of product type \(j\) is calculated by the difference of the due
-% date \(DD_{j}\) and the lead time \(LT_{j}\).
+% date \(DD_{j}\) and the lead time \(\lt_{j}\).
 %
 % Note that we set lead times for each product group and not for every order as done by
 % \cite{Ackerman1963}.
@@ -1406,7 +1407,7 @@ directly seen. Thus, any state $s \in \mathcal{S}$ of the state space is compose
 information for each product type \(\pt\):
 \begin{itemize}
 
-\item The currently set lead time $LT_{g} \in \{1,2,\ldots,\DDS\}$ (Recall:
+\item The currently set lead time $\lt_{g} \in \{1,2,\ldots,\DDS\}$ (Recall:
   $\text{Due Date Period} - \text{Lead Time} = \text{Release Period}$). Note that we bound the
   maximum lead time with due date slack $\DDS$, which is $7$ in our setup.
 
@@ -1442,14 +1443,24 @@ is the current period. Clearly, this yields bulk releases, meaning that either a
 the same due date and of the same product type are released.
 
 The \textit{action space} is composed of two decisions, the relative change of the lead times to the
-currently set lead times $LT_{g} \in \{1,2,\ldots,\DDS\}$ for each product type $\pt$.
+currently set lead times $\lt_{\pt} \in \{1,2,\ldots,\DDS\}$ for each product type $\pt$.
 %
-We restrict the lead time update for state $s_{t+1}$ according to the lead time $LT_{g}$ from state
-$s_{t}$ by a maximum change of 1. Thus, if $LT_{g}$ is the current lead time of product type $\pt$
-the agent can choose a lead time in $\{1,2,\ldots,\DDS\} \cap \{LT_{g}-1,LT_{g},LT_{g}+1\}$. % Put
+We restrict the lead time update for state $s_{t+1}$ according to the lead time $\lt_{\pt}$ from state
+$s_{t}$ by a maximum change of 1. Thus, if $\lt_{\pt}$ is the current lead time of product type $\pt$
+the agent can choose a lead time in $\{1,2,\ldots,\DDS\} \cap \{\lt_{\pt}-1,\lt_{\pt},\lt_{\pt}+1\}$. % Put
 % differently the algorithm can increase or decrease the lead time by 1 or leave it as it is, as long
 % as it acts within the discrete action space given by the set $\{1,2,\ldots,\DDS\}$ for each product
 % type.
+%
+Recall that we implement independent agents to reduce the action space. In particular, this adaption
+enables us to present the algorithm the above defined state space not only on the basis of product
+groups, but directly for each product type. Note that without this extension the problem is
+computationally infeasible due to \(3^{6} = 729\) possible actions. Removing the dependency between
+the lead times of different product types reduces the set of possible actions, and thus the number
+of ANN output layer nodes, to \(3 \cdot 6 = 18\). In preliminary experiments on small examples we
+only observed a very slight increase of required steps during training. Therefore, this is a vital
+adaption to ensure scalability.
+
 
 \paragraph*{Reward.}
 In each period the agents choose actions, which when executed generate a reward while traversing to
@@ -1498,7 +1509,7 @@ independent agents we gain \(\anninp=324\) and \(\annout=36\).
 
 % Min-Max Scaling of input/output. Output: ScalingNetOutParameters (-800) 800 (-300) 300 (-400) 800 (-400) 800
 The features representing order counts are scaled using min-max scaling with minimum \(0\) and
-maximum \(5\), the lead times with minimum \(0\) and maximum \(7\) respectively.
+maximum \(5\), the lead times with minimum \(0\) and maximum \(7\).
 % Output layer scaling
 To further ensure smaller ANN parameter values the output is transformed using min-max scaling to
 the interval \((-400, 800)\), s.t.\@ an ANN output of \(1\) represents a value of \(800\).
@@ -1506,7 +1517,7 @@ the interval \((-400, 800)\), s.t.\@ an ANN output of \(1\) represents a value o
 % Training Mini-Batch Size:  4
 On each training step, i.e.\@ every n-step steps, randomly \(m\) sets of experiences the training
 mini-batch size each consisting of n-step experiences are selected, there gradients computed and the
-sum of gradients backpropagated though the worker network using Adam \citep{kingma2014adam}, where
+sum of gradients backpropagated trough the worker network using Adam \citep{kingma2014adam}, where
 the weight decay with parameter \(\lambda\) is implemented as presented by
 \citet{loshchilov2017decoupled}.
 %
@@ -1783,7 +1794,7 @@ with fixed lead times between \(1\) and \(4\) as indicated by the number ($\BILO
 
 
 For the case of medium variability with a utilisation of \(70\%\) 70-(\(\Unif\)) we can see that
-\(\BILTwo\) performs best in the sense of accumulated costs (\(220.53\)). The reinforcement learning
+\(\BILTwo\) performs best in the sense of accumulated costs (\(220.53\)). The RL
 algorithm follow, where \rlt{0.99} is slightly but significantly better then the other two variants
 (\(250.70\), \(254.97\), \(255.06\)). The other \BIL{} variants accumulate much more costs. For the
 timing one can see that \rlt{1.00} performs very good with a service level of \(93.2\%\).
@@ -1808,7 +1819,7 @@ can see that \rlt{0.99} performs best (\(576.48\)), followed by \qlt{0.99} (\(58
 \BILThree{} (\(595.35\)), as well as \rlt{1.00} (\(602.54\)), where the later two are not
 significantly different. In this case \rlt{0.99} also achieves the best service level of \(87.9\%\)
 within this group of best performing algorithms. The WIPC costs, as well as the SFTT, show that the
-reinforcement learning agents have a higher work in process, which is clear as they try to smooth
+RL agents have a higher work in process, which is clear as they try to smooth
 the workload of demand stream. When looking at the timing cost it becomes even more apparent that
 the agents perform well in timing as \rlt{0.99} performs much better (\(471.13\)) than the other two
 agents (\(488.01\), \(494.66\)) and all the \BIL{} techniques accumulated more \fgibocName{} costs
@@ -2001,7 +2012,7 @@ work.
 
 Overall we can see that the RL agents, and especially the established \ARA{} algorithm performs very
 well in systems with high utilisation. In case of the less utilised systems the results reveal that
-there is still potential for the improvement of reinforcement learning variants.
+there is still potential for the improvement of RL variants.
 
 
 \section{Conclusion}
@@ -2014,12 +2025,12 @@ there is still potential for the improvement of reinforcement learning variants.
 % planning. We hypothesize that due to more correct state value estimations from the critic, the
 % resulting policies from the actor are will outperform the currently known actor-critic algorithms.
 % This would be in line with the observation of overestimated state values of standard discounted
-% reinforcement learning algorithms, which lead to the development of
+% RL algorithms, which lead to the development of
 % extensions~\cite[]{hessel2018rainbow}. We believe that instead of developing extensions to resolve
 % structurally fundamental problems a better approach is to aim for correct state value estimations,
 % which will consequently lead to better policies.\\
 
-This paper is one of the first papers that use reinforcement learning for setting lead times to
+This paper is one of the first papers that use RL for setting lead times to
 release orders into the production system. We present a novel average reward adjusted reinforcement
 learning algorithm that uses an artificial neural network to approximate the state-action value
 functions. We add several extensions to this algorithm, including n-step learning, and a special
@@ -2037,7 +2048,7 @@ for improvement, as \BIL{} outperforms them. When comparing deep Q-Learning to t
 \ARA{} algorithm, we can see that for all cases, except one (80-\(\Unif\)), \ARA{} performs better.
 
 Therefore, in the future we plan to develop \ARA{} further to a actor-critic state-of-the-art
-reinforcement learning algorithm. We hypothesise that due to the more correct state-action value
+RL algorithm. We hypothesise that due to the more correct state-action value
 estimations of \ARA{} as compared to deep Q-Learning, cf. \citet{schneckenreither2020average}, the
 critic will provide a better feedback of the value function update to the actor. This should lead to
 better policies than with standard actor-critic algorithms, e.g. A3C~\citep{mnih2016asynchronous}.
@@ -2072,16 +2083,17 @@ agents without this adaption.
 % This paper introduces deep theoretical insights in reinfocement learning and provides first evidence
 % that average reward reinfocement learning is better applicable to operations research problems than
 % the discounted framework. The paper describes an application of an order release model based on
-% reinforcement learning. The performance is tested on a multi-product, two-stage hypothetical flow
+% RL. The performance is tested on a multi-product, two-stage hypothetical flow
 % shop and is measured by cost, delivery and lead time related measures. We show that in the current
 % version the machine learning approach is not able to outperform all other tested order release
 % approaches. In the future we expect to be able to yield better results by investigating the
-% parameterisation and resolving current issues when scaling average reinforcement learning to complex
+% parameterisation and resolving current issues when scaling average RL to complex
 % scenarios.
 
 % \MS[t]{todo}
 
-\bibliographystyle{plainnat}
+\bibliographystyle{tfcadinitials}
+% \bibliographystyle{plainnat}
 \bibliography{references}
 \vfill
 \pagebreak[4!]
